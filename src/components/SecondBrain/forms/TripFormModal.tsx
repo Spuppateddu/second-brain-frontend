@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HiPlus, HiX } from "react-icons/hi";
 
 import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
@@ -12,6 +13,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { useCreateTrip, useUpdateTrip } from "@/lib/queries/entities";
 import type { Trip } from "@/types/entities";
 
@@ -29,6 +31,61 @@ export default function TripFormModal(props: TripFormModalProps) {
   return <TripFormModalInner key={key} {...props} />;
 }
 
+type SectionProps = {
+  label: string;
+  addLabel: string;
+  value: string;
+  placeholder: string;
+  onChange: (html: string) => void;
+};
+
+function ExpandableRichTextSection({
+  label,
+  addLabel,
+  value,
+  placeholder,
+  onChange,
+}: SectionProps) {
+  const [open, setOpen] = useState(() => !!value && value.trim() !== "");
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-2 rounded-lg border border-dashed border-zinc-300 px-4 py-2 text-left text-sm text-zinc-600 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-primary-900/20"
+      >
+        <HiPlus className="h-4 w-4" />
+        <span>{addLabel}</span>
+      </button>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <FormFieldLabel>{label}</FormFieldLabel>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onChange("");
+          }}
+          className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+          aria-label={`Remove ${label}`}
+        >
+          <HiX className="h-4 w-4" />
+        </button>
+      </div>
+      <RichTextEditor
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
 function TripFormModalInner({
   initial,
   prefillTagId,
@@ -36,9 +93,9 @@ function TripFormModalInner({
   onSaved,
 }: TripFormModalProps) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
-  const [startDate, setStartDate] = useState(initial?.start_date ?? "");
-  const [endDate, setEndDate] = useState(initial?.end_date ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [locations, setLocations] = useState(initial?.locations ?? "");
+  const [bag, setBag] = useState(initial?.bag ?? "");
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
@@ -48,9 +105,8 @@ function TripFormModalInner({
   const createMut = useCreateTrip();
   const updateMut = useUpdateTrip(initial?.id ?? 0);
   const isPending = createMut.isPending || updateMut.isPending;
-  void isSearchable;
 
-  const submit = async () => {
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!name.trim()) {
       setError("Trip name is required.");
@@ -58,16 +114,17 @@ function TripFormModalInner({
     }
     const payload = {
       name: name.trim(),
-      description: description.trim() || null,
-      start_date: startDate || null,
-      end_date: endDate || null,
+      notes: notes.trim() || null,
+      locations: locations.trim() || null,
+      bag: bag.trim() || null,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
       if (initial) await updateMut.mutateAsync(payload);
       else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -94,43 +151,46 @@ function TripFormModalInner({
       footer={
         <>
           <FooterCloseButton onClick={onClose} isPending={isPending} />
-          <FooterPrimaryButton onClick={submit} isPending={isPending}>
-            {initial ? "Save" : "Create Trip"}
+          <FooterPrimaryButton
+            variant="secondary"
+            onClick={() => submit(false)}
+            isPending={isPending}
+          >
+            Save
+          </FooterPrimaryButton>
+          <FooterPrimaryButton
+            onClick={() => submit(true)}
+            isPending={isPending}
+          >
+            Save and Close
           </FooterPrimaryButton>
         </>
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <FormFieldLabel>Start date</FormFieldLabel>
-            <input
-              type="date"
-              value={startDate ?? ""}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            />
-          </div>
-          <div>
-            <FormFieldLabel>End date</FormFieldLabel>
-            <input
-              type="date"
-              value={endDate ?? ""}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            />
-          </div>
-        </div>
-        <div>
-          <FormFieldLabel>Notes</FormFieldLabel>
-          <textarea
-            rows={6}
-            value={description ?? ""}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Plans, packing list, places to visit…"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-          />
-        </div>
+        <ExpandableRichTextSection
+          label="Notes"
+          addLabel="Add Notes"
+          value={notes}
+          placeholder="Additional trip notes..."
+          onChange={setNotes}
+        />
+
+        <ExpandableRichTextSection
+          label="Places to Visit"
+          addLabel="Add Places to Visit"
+          value={locations}
+          placeholder="List of places to visit..."
+          onChange={setLocations}
+        />
+
+        <ExpandableRichTextSection
+          label="What to Pack (Bag)"
+          addLabel="Add Packing List"
+          value={bag}
+          placeholder="List of things to pack for the trip..."
+          onChange={setBag}
+        />
 
         <InlineTagPicker
           selectedTagIds={tagIds}

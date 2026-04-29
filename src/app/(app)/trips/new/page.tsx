@@ -1,26 +1,16 @@
 "use client";
 
-import { CreateEntityPage } from "@/components/EntityCrudPages";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import { useCreateTrip } from "@/lib/queries/entities";
+import { useRouter } from "next/navigation";
 
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "name", label: "Name", required: true },
-  { kind: "date", key: "start_date", label: "Start date" },
-  { kind: "date", key: "end_date", label: "End date" },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import TripFormModal from "@/components/SecondBrain/forms/TripFormModal";
 
 export default function NewTripPage() {
+  const router = useRouter();
   return (
-    <CreateEntityPage
-      title="New trip"
-      fields={FIELDS}
-      listHref="/trips"
-      detailHref={(id) => `/trips/${id}`}
-      withTags
-
-      useCreate={useCreateTrip}
+    <TripFormModal
+      isOpen
+      onClose={() => router.push("/trips")}
+      onSaved={() => router.push("/trips")}
     />
   );
 }

@@ -1,5 +1,7 @@
 @import "@heroui/react/styles";
 
+@plugin "@tailwindcss/typography";
+
 /* Class-based dark mode: only activates when a `.dark` class is set on an
    ancestor. Without an explicit toggle in the app, this keeps the UI in light
    mode regardless of the user's OS color-scheme preference. */
@@ -84,4 +86,39 @@
   --color-danger-700: #b91c1c;
   --color-danger-800: #991b1b;
   --color-danger-900: #7f1d1d;
+
+  --animate-shake: shake 0.5s ease-in-out infinite;
+  --animate-water-pulse: water-pulse 1.5s ease-in-out infinite;
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-2px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(2px);
+    }
+  }
+
+  @keyframes water-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.1);
+    }
+  }
 }

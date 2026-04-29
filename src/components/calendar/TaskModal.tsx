@@ -1228,9 +1228,24 @@ function PlanningSubtasksSection({ taskId }: { taskId: number }) {
   const queryClient = useQueryClient();
   const create = useCreatePlanningSubTask();
   const [content, setContent] = useState("");
+  // Bump on any planning cache change so the memo below re-evaluates and
+  // newly-added subtasks render without closing/reopening the modal.
+  const [cacheTick, setCacheTick] = useState(0);
+  useEffect(() => {
+    const cache = queryClient.getQueryCache();
+    const unsubscribe = cache.subscribe((event) => {
+      const key = event?.query?.queryKey;
+      if (Array.isArray(key) && key[0] === "planning") {
+        setCacheTick((t) => t + 1);
+      }
+    });
+    return unsubscribe;
+  }, [queryClient]);
 
   // Pull the latest planning task subtasks from any cached planning query so
-  // the modal reflects newly-added subtasks after invalidation.
+  // the modal reflects newly-added subtasks after invalidation. Backend
+  // serializes the relation as `sub_tasks` (snake_case); fall back to the
+  // camelCase form in case any caller normalizes it.
   const subTasks = useMemo<PlanningSubTaskLite[]>(() => {
     const queries = queryClient.getQueriesData<unknown>({
       queryKey: heavyKeys.planning,
@@ -1244,11 +1259,12 @@ function PlanningSubtasksSection({ taskId }: { taskId: number }) {
       for (const period of [summary.monthlyPlanning, summary.yearlyPlanning]) {
         if (!period?.tasks) continue;
         const match = period.tasks.find((t) => t.id === taskId);
-        if (match?.subTasks) return match.subTasks;
+        const subs = match?.sub_tasks ?? match?.subTasks;
+        if (subs) return subs;
       }
     }
     return [];
-  }, [queryClient, taskId]);
+  }, [queryClient, taskId, cacheTick]);
 
   const sorted = subTasks.slice().sort((a, b) => a.order - b.order);
 

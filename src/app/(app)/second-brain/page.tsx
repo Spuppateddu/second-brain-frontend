@@ -13,9 +13,7 @@ import {
 import { HiArrowPath, HiPlus } from "react-icons/hi2";
 
 import ConfirmDialog from "@/components/SecondBrain/ConfirmDialog";
-import EntityModalsProvider, {
-  useEntityModals,
-} from "@/components/SecondBrain/EntityModalsProvider";
+import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
 import GraphSearchOverlay, {
   type EntitySearchResult,
 } from "@/components/SecondBrain/GraphSearchOverlay";
@@ -56,13 +54,7 @@ const CREATABLE_ENTITY_TYPES: Array<Exclude<GraphNodeKind, "tag">> = [
 ];
 
 export default function SecondBrainPage() {
-  // Wraps the actual page in the modal provider so any descendant (including
-  // TagEntityCard) can call `useEntityModals()` to launch entity create/edit.
-  return (
-    <EntityModalsProvider>
-      <SecondBrainPageInner />
-    </EntityModalsProvider>
-  );
+  return <SecondBrainPageInner />;
 }
 
 function SecondBrainPageInner() {

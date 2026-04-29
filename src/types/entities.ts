@@ -181,8 +181,9 @@ export type Hardware = CommonFields & { title: string };
 export type Software = CommonFields & { title: string };
 export type Trip = CommonFields & {
   name: string;
-  start_date: string | null;
-  end_date: string | null;
+  bag: string | null;
+  locations: string | null;
+  notes: string | null;
 };
 export type MegaFile = CommonFields & {
   title: string;

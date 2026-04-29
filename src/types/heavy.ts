@@ -31,6 +31,7 @@ export type PlanningTaskLite = {
   end_date?: string;
   planning_type_id?: number;
   subTasks?: PlanningSubTaskLite[];
+  sub_tasks?: PlanningSubTaskLite[];
   taskCategories?: PlanningTaskCategory[];
   task_categories?: PlanningTaskCategory[];
   linkedCalendarTasks?: { id: number; task_date?: string }[];
