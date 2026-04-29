@@ -18,7 +18,6 @@ import {
   type MediaTaskInput,
   useCreateMediaTask,
   useDeleteMediaTask,
-  useMarkMediaUndone,
   useMedia,
   useToggleMediaWatchlist,
   useUpdateMediaTask,
@@ -43,7 +42,6 @@ export default function MediaPage() {
   const update = useUpdateMediaTask();
   const remove = useDeleteMediaTask();
   const toggleWatchlist = useToggleMediaWatchlist();
-  const markUndone = useMarkMediaUndone();
 
   const reviewCategories = useMemo(
     () => data?.reviewCategories ?? [],
@@ -82,10 +80,6 @@ export default function MediaPage() {
   };
 
   const handleToggleDone = (task: MediaTask) => {
-    if (task.is_done) {
-      markUndone.mutate(task.id);
-      return;
-    }
     setReviewTask(task);
   };
 
@@ -292,21 +286,13 @@ function MediaRow({
   onToggleDone: (task: MediaTask) => void;
   inWatchlistSection: boolean;
 }) {
-  const doneClass = task.is_done
-    ? "bg-green-50/60 dark:bg-green-900/20"
-    : "bg-white dark:bg-zinc-950";
-
   return (
-    <li
-      className={`group flex items-center gap-2 rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-800 ${doneClass}`}
-    >
+    <li className="group flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950">
       <button
         type="button"
         onClick={() => onToggleDone(task)}
-        title={task.is_done ? "Mark not done" : "Mark done (write review)"}
-        className={`shrink-0 rounded p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
-          task.is_done ? "text-green-600" : "text-zinc-400"
-        }`}
+        title="Mark done (write review)"
+        className="shrink-0 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
       >
         <HiCheck className="h-4 w-4" />
       </button>
@@ -316,12 +302,7 @@ function MediaRow({
         onClick={() => onEdit(task)}
         className="min-w-0 flex-1 text-left"
       >
-        <div
-          className={`truncate text-sm font-medium ${
-            task.is_done ? "line-through opacity-60" : ""
-          }`}
-          title={task.title}
-        >
+        <div className="truncate text-sm font-medium" title={task.title}>
           {task.title}
         </div>
         {task.review_category ? (
