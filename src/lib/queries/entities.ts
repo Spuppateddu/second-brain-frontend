@@ -816,6 +816,18 @@ export function useWishlist() {
   });
 }
 
+export function useToggleWishlistPurchased() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.patch(`/wishlist/${id}/toggle-purchased`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: entityKeys.wishlist });
+    },
+  });
+}
+
 export function useBookmarks() {
   return useQuery<Bookmark[]>({
     queryKey: entityKeys.bookmarks,

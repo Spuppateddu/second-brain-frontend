@@ -41,6 +41,16 @@ function completionPct(day: CalendarDay): number {
   return Math.round((day.done_notes / day.total_notes) * 100);
 }
 
+function getContrastColor(hex: string): string {
+  const m = hex.replace("#", "");
+  if (m.length !== 6) return "#ffffff";
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#1f2937" : "#ffffff";
+}
+
 type DroppableDayRowProps = {
   day: CalendarDay;
   selected: boolean;
@@ -159,16 +169,12 @@ function DayRow({
           {day.category_counts.slice(0, 4).map((c) => (
             <span
               key={c.category_id}
-              className="inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[10px]"
+              className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium"
               style={{
-                backgroundColor: `${c.category_color}20`,
-                color: c.category_color,
+                backgroundColor: c.category_color,
+                color: getContrastColor(c.category_color),
               }}
             >
-              <span
-                className="inline-block h-1 w-1 rounded-full"
-                style={{ backgroundColor: c.category_color }}
-              />
               {c.count}
             </span>
           ))}

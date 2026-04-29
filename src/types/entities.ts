@@ -209,6 +209,9 @@ export type WishlistItem = CommonFields & {
   name: string;
   link: string | null;
   notes: string | null;
+  price: number | string | null;
+  planned_purchase_date: string | null;
+  purchased_at: string | null;
   is_purchased: boolean;
 };
 export type Bookmark = CommonFields & {

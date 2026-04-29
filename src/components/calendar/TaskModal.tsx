@@ -24,6 +24,7 @@ import {
   useCreateCalendarSubTask,
   useDeleteCalendarSubTask,
   useDeleteCalendarTask,
+  useSkipAndDeleteCalendarTask,
   useUpdateCalendarSubTask,
   type LinkedEntityRef,
 } from "@/lib/queries/calendar";
@@ -205,6 +206,7 @@ function TaskModalForm({
   const date = task?.task_date ?? defaultDate ?? "";
 
   const removeCalendar = useDeleteCalendarTask(date);
+  const skipAndRemoveCalendar = useSkipAndDeleteCalendarTask(date);
   const removePlanning = useDeletePlanningTask();
   const removeOutOfPlan = useDeleteOutOfPlanNote();
   const updatePlanningTaskMut = useUpdatePlanningTask();
@@ -214,6 +216,17 @@ function TaskModalForm({
   const linkedPlanning = task?.linkedPlanningTask ?? null;
   const linkedPlanningSub = task?.linkedPlanningSubTask ?? null;
   const isCalendarLinkedToPlanning = !!(linkedPlanning || linkedPlanningSub);
+
+  const pendingSubtasksCount = useMemo(() => {
+    if (mode !== "calendar" || !task || !dayQuery.data) return 0;
+    const live =
+      dayQuery.data.calendarTasks.find((t) => t.id === task.id) ??
+      dayQuery.data.calendarWorkTasks.find((t) => t.id === task.id) ??
+      null;
+    const subs = live?.subTasks ?? task.subTasks ?? [];
+    return subs.filter((s) => !s.is_done).length;
+  }, [mode, task, dayQuery.data]);
+  const hasPendingSubtasks = pendingSubtasksCount > 0;
 
   const initialCategories = useMemo(
     () =>
@@ -455,6 +468,13 @@ function TaskModalForm({
   async function handleToggleDone() {
     const next = !isDone;
 
+    if (next === true && mode === "calendar" && hasPendingSubtasks) {
+      alert(
+        `Complete all subtasks first (${pendingSubtasksCount} left).`,
+      );
+      return;
+    }
+
     // For a calendar task being marked done that's linked to a planning task
     // (or sub-task), surface a confirm modal so the user can also mark the
     // linked planning row done in one shot.
@@ -537,6 +557,23 @@ function TaskModalForm({
     setSubmitting(true);
     try {
       await removeCalendar.mutateAsync(task.id);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleSkipRegen() {
+    if (!task) return;
+    if (
+      !confirm(
+        "Delete this task and skip regeneration? The auto-task rule will not recreate it.",
+      )
+    )
+      return;
+    setSubmitting(true);
+    try {
+      await skipAndRemoveCalendar.mutateAsync(task.id);
       onClose();
     } finally {
       setSubmitting(false);
@@ -634,7 +671,14 @@ function TaskModalForm({
               <button
                 type="button"
                 onClick={handleToggleDone}
-                disabled={submitting}
+                disabled={
+                  submitting || (!isDone && hasPendingSubtasks)
+                }
+                title={
+                  !isDone && hasPendingSubtasks
+                    ? `Complete all subtasks first (${pendingSubtasksCount} left)`
+                    : undefined
+                }
                 className={[
                   "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
                   isDone
@@ -872,7 +916,7 @@ function TaskModalForm({
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-2 border-t border-zinc-200 px-5 py-4 flex-shrink-0">
-          <div>
+          <div className="flex items-center gap-2">
             {editing && (
               <Button
                 type="button"
@@ -885,6 +929,21 @@ function TaskModalForm({
                 Delete
               </Button>
             )}
+            {editing &&
+              mode === "calendar" &&
+              task &&
+              task.auto_task_rule_id != null && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  isDisabled={submitting}
+                  onClick={handleSkipRegen}
+                  className="text-danger"
+                >
+                  Skip regen
+                </Button>
+              )}
           </div>
           <div className="flex items-center gap-2">
             <Button

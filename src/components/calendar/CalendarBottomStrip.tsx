@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HiArrowTopRightOnSquare,
   HiCheck,
@@ -21,10 +21,14 @@ import {
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
 
-import { useMedia, useWishlist } from "@/lib/queries/entities";
+import {
+  useMedia,
+  useToggleWishlistPurchased,
+  useWishlist,
+} from "@/lib/queries/entities";
 import {
   useAddYoutubeByUrl,
-  useCashflow,
+  useCalendarBudgets,
   useCopyPlanningToCalendar,
   usePlanningUnlinked,
   useRssNews,
@@ -34,7 +38,7 @@ import {
   useYoutubeWatchlist,
 } from "@/lib/queries/heavy";
 import type {
-  CashflowPayload,
+  CalendarBudgetRow,
   PlanningTaskUnlinked,
   RssNewsItem,
   TwitchLiveStream,
@@ -60,6 +64,11 @@ type SectionDef = {
 
 const ALL_SECTIONS: SectionDef[] = [
   {
+    key: "planning",
+    label: "Planning",
+    icon: HiClipboardDocumentList,
+  },
+  {
     key: "budget",
     label: "Budget",
     icon: HiCurrencyDollar,
@@ -67,11 +76,6 @@ const ALL_SECTIONS: SectionDef[] = [
   },
   { key: "wishlist", label: "Wishlist", icon: HiShoppingCart },
   { key: "media", label: "Media", icon: HiFilm },
-  {
-    key: "planning",
-    label: "Planning",
-    icon: HiClipboardDocumentList,
-  },
   {
     key: "youtube",
     label: "YouTube",
@@ -89,6 +93,15 @@ const ALL_SECTIONS: SectionDef[] = [
 
 // ── Section components ─────────────────────────────────────────────────────
 
+function todayString(): string {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
 function fmtMoney(n: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -97,81 +110,141 @@ function fmtMoney(n: number): string {
   }).format(n);
 }
 
-function BudgetSection({ data }: { data: CashflowPayload }) {
-  const recent = data.payments.slice(0, 12);
+function BudgetSection({ budgets }: { budgets: CalendarBudgetRow[] }) {
+  if (budgets.length === 0) {
+    return <p className="text-sm text-zinc-500">No active budgets.</p>;
+  }
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-md border border-success-200 bg-success-50 p-3 dark:border-success-800 dark:bg-success-900/20">
-          <p className="text-xs uppercase text-success-700 dark:text-success-300">
-            In
-          </p>
-          <p className="text-lg font-semibold text-success-700 dark:text-success-300">
-            {fmtMoney(data.summary.positive)}
+    <ul className="space-y-2">
+      {budgets.map((b) => (
+        <BudgetRow key={b.id} budget={b} />
+      ))}
+    </ul>
+  );
+}
+
+function BudgetRow({ budget }: { budget: CalendarBudgetRow }) {
+  const pct = Math.max(0, Math.min(100, budget.percentage));
+  const over = budget.is_over_threshold;
+  const exceeded = budget.amount_left < 0;
+  const barColor = exceeded
+    ? "bg-danger"
+    : over
+      ? "bg-amber-500"
+      : "bg-success-500";
+
+  return (
+    <li
+      className={[
+        "rounded-lg border p-3 text-sm",
+        exceeded
+          ? "border-danger/40 bg-danger/5"
+          : over
+            ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
+            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950",
+      ].join(" ")}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-medium">{budget.name}</p>
+          <p className="text-xs uppercase tracking-wide text-zinc-500">
+            {budget.type} · {budget.payments_count} payment
+            {budget.payments_count === 1 ? "" : "s"}
           </p>
         </div>
-        <div className="rounded-md border border-danger/40 bg-danger/5 p-3">
-          <p className="text-xs uppercase text-danger">Out</p>
-          <p className="text-lg font-semibold text-danger">
-            {fmtMoney(data.summary.negative)}
-          </p>
-        </div>
-        <div className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-xs uppercase text-zinc-500">Net</p>
-          <p className="text-lg font-semibold">{fmtMoney(data.summary.net)}</p>
+        <div className="flex flex-shrink-0 flex-col items-end">
+          <span className={exceeded ? "font-semibold text-danger" : "font-semibold"}>
+            {fmtMoney(budget.total_spent)} / {fmtMoney(budget.amount)}
+          </span>
+          <span
+            className={[
+              "text-xs",
+              exceeded
+                ? "text-danger"
+                : over
+                  ? "text-amber-700 dark:text-amber-400"
+                  : "text-zinc-500",
+            ].join(" ")}
+          >
+            {exceeded
+              ? `${fmtMoney(Math.abs(budget.amount_left))} over`
+              : `${fmtMoney(budget.amount_left)} left`}{" "}
+            · {budget.percentage}%
+          </span>
         </div>
       </div>
-      <ul className="flex flex-col divide-y divide-zinc-200 rounded-md border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-        {recent.map((p) => (
-          <li
-            key={p.id}
-            className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
-          >
-            <div className="flex flex-col">
-              <span className="font-medium">
-                {p.description ?? "(no description)"}
-              </span>
-              <span className="text-xs text-zinc-500">
-                {p.date} · {p.payment_method?.name ?? "—"}
-              </span>
-            </div>
-            <span
-              className={
-                p.is_positive_cashflow ? "text-success-600" : "text-danger"
-              }
-            >
-              {p.is_positive_cashflow ? "+" : "−"}
-              {fmtMoney(Math.abs(p.amount))}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+        <div
+          className={["h-full transition-all", barColor].join(" ")}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </li>
   );
 }
 
 function WishlistSection({ items }: { items: WishlistItem[] }) {
+  const togglePurchased = useToggleWishlistPurchased();
+
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-zinc-500">
+        Nothing to buy now. Items are listed once their planned purchase date
+        is today or earlier.
+      </p>
+    );
+  }
+
   return (
-    <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((w) => (
-        <li
-          key={w.id}
-          className="rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-        >
-          <p className="font-medium">{w.name}</p>
-          {w.notes && <p className="mt-1 text-xs text-zinc-500">{w.notes}</p>}
-          {w.link && (
-            <a
-              href={w.link}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1 inline-block text-xs text-primary-600 hover:underline"
-            >
-              Open link
-            </a>
-          )}
-        </li>
-      ))}
+    <ul className="space-y-2">
+      {items.map((w) => {
+        const price =
+          w.price == null ? null : Number(w.price);
+        return (
+          <li
+            key={w.id}
+            className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{w.name}</p>
+              <p className="text-xs text-zinc-500">
+                {w.planned_purchase_date
+                  ? formatLocaleDate(w.planned_purchase_date)
+                  : "No planned date"}
+                {price != null && !Number.isNaN(price)
+                  ? ` · ${fmtMoney(price)}`
+                  : ""}
+              </p>
+              {w.notes && (
+                <p className="mt-1 truncate text-xs text-zinc-500">{w.notes}</p>
+              )}
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-1.5">
+              {w.link && (
+                <a
+                  href={w.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open link"
+                  aria-label="Open buy link"
+                  className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  <HiArrowTopRightOnSquare className="h-4 w-4" />
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => togglePurchased.mutate(w.id)}
+                disabled={togglePurchased.isPending}
+                className="inline-flex items-center gap-1 rounded-md bg-green-100 px-2.5 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+              >
+                <HiCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Mark bought</span>
+              </button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -647,7 +720,7 @@ export function CalendarBottomStrip({
   const hasRss = privileges.includes("rss_news");
 
   // All API calls fire on mount (privilege-gated).
-  const cashflow = useCashflow({ enabled: hasCashflow });
+  const budgets = useCalendarBudgets(selectedDate, { enabled: hasCashflow });
   const wishlist = useWishlist();
   const media = useMedia();
   const planningUnlinked = usePlanningUnlinked();
@@ -655,10 +728,21 @@ export function CalendarBottomStrip({
   const twitch = useTwitchLive({ enabled: hasTwitch });
   const rss = useRssNews({ enabled: hasRss });
 
-  const wishlistOpen = useMemo(
-    () => (wishlist.data ?? []).filter((w) => !w.is_purchased),
-    [wishlist.data],
-  );
+  const wishlistDue = useMemo(() => {
+    const today = todayString();
+    return (wishlist.data ?? [])
+      .filter(
+        (w) =>
+          !w.is_purchased &&
+          w.planned_purchase_date != null &&
+          w.planned_purchase_date <= today,
+      )
+      .sort((a, b) =>
+        (a.planned_purchase_date ?? "").localeCompare(
+          b.planned_purchase_date ?? "",
+        ),
+      );
+  }, [wishlist.data]);
   const watchlistMedia = useMemo(
     () => media.data?.watchlist ?? [],
     [media.data],
@@ -671,9 +755,11 @@ export function CalendarBottomStrip({
     [rss.data],
   );
 
+  const budgetRows = budgets.data?.budgets ?? [];
+
   const counts: Record<SectionKey, number> = {
-    budget: cashflow.data?.payments?.length ?? 0,
-    wishlist: wishlistOpen.length,
+    budget: budgetRows.length,
+    wishlist: wishlistDue.length,
     media: watchlistMedia.length,
     planning: planningTasks.length,
     youtube: youtubeVideos.length,
@@ -703,6 +789,21 @@ export function CalendarBottomStrip({
 
   const [expanded, setExpanded] = useState(false);
   const [active, setActive] = useState<SectionKey | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onDown = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [expanded]);
 
   const currentKey: SectionKey | null =
     active && visibleSections.some((s) => s.key === active)
@@ -714,9 +815,9 @@ export function CalendarBottomStrip({
   function renderSection(key: SectionKey) {
     switch (key) {
       case "budget":
-        return cashflow.data ? <BudgetSection data={cashflow.data} /> : null;
+        return <BudgetSection budgets={budgetRows} />;
       case "wishlist":
-        return <WishlistSection items={wishlistOpen} />;
+        return <WishlistSection items={wishlistDue} />;
       case "media":
         return <MediaSection items={watchlistMedia} />;
       case "planning":
@@ -736,7 +837,10 @@ export function CalendarBottomStrip({
   }
 
   return (
-    <div className="flex-shrink-0 border-t border-gray-200 bg-white relative z-20 dark:border-gray-700 dark:bg-gray-800">
+    <div
+      ref={containerRef}
+      className="flex-shrink-0 border-t border-gray-200 bg-white relative z-20 dark:border-gray-700 dark:bg-gray-800"
+    >
       {expanded && (
         <div className="absolute bottom-full left-0 right-0 h-[50vh] flex flex-col bg-white border-t-2 border-primary-500 shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.25)] rounded-t-2xl overflow-hidden dark:bg-gray-800 dark:border-primary-400 dark:shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.6)]">
           <div

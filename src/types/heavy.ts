@@ -33,8 +33,8 @@ export type PlanningTaskLite = {
   subTasks?: PlanningSubTaskLite[];
   taskCategories?: PlanningTaskCategory[];
   task_categories?: PlanningTaskCategory[];
-  linkedCalendarTasks?: { id: number }[];
-  linked_calendar_tasks?: { id: number }[];
+  linkedCalendarTasks?: { id: number; task_date?: string }[];
+  linked_calendar_tasks?: { id: number; task_date?: string }[];
   linkedBookmarks?: LinkableSummary[];
   linkedNotes?: LinkableSummary[];
   linkedPersons?: LinkableSummary[];
@@ -152,6 +152,24 @@ export type CashflowPayload = {
 export type CashflowFilterPayload = {
   payments: Payment[];
   summary: CashflowSummary;
+};
+
+export type CalendarBudgetRow = {
+  id: number;
+  name: string;
+  description: string | null;
+  type: "daily" | "weekly" | "monthly" | "yearly";
+  amount: number;
+  total_spent: number;
+  percentage: number;
+  amount_left: number;
+  payments_count: number;
+  is_over_threshold: boolean;
+};
+
+export type CalendarBudgetsPayload = {
+  budgets: CalendarBudgetRow[];
+  has_over_threshold: boolean;
 };
 
 export type CashflowTrendsPoint = {

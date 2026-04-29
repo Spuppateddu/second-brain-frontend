@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { SecondBrainPayload } from "@/types/graph";
 import type {
+  CalendarBudgetsPayload,
   CashflowFilterPayload,
   CashflowFilters,
   CashflowPayload,
@@ -33,6 +34,7 @@ export const heavyKeys = {
   planningUnlinked: ["planning", "unlinked"] as const,
   outOfPlan: ["out-of-plan"] as const,
   cashflow: ["cashflow"] as const,
+  calendarBudgets: (date: string) => ["calendar-budgets", date] as const,
   youtubeChannels: ["youtube-channels"] as const,
   youtubeVideosByDate: ["youtube-videos", "by-date"] as const,
   youtubeWatchlist: ["youtube-videos", "watchlist"] as const,
@@ -326,6 +328,22 @@ export function useCashflow(options?: { enabled?: boolean }) {
     queryKey: heavyKeys.cashflow,
     enabled: options?.enabled ?? true,
     queryFn: async () => (await api.get<CashflowPayload>("/cashflow")).data,
+  });
+}
+
+export function useCalendarBudgets(
+  date: string,
+  options?: { enabled?: boolean },
+) {
+  return useQuery<CalendarBudgetsPayload>({
+    queryKey: heavyKeys.calendarBudgets(date),
+    enabled: (options?.enabled ?? true) && !!date,
+    queryFn: async () =>
+      (
+        await api.get<CalendarBudgetsPayload>(
+          `/calendar-tasks/budgets/${date}`,
+        )
+      ).data,
   });
 }
 
