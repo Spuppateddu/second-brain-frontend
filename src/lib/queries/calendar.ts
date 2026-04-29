@@ -283,6 +283,19 @@ export function useDeleteCalendarTask(date: string) {
   });
 }
 
+export function useSkipAndDeleteCalendarTask(date: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/calendar-tasks/${id}/skip-and-delete`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: calendarKeys.day(date) });
+      queryClient.invalidateQueries({ queryKey: calendarKeys.overview });
+    },
+  });
+}
+
 export function useCreateCalendarSubTask(date: string) {
   const queryClient = useQueryClient();
   return useMutation({

@@ -1,52 +1,51 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
-import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useDeleteWishlist,
-  useUpdateWishlist,
-  useWishlistOne, type WishlistInput
-} from "@/lib/queries/entities";
-import type { WishlistItem } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "name", label: "Name", required: true },
-  { kind: "url", key: "link", label: "Link" },
-  { kind: "textarea", key: "notes", label: "Notes" },
-];
+import WishlistFormModal from "@/components/SecondBrain/forms/WishlistFormModal";
+import { useWishlistOne } from "@/lib/queries/entities";
 
 export default function EditWishlistPage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<WishlistItem, WishlistInput>
-      id={Number(id)}
-      title="Wishlist item"
-      fields={FIELDS}
-      listHref="/wishlist"
-      toFormValues={(item) => ({
-        name: item.name,
-        link: item.link ?? "",
-        notes: item.notes ?? ""
-})}
-      withTags
+  const itemId = Number(id);
 
-      useOne={useWishlistOne}
-      useUpdate={useUpdateWishlist}
-      useDelete={useDeleteWishlist}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="wishlist_item" id={item.id} />
-          <LinkedEntitiesPanel type="wishlist_item" id={item.id} />
-        </>
-      )}
+  const { data: item, isLoading, error } = useWishlistOne(
+    Number.isNaN(itemId) ? null : itemId,
+  );
+
+  if (Number.isNaN(itemId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid wishlist id.</p>
+      </main>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <main className="p-6 text-sm text-zinc-500">Loading wishlist item…</main>
+    );
+  }
+
+  if (error || !item) {
+    return (
+      <main className="p-6 text-sm text-danger">
+        Couldn&rsquo;t load this wishlist item.
+      </main>
+    );
+  }
+
+  return (
+    <WishlistFormModal
+      isOpen
+      initial={item}
+      onClose={() => router.push("/wishlist")}
     />
   );
 }

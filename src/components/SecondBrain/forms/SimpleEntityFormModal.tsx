@@ -12,6 +12,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface MutationLike<TPayload> {
   isPending: boolean;
@@ -136,12 +137,10 @@ function SimpleEntityFormModalInner<
       <div className="space-y-4">
         <div>
           <FormFieldLabel>Description</FormFieldLabel>
-          <textarea
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+          <RichTextEditor
+            value={description ?? ""}
+            onChange={setDescription}
             placeholder="Optional"
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
         </div>
 

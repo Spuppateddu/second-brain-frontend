@@ -15,7 +15,7 @@ export default function TripsPage() {
   const trips = data ?? [];
   const { query, setQuery, filtered } = useTextFilter(
     trips,
-    (t) => `${t.name} ${t.description ?? ""}`,
+    (t) => `${t.name} ${t.notes ?? ""} ${t.locations ?? ""}`,
   );
 
   return (
@@ -48,15 +48,11 @@ export default function TripsPage() {
                 <span className="font-medium">{trip.name}</span>
                 <EditLink href={`/trips/${trip.id}`} />
               </div>
-              {trip.start_date || trip.end_date ? (
-                <span className="text-xs text-zinc-500">
-                  {trip.start_date ?? "?"} → {trip.end_date ?? "?"}
-                </span>
-              ) : null}
-              {trip.description ? (
-                <p className="line-clamp-2 text-sm text-zinc-500">
-                  {trip.description}
-                </p>
+              {trip.notes ? (
+                <p
+                  className="line-clamp-2 text-sm text-zinc-500"
+                  dangerouslySetInnerHTML={{ __html: trip.notes }}
+                />
               ) : null}
               {trip.tags.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1">

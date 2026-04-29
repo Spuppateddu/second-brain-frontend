@@ -820,6 +820,18 @@ export function useWishlist() {
   });
 }
 
+export function useToggleWishlistPurchased() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.patch(`/wishlist/${id}/toggle-purchased`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: entityKeys.wishlist });
+    },
+  });
+}
+
 export function useBookmarks() {
   return useQuery<Bookmark[]>({
     queryKey: entityKeys.bookmarks,
@@ -1094,7 +1106,16 @@ export const useUpdatePerson = makeUpdate<PersonInput, Person>({ resource: "pers
 export const useDeletePerson = makeDelete({ resource: "persons", queryKey: entityKeys.persons });
 
 // Wishlist
-export type WishlistInput = { name: string; link?: string | null; notes?: string | null; tag_ids?: number[] };
+export type WishlistInput = {
+  name: string;
+  link?: string | null;
+  notes?: string | null;
+  price?: number | string | null;
+  planned_purchase_date?: string | null;
+  is_purchased?: boolean;
+  is_searchable?: boolean;
+  tag_ids?: number[];
+};
 export const useWishlistOne = makeOne<WishlistItem>({ resource: "wishlist", wrapKey: "item", queryKey: entityKeys.wishlist });
 export const useCreateWishlist = makeCreate<WishlistInput, WishlistItem>({ resource: "wishlist", wrapKey: "item", queryKey: entityKeys.wishlist });
 export const useUpdateWishlist = makeUpdate<WishlistInput, WishlistItem>({ resource: "wishlist", wrapKey: "item", queryKey: entityKeys.wishlist });
@@ -1563,7 +1584,14 @@ export function useDeleteRecipe() {
 }
 
 // Trip
-export type TripInput = { name: string; description?: string | null; start_date?: string | null; end_date?: string | null; tag_ids?: number[] };
+export type TripInput = {
+  name: string;
+  bag?: string | null;
+  locations?: string | null;
+  notes?: string | null;
+  is_searchable?: boolean;
+  tag_ids?: number[];
+};
 export const useTrip = makeOne<Trip>({ resource: "trips", wrapKey: "trip", queryKey: entityKeys.trips });
 export const useCreateTrip = makeCreate<TripInput, Trip>({ resource: "trips", wrapKey: "trip", queryKey: entityKeys.trips });
 export const useUpdateTrip = makeUpdate<TripInput, Trip>({ resource: "trips", wrapKey: "trip", queryKey: entityKeys.trips });

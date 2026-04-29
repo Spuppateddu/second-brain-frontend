@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
+import EntityModalsProvider from "@/components/SecondBrain/EntityModalsProvider";
 
 export default function AppLayout({
   children,
@@ -8,7 +9,9 @@ export default function AppLayout({
 }) {
   return (
     <AuthGate>
-      <AppShell>{children}</AppShell>
+      <EntityModalsProvider>
+        <AppShell>{children}</AppShell>
+      </EntityModalsProvider>
     </AuthGate>
   );
 }

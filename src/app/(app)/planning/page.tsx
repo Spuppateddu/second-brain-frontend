@@ -4,14 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   HiCalendar,
-  HiCheck,
   HiChevronDown,
   HiChevronLeft,
   HiChevronRight,
   HiPlus,
   HiQueueList,
   HiStar,
-  HiViewColumns,
 } from "react-icons/hi2";
 
 import { TaskModal } from "@/components/calendar/TaskModal";
@@ -19,7 +17,7 @@ import { api } from "@/lib/api";
 import { heavyKeys, usePlanning } from "@/lib/queries/heavy";
 import type { PlanningPeriod, PlanningTaskLite } from "@/types/heavy";
 
-type ViewMode = "kanban" | "completed" | "list";
+type StatusFilter = "all" | "incomplete" | "completed";
 type PeriodMode = "month" | "year";
 
 function shiftMonth(month: string, delta: number): string {
@@ -51,6 +49,25 @@ function originLabel(task: PlanningTaskLite): string | null {
     return `From ${carriedForward}`;
   }
   return `From ${task.origin_year}`;
+}
+
+function formatCalendarTaskDates(
+  linked: { task_date?: string }[],
+): string | null {
+  const dates = linked
+    .map((t) => t.task_date)
+    .filter((d): d is string => !!d)
+    .sort();
+  if (dates.length === 0) return null;
+  return dates
+    .map((d) => {
+      const [y, m, day] = d.split("-").map(Number);
+      return new Date(y, m - 1, day).toLocaleString("en", {
+        month: "short",
+        day: "numeric",
+      });
+    })
+    .join(", ");
 }
 
 function getContrastColor(hex: string): string {
@@ -91,57 +108,36 @@ function ProgressBar({ value }: { value: number }) {
   );
 }
 
-function ViewToggle({
+function StatusFilterToggle({
   value,
   onChange,
 }: {
-  value: ViewMode;
-  onChange: (v: ViewMode) => void;
+  value: StatusFilter;
+  onChange: (v: StatusFilter) => void;
 }) {
-  const items: {
-    key: ViewMode;
-    icon: typeof HiViewColumns;
-    title: string;
-    activeBg: string;
-  }[] = [
-    {
-      key: "kanban",
-      icon: HiViewColumns,
-      title: "Kanban view",
-      activeBg: "bg-blue-500 text-white",
-    },
-    {
-      key: "completed",
-      icon: HiCheck,
-      title: "Completed only",
-      activeBg: "bg-blue-500 text-white",
-    },
-    {
-      key: "list",
-      icon: HiQueueList,
-      title: "List view",
-      activeBg: "bg-orange-500 text-white",
-    },
+  const items: { key: StatusFilter; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "incomplete", label: "Not completed" },
+    { key: "completed", label: "Completed" },
   ];
   return (
     <div className="flex items-center overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
-      {items.map(({ key, icon: Icon, title, activeBg }, i) => {
+      {items.map(({ key, label }, i) => {
         const active = value === key;
         return (
           <button
             key={key}
             type="button"
-            title={title}
             onClick={() => onChange(key)}
             className={[
-              "p-1.5 transition-colors",
+              "px-3 py-1.5 text-sm transition-colors",
               i > 0 ? "border-l border-zinc-200 dark:border-zinc-700" : "",
               active
-                ? activeBg
-                : "bg-white text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700",
+                ? "bg-blue-500 text-white"
+                : "bg-white text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
             ].join(" ")}
           >
-            <Icon className="h-4 w-4" />
+            {label}
           </button>
         );
       })}
@@ -202,7 +198,8 @@ function TaskRow({
           {linkedCalendarTasks.length > 0 && (
             <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
               <HiCalendar className="h-3 w-3" />
-              {linkedCalendarTasks.length}
+              {formatCalendarTaskDates(linkedCalendarTasks) ??
+                linkedCalendarTasks.length}
             </span>
           )}
         </div>
@@ -260,7 +257,7 @@ function StarGroup({
         />
       </button>
       {open && (
-        <div className="flex flex-col gap-2 p-2">
+        <div className="grid grid-cols-1 gap-2 p-2 sm:grid-cols-2">
           {tasks.map((t) => (
             <TaskRow key={t.id} task={t} onOpen={onOpen} />
           ))}
@@ -284,7 +281,7 @@ function PeriodCard({
   onNext: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [view, setView] = useState<ViewMode>("list");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("incomplete");
   const [taskSectionOpen, setTaskSectionOpen] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTask, setModalTask] = useState<PlanningTaskLite | null>(null);
@@ -302,9 +299,10 @@ function PeriodCard({
   );
 
   const visibleTasks = useMemo(() => {
-    if (view === "completed") return tasks.filter((t) => t.is_done);
+    if (statusFilter === "completed") return tasks.filter((t) => t.is_done);
+    if (statusFilter === "incomplete") return tasks.filter((t) => !t.is_done);
     return tasks;
-  }, [tasks, view]);
+  }, [tasks, statusFilter]);
 
   const groups = useMemo(() => {
     const buckets = new Map<number, PlanningTaskLite[]>();
@@ -381,7 +379,7 @@ function PeriodCard({
           >
             <HiChevronRight className="h-4 w-4" />
           </button>
-          <ViewToggle value={view} onChange={setView} />
+          <StatusFilterToggle value={statusFilter} onChange={setStatusFilter} />
         </div>
 
         <div className="flex items-center gap-2">
