@@ -667,6 +667,7 @@ export type ReviewInput = {
   rating: number;
   content?: string | null;
   completion_date?: string | null;
+  media_task_id?: number | null;
 };
 
 export function useCreateReview() {
@@ -675,9 +676,12 @@ export function useCreateReview() {
     mutationFn: async (payload: ReviewInput) => {
       await api.post("/reviews", payload);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: entityKeys.reviews });
       queryClient.invalidateQueries({ queryKey: entityKeys.reviewCategories });
+      if (variables.media_task_id != null) {
+        queryClient.invalidateQueries({ queryKey: entityKeys.media });
+      }
     },
   });
 }

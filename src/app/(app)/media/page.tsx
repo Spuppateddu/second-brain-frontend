@@ -11,6 +11,7 @@ import {
   HiXMark,
 } from "react-icons/hi2";
 
+import { MediaReviewModal } from "@/components/media/MediaReviewModal";
 import { MediaTaskModal } from "@/components/media/MediaTaskModal";
 import { Input } from "@/components/UI/Input";
 import {
@@ -35,6 +36,8 @@ export default function MediaPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MediaTask | null>(null);
   const [defaultIsWatchlist, setDefaultIsWatchlist] = useState(false);
+
+  const [reviewTask, setReviewTask] = useState<MediaTask | null>(null);
 
   const create = useCreateMediaTask();
   const update = useUpdateMediaTask();
@@ -83,9 +86,7 @@ export default function MediaPage() {
       markUndone.mutate(task.id);
       return;
     }
-    alert(
-      "Marking media as done requires writing a review. The review modal isn't built yet — open the item and edit it instead, or add the review feature.",
-    );
+    setReviewTask(task);
   };
 
   return (
@@ -191,6 +192,13 @@ export default function MediaPage() {
         }
         isSaving={create.isPending || update.isPending}
         isDeleting={remove.isPending}
+      />
+
+      <MediaReviewModal
+        open={reviewTask !== null}
+        onClose={() => setReviewTask(null)}
+        task={reviewTask}
+        reviewCategories={reviewCategories}
       />
     </div>
   );
