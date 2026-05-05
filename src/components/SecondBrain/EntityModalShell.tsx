@@ -38,8 +38,8 @@ export default function EntityModalShell({
 
   if (!isOpen) return null;
 
-  // Mobile: fullscreen. Desktop: centered at 70% of viewport.
-  const desktopMaxWidth = size === "xl" ? "md:max-w-6xl" : "md:max-w-5xl";
+  // Mobile: fullscreen. Desktop: centered, ~85% wide × 70% tall.
+  const desktopMaxWidth = size === "xl" ? "md:max-w-7xl" : "md:max-w-6xl";
 
   return (
     <div
@@ -50,7 +50,7 @@ export default function EntityModalShell({
         className={[
           "flex flex-col overflow-hidden",
           "h-full w-full bg-white dark:bg-zinc-950",
-          "md:h-[70vh] md:w-[70vw] md:rounded-xl md:border md:border-zinc-200 md:shadow-2xl md:dark:border-zinc-800",
+          "md:h-[70vh] md:w-[85vw] md:rounded-xl md:border md:border-zinc-200 md:shadow-2xl md:dark:border-zinc-800",
           desktopMaxWidth,
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
