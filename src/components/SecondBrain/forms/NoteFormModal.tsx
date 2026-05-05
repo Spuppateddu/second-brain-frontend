@@ -108,14 +108,12 @@ function NoteFormModalInner({
         </>
       }
     >
-      <div className="flex h-full flex-col gap-4">
-        <div className="min-h-[260px] flex-1">
-          <RichTextEditor
-            value={content}
-            onChange={setContent}
-            placeholder="Write your note content here..."
-          />
-        </div>
+      <div className="flex flex-col gap-4">
+        <RichTextEditor
+          value={content}
+          onChange={setContent}
+          placeholder="Write your note content here..."
+        />
         <InlineTagPicker
           selectedTagIds={tagIds}
           onChange={setTagIds}
