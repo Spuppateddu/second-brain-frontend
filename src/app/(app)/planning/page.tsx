@@ -3,9 +3,12 @@
 import { useMemo, useState } from "react";
 import {
   HiCalendar,
+  HiCheck,
   HiChevronDown,
   HiChevronLeft,
   HiChevronRight,
+  HiLockClosed,
+  HiNoSymbol,
   HiPlus,
   HiQueueList,
   HiStar,
@@ -154,29 +157,46 @@ function TaskRow({
   const isWork = !!task.is_work;
   const isDone = !!task.is_done;
   const isCancelled = !!task.is_cancelled;
+  const isBlocked = !!task.is_blocked;
   const stars = task.stars ?? 0;
   const carry = originLabel(task);
   const linkedCalendarTasks =
     task.linkedCalendarTasks ?? task.linked_calendar_tasks ?? [];
   const categories = task.taskCategories ?? task.task_categories ?? [];
 
-  const borderColor = isWork ? "border-l-orange-400" : "border-l-cyan-400";
-  const bgColor = isWork
-    ? "bg-orange-50/40 dark:bg-orange-500/5"
-    : "bg-white dark:bg-zinc-900";
+  const borderColor = isBlocked
+    ? "border-l-zinc-400"
+    : isWork
+      ? "border-l-orange-400"
+      : "border-l-cyan-400";
+  const bgColor = isBlocked
+    ? "bg-zinc-100/70 dark:bg-zinc-900/40"
+    : isWork
+      ? "bg-orange-50/40 dark:bg-orange-500/5"
+      : "bg-white dark:bg-zinc-900";
 
   const titleStyle = isCancelled
     ? "line-through text-zinc-400"
-    : isDone
-      ? "text-zinc-400 dark:text-zinc-500"
-      : "text-zinc-800 dark:text-zinc-100";
+    : isBlocked
+      ? "italic text-zinc-400 dark:text-zinc-500"
+      : isDone
+        ? "line-through text-zinc-400 dark:text-zinc-500"
+        : "text-zinc-800 dark:text-zinc-100";
+
+  const interactive = !isBlocked;
 
   return (
     <button
       type="button"
-      onClick={() => onOpen(task)}
+      onClick={() => interactive && onOpen(task)}
+      disabled={!interactive}
+      aria-disabled={!interactive}
+      title={isBlocked ? "Closed — carried forward to another period" : undefined}
       className={[
-        "group flex w-full items-start gap-3 rounded-md border border-zinc-200 border-l-4 p-3 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60",
+        "group flex w-full items-start gap-3 rounded-md border border-zinc-200 border-l-4 p-3 text-left transition-colors dark:border-zinc-800",
+        interactive
+          ? "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+          : "cursor-not-allowed",
         borderColor,
         bgColor,
       ].join(" ")}
@@ -189,6 +209,24 @@ function TaskRow({
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {isBlocked && (
+            <span className="inline-flex items-center gap-1 rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
+              <HiLockClosed className="h-3 w-3" />
+              Closed
+            </span>
+          )}
+          {!isBlocked && isDone && (
+            <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+              <HiCheck className="h-3 w-3" />
+              Completed
+            </span>
+          )}
+          {!isBlocked && !isDone && isCancelled && (
+            <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+              <HiNoSymbol className="h-3 w-3" />
+              Cancelled
+            </span>
+          )}
           {carry && (
             <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
               {carry}

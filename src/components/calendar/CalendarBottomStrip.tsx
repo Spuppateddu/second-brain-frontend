@@ -37,6 +37,7 @@ import {
   useToggleYoutubeWatched,
   useTwitchLive,
   useUpdatePlanningTask,
+  useUpdateYoutubeProgress,
   useYoutubeWatchlist,
 } from "@/lib/queries/heavy";
 import type {
@@ -412,12 +413,67 @@ function formatPublishedDate(publishedAt: string): string {
   });
 }
 
+function formatProgressSeconds(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function parseProgressInput(input: string): number | null {
+  const parts = input.split(":").map((p) => parseInt(p, 10));
+  if (parts.some(Number.isNaN)) return null;
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 1) return parts[0];
+  return null;
+}
+
+function buildResumeUrl(videoUrl: string, progressSeconds: number): string {
+  try {
+    const u = new URL(videoUrl);
+    u.searchParams.set("t", `${progressSeconds}s`);
+    return u.toString();
+  } catch {
+    const sep = videoUrl.includes("?") ? "&" : "?";
+    return `${videoUrl}${sep}t=${progressSeconds}s`;
+  }
+}
+
 function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
   const toggleWatched = useToggleYoutubeWatched();
   const toggleWatchlist = useToggleYoutubeVideoWatchlist();
   const addByUrl = useAddYoutubeByUrl();
+  const updateProgress = useUpdateYoutubeProgress();
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+
+  function startEditing(video: YoutubeVideo) {
+    setEditingId(video.id);
+    setEditingValue(
+      video.progress_seconds
+        ? formatProgressSeconds(video.progress_seconds)
+        : "",
+    );
+  }
+
+  function commitProgress(video: YoutubeVideo) {
+    const trimmed = editingValue.trim();
+    const parsed = trimmed === "" ? null : parseProgressInput(trimmed);
+    if (trimmed !== "" && parsed === null) {
+      setEditingId(null);
+      return;
+    }
+    if (parsed !== (video.progress_seconds ?? null)) {
+      updateProgress.mutate({ videoId: video.id, progressSeconds: parsed });
+    }
+    setEditingId(null);
+  }
 
   async function handleAdd() {
     const trimmed = url.trim();
@@ -548,7 +604,40 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                           <span className="mx-2 hidden sm:inline">•</span>
                           <span className="flex items-center">
                             <HiClock className="mr-1 h-4 w-4" />
-                            {duration}
+                            {editingId === video.id ? (
+                              <input
+                                type="text"
+                                value={editingValue}
+                                onChange={(e) =>
+                                  setEditingValue(e.target.value)
+                                }
+                                onBlur={() => commitProgress(video)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    commitProgress(video);
+                                  } else if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setEditingId(null);
+                                  }
+                                }}
+                                placeholder="mm:ss"
+                                autoFocus
+                                className="w-24 rounded border border-red-300 bg-white px-1.5 py-0.5 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-gray-800 dark:text-gray-100"
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => startEditing(video)}
+                                title="Click to set where you left off"
+                                className="cursor-pointer hover:text-red-600 dark:hover:text-red-400"
+                              >
+                                {video.progress_seconds
+                                  ? `${formatProgressSeconds(video.progress_seconds)} / `
+                                  : ""}
+                                {duration}
+                              </button>
+                            )}
                           </span>
                         </div>
                       )}
@@ -573,13 +662,15 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() =>
-                        window.open(
-                          video.video_url,
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      }
+                      onClick={() => {
+                        const target = video.progress_seconds
+                          ? buildResumeUrl(
+                              video.video_url,
+                              video.progress_seconds,
+                            )
+                          : video.video_url;
+                        window.open(target, "_blank", "noopener,noreferrer");
+                      }}
                       className="inline-flex items-center justify-center gap-1 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                     >
                       <HiArrowTopRightOnSquare className="h-4 w-4" />

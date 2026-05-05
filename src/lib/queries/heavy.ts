@@ -1145,3 +1145,25 @@ export function useAddYoutubeByUrl() {
     },
   });
 }
+
+export function useUpdateYoutubeProgress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      videoId,
+      progressSeconds,
+    }: {
+      videoId: number;
+      progressSeconds: number | null;
+    }) => {
+      const { data } = await api.patch<{ progress_seconds: number | null }>(
+        `/youtube-videos/${videoId}/progress`,
+        { progress_seconds: progressSeconds },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeWatchlist });
+    },
+  });
+}

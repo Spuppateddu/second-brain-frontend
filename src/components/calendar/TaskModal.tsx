@@ -7,6 +7,7 @@ import {
   HiCalendarDays,
   HiCheck,
   HiLink,
+  HiLockClosed,
   HiMagnifyingGlass,
   HiNoSymbol,
   HiPlus,
@@ -274,6 +275,8 @@ function TaskModalForm({
         ? (outOfPlanNote?.is_cancelled ?? false)
         : (task?.is_cancelled ?? false),
   );
+  const isBlocked = isPlanning ? !!planningTask?.is_blocked : false;
+  const formLocked = isDone || isBlocked;
   const [stars, setStars] = useState<number | null>(
     isPlanning
       ? (planningTask?.stars ?? null)
@@ -621,17 +624,19 @@ function TaskModalForm({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                disabled={formLocked}
                 placeholder="Task title…"
-                className="mt-1 w-full bg-transparent text-xl font-semibold text-zinc-900 placeholder:text-zinc-400 outline-none"
+                className="mt-1 w-full bg-transparent text-xl font-semibold text-zinc-900 placeholder:text-zinc-400 outline-none disabled:cursor-not-allowed disabled:opacity-70"
               />
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsWork((p) => !p)}
+                disabled={formLocked}
                 title={isWork ? "Work" : "Personal"}
                 className={[
-                  "rounded-full p-2 transition-colors",
+                  "rounded-full p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   isWork
                     ? "bg-orange-200 text-orange-700 hover:bg-orange-300"
                     : "bg-white text-sky-700 hover:bg-zinc-100",
@@ -665,6 +670,27 @@ function TaskModalForm({
 
         {/* Body (scrollable) */}
         <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-5">
+          {(isBlocked || isDone) && (
+            <div
+              className={[
+                "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
+                isBlocked
+                  ? "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                  : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200",
+              ].join(" ")}
+            >
+              {isBlocked ? (
+                <HiLockClosed className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              ) : (
+                <HiCheck className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              )}
+              <span>
+                {isBlocked
+                  ? "This task is closed because the period was carried forward. It cannot be edited."
+                  : "This task is completed. Mark it incomplete to edit."}
+              </span>
+            </div>
+          )}
           {/* Status bar + categories */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -672,12 +698,14 @@ function TaskModalForm({
                 type="button"
                 onClick={handleToggleDone}
                 disabled={
-                  submitting || (!isDone && hasPendingSubtasks)
+                  submitting || (!isDone && hasPendingSubtasks) || isBlocked
                 }
                 title={
-                  !isDone && hasPendingSubtasks
-                    ? `Complete all subtasks first (${pendingSubtasksCount} left)`
-                    : undefined
+                  isBlocked
+                    ? "Closed tasks cannot be reopened from here"
+                    : !isDone && hasPendingSubtasks
+                      ? `Complete all subtasks first (${pendingSubtasksCount} left)`
+                      : undefined
                 }
                 className={[
                   "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
@@ -692,8 +720,9 @@ function TaskModalForm({
               <button
                 type="button"
                 onClick={() => setIsCancelled((p) => !p)}
+                disabled={formLocked}
                 className={[
-                  "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                  "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   isCancelled
                     ? "border-red-400 bg-red-50 text-red-700"
                     : "border-zinc-300 bg-zinc-50 text-zinc-600",
@@ -722,8 +751,9 @@ function TaskModalForm({
                           prev.filter((id) => id !== c.id),
                         )
                       }
+                      disabled={formLocked}
                       title="Remove category"
-                      className="rounded-full hover:bg-black/10 p-0.5"
+                      className="rounded-full p-0.5 hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <HiXMark className="h-3 w-3" />
                     </button>
@@ -732,8 +762,9 @@ function TaskModalForm({
                 <button
                   type="button"
                   onClick={() => setShowCategoryPicker((p) => !p)}
+                  disabled={formLocked}
                   title="Add category"
-                  className="rounded-full border border-zinc-300 p-1 text-zinc-500 hover:bg-zinc-100"
+                  className="rounded-full border border-zinc-300 p-1 text-zinc-500 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <HiPlus className="h-4 w-4" />
                 </button>
@@ -789,9 +820,10 @@ function TaskModalForm({
             <textarea
               value={description ?? ""}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={formLocked}
               placeholder="Add a description…"
               rows={3}
-              className="w-full resize-y rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full resize-y rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
             />
           </section>
 
@@ -849,7 +881,8 @@ function TaskModalForm({
                         key={n}
                         type="button"
                         onClick={() => setStars(stars === n ? null : n)}
-                        className="p-1 transition-transform hover:scale-110"
+                        disabled={formLocked}
+                        className="p-1 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
                         title={`${n} star${n > 1 ? "s" : ""}`}
                       >
                         <HiStar
@@ -868,7 +901,8 @@ function TaskModalForm({
                   <button
                     type="button"
                     onClick={() => setStars(null)}
-                    className="text-xs text-zinc-500 hover:text-danger"
+                    disabled={formLocked}
+                    className="text-xs text-zinc-500 hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Clear
                   </button>
@@ -887,8 +921,9 @@ function TaskModalForm({
                     type="date"
                     value={taskDate}
                     onChange={(e) => setTaskDate(e.target.value)}
+                    disabled={formLocked}
                     required
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
                 <div>
@@ -897,7 +932,8 @@ function TaskModalForm({
                     type="time"
                     value={startTime ?? ""}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+                    disabled={formLocked}
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
                 <div>
@@ -906,7 +942,8 @@ function TaskModalForm({
                     type="time"
                     value={endTime ?? ""}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+                    disabled={formLocked}
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
               </div>
@@ -963,7 +1000,8 @@ function TaskModalForm({
                 !title.trim() ||
                 (mode === "calendar" && !taskDate) ||
                 (mode === "planning" && !planningPeriod) ||
-                submitting
+                submitting ||
+                formLocked
               }
             >
               {editing ? "Save" : "Create"}
