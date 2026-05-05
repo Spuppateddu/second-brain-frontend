@@ -38,19 +38,19 @@ export default function EntityModalShell({
 
   if (!isOpen) return null;
 
-  // Mobile: fullscreen. Desktop: centered, capped width.
-  const desktopMaxWidth = size === "xl" ? "md:max-w-3xl" : "md:max-w-2xl";
+  // Mobile: fullscreen. Desktop: centered at 70% of viewport.
+  const desktopMaxWidth = size === "xl" ? "md:max-w-6xl" : "md:max-w-5xl";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-zinc-950/40 backdrop-blur-sm md:items-start md:p-4"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-zinc-950/40 backdrop-blur-sm md:items-center md:p-4"
       onClick={() => closeOnBackdrop && onClose()}
     >
       <div
         className={[
           "flex flex-col overflow-hidden",
           "h-full w-full bg-white dark:bg-zinc-950",
-          "md:mt-12 md:h-auto md:max-h-[calc(100vh-6rem)] md:rounded-xl md:border md:border-zinc-200 md:shadow-2xl md:dark:border-zinc-800",
+          "md:h-[70vh] md:w-[70vw] md:rounded-xl md:border md:border-zinc-200 md:shadow-2xl md:dark:border-zinc-800",
           desktopMaxWidth,
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
