@@ -137,29 +137,33 @@ export default function InlineTagPicker({
         Tags
       </span>
 
-      {selected.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          {selected.map((tag) => (
-            <span
-              key={tag.id}
-              className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium text-white"
-              style={{ backgroundColor: tag.color }}
+      <div
+        ref={inputWrapperRef}
+        className="relative flex flex-wrap items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800"
+        onClick={(e) => {
+          // Clicking blank space inside the box should focus the search input
+          if (e.target === e.currentTarget) {
+            (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus();
+          }
+        }}
+      >
+        {selected.map((tag) => (
+          <span
+            key={tag.id}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+            style={{ backgroundColor: tag.color }}
+          >
+            {tag.name}
+            <button
+              type="button"
+              onClick={() => remove(tag.id)}
+              className="rounded-full p-0.5 hover:bg-white/20"
+              aria-label="Remove tag"
             >
-              {tag.name}
-              <button
-                type="button"
-                onClick={() => remove(tag.id)}
-                className="rounded-full p-0.5 hover:bg-white/20"
-                aria-label="Remove tag"
-              >
-                <HiXMark className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div ref={inputWrapperRef} className="relative">
+              <HiXMark className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
         <input
           type="text"
           value={query}
@@ -172,10 +176,18 @@ export default function InlineTagPicker({
             if (e.key === "Enter") {
               e.preventDefault();
               if (showCreateOption) void createAndSelect();
+            } else if (
+              e.key === "Backspace" &&
+              query === "" &&
+              selectedTagIds.length > 0
+            ) {
+              remove(selectedTagIds[selectedTagIds.length - 1]);
             }
           }}
-          placeholder="Search or create tags..."
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          placeholder={
+            selected.length > 0 ? "Add another tag..." : "Search or create tags..."
+          }
+          className="min-w-[8rem] flex-1 bg-transparent px-1 py-0.5 outline-none dark:text-zinc-100"
         />
       </div>
 
