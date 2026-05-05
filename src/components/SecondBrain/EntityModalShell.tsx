@@ -58,7 +58,7 @@ export default function EntityModalShell({
         <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
           {titleContent}
         </div>
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 pb-4">{children}</div>
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
           {footer}
         </div>

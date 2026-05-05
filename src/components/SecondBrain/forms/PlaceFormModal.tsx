@@ -97,7 +97,7 @@ function PlaceFormModalInner({
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4">
         <div>
           <FormFieldLabel>URL / Maps link</FormFieldLabel>
           <input

@@ -107,7 +107,7 @@ function MegaFileFormModalInner({
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4">
         <div>
           <FormFieldLabel>Mega link</FormFieldLabel>
           <input

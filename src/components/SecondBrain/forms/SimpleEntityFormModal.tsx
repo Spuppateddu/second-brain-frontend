@@ -134,7 +134,7 @@ function SimpleEntityFormModalInner<
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4">
         <div>
           <FormFieldLabel>Description</FormFieldLabel>
           <RichTextEditor

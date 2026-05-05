@@ -128,7 +128,7 @@ function BookmarkFormModalInner({
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4">
         <div>
           <FormFieldLabel>URL</FormFieldLabel>
           <div className="flex gap-2">
