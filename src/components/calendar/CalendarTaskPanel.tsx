@@ -23,7 +23,7 @@ import { WaterTracker } from "@/components/calendar/WaterTracker";
 import { useCalendarDay } from "@/lib/queries/calendar";
 import type { CalendarTask } from "@/types/calendar";
 
-type StatusFilter = "all" | "not_completed" | "cancelled";
+type StatusFilter = "all" | "not_completed" | "completed" | "cancelled";
 type TypeFilter = "all" | "work" | "personal";
 
 function fullDateLabel(date: string): string {
@@ -188,6 +188,7 @@ function StatusFilterGroup({
   const items: { key: StatusFilter; icon: typeof HiViewColumns; title: string; activeBg: string }[] = [
     { key: "all", icon: HiViewColumns, title: "All", activeBg: "bg-blue-500 text-white" },
     { key: "not_completed", icon: HiQueueList, title: "Not completed", activeBg: "bg-blue-500 text-white" },
+    { key: "completed", icon: HiCheck, title: "Completed", activeBg: "bg-green-500 text-white" },
     { key: "cancelled", icon: HiNoSymbol, title: "Cancelled", activeBg: "bg-red-500 text-white" },
   ];
   return (
@@ -297,6 +298,8 @@ export function CalendarTaskPanel({
   const filtered = useMemo(() => {
     return allTasks.filter((t) => {
       if (statusFilter === "not_completed" && (t.is_done || t.is_cancelled))
+        return false;
+      if (statusFilter === "completed" && (!t.is_done || t.is_cancelled))
         return false;
       if (statusFilter === "cancelled" && !t.is_cancelled) return false;
       if (typeFilter === "work" && !t.is_work) return false;

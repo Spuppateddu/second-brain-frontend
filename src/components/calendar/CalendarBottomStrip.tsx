@@ -17,6 +17,7 @@ import {
   HiPlay,
   HiPlus,
   HiShoppingCart,
+  HiTrash,
   HiVideoCamera,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
@@ -32,6 +33,7 @@ import {
   useCopyPlanningToCalendar,
   usePlanningUnlinked,
   useRssNews,
+  useToggleYoutubeVideoWatchlist,
   useToggleYoutubeWatched,
   useTwitchLive,
   useUpdatePlanningTask,
@@ -301,7 +303,17 @@ function MediaSection({ items }: { items: MediaTask[] }) {
 }
 
 function formatLocaleDate(date: string): string {
-  return new Date(`${date}T00:00:00`).toLocaleDateString("en-GB");
+  const justDate = date.slice(0, 10);
+  return new Date(`${justDate}T00:00:00`).toLocaleDateString("en-GB");
+}
+
+function planningTypeLabel(
+  type: { slug?: string; name: string } | null | undefined,
+): string {
+  if (!type) return "";
+  if (type.slug === "month") return "Monthly";
+  if (type.slug === "year") return "Yearly";
+  return type.name;
 }
 
 function PlanningSection({
@@ -358,7 +370,7 @@ function PlanningSection({
           </div>
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {task.planning_type?.name ?? ""}
+              {planningTypeLabel(task.planning_type)}
               {task.start_date ? ` · ${formatLocaleDate(task.start_date)}` : ""}
             </p>
             <div className="ml-auto flex gap-2">
@@ -402,6 +414,7 @@ function formatPublishedDate(publishedAt: string): string {
 
 function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
   const toggleWatched = useToggleYoutubeWatched();
+  const toggleWatchlist = useToggleYoutubeVideoWatchlist();
   const addByUrl = useAddYoutubeByUrl();
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -541,19 +554,22 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-stretch space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
+                  <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row sm:items-center sm:gap-2">
                     <button
                       type="button"
                       onClick={() => toggleWatched.mutate(video.id)}
                       disabled={toggleWatched.isPending}
                       className={[
-                        "rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50",
+                        "inline-flex items-center justify-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50",
                         video.is_watched
-                          ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500",
+                          ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
+                          : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600",
                       ].join(" ")}
                     >
-                      {video.is_watched ? "Watched" : "Mark Watched"}
+                      <HiCheck className="h-4 w-4" />
+                      <span className="truncate">
+                        {video.is_watched ? "Watched" : "Mark Watched"}
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -564,10 +580,21 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                           "noopener,noreferrer",
                         )
                       }
-                      className="inline-flex items-center gap-1 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                      className="inline-flex items-center justify-center gap-1 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                     >
                       <HiArrowTopRightOnSquare className="h-4 w-4" />
-                      Watch
+                      <span className="truncate">Watch</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleWatchlist.mutate(video.id)}
+                      disabled={toggleWatchlist.isPending}
+                      title="Remove from watchlist"
+                      aria-label="Remove from watchlist"
+                      className="inline-flex items-center justify-center gap-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <HiTrash className="h-4 w-4" />
+                      <span className="truncate">Remove</span>
                     </button>
                   </div>
                 </div>

@@ -54,6 +54,16 @@ export function FastNoteModal({ open, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isDirty, content]);
 
+  useEffect(() => {
+    if (!open || !isDirty) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [open, isDirty]);
+
   function attemptClose() {
     if (saving) return;
     if (isDirty) {
@@ -78,33 +88,21 @@ export function FastNoteModal({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-zinc-950/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-zinc-950/40 p-2 backdrop-blur-sm sm:items-start sm:p-4"
       onClick={attemptClose}
     >
       <div
-        className="mt-20 flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl sm:mt-10 sm:h-[85vh] sm:max-w-6xl dark:border-zinc-800 dark:bg-zinc-950"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold">Fast Note</h2>
-            {isDirty && (
-              <span className="text-xs text-orange-500">
-                (unsaved changes)
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={attemptClose}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+        <div className="flex items-center gap-2 border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+          <h2 className="text-base font-semibold">Fast Note</h2>
+          {isDirty && (
+            <span className="text-xs text-orange-500">(unsaved changes)</span>
+          )}
         </div>
 
-        <div className="p-5">
+        <div className="flex flex-1 flex-col p-5">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-500" />
@@ -116,7 +114,7 @@ export function FastNoteModal({ open, onClose }: Props) {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Jot down a thought… (⌘/Ctrl + Enter to save)"
               rows={12}
-              className="w-full resize-y rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm leading-relaxed text-zinc-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-full w-full flex-1 resize-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm leading-relaxed text-zinc-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
             />
           )}
           {updateFastNote.isError && (
