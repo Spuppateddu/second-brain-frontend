@@ -164,22 +164,34 @@ function DayRow({
           </button>
         )}
       </div>
-      {day.category_counts.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {day.category_counts.slice(0, 4).map((c) => (
-            <span
-              key={c.category_id}
-              className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium"
-              style={{
-                backgroundColor: c.category_color,
-                color: getContrastColor(c.category_color),
-              }}
-            >
-              {c.count}
-            </span>
-          ))}
-        </div>
-      )}
+      {(() => {
+        const untagged = day.personal_pending_notes + day.auto_pending_notes;
+        if (day.category_counts.length === 0 && untagged === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {day.category_counts.slice(0, 4).map((c) => (
+              <span
+                key={c.category_id}
+                className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium"
+                style={{
+                  backgroundColor: c.category_color,
+                  color: getContrastColor(c.category_color),
+                }}
+              >
+                {c.count}
+              </span>
+            ))}
+            {untagged > 0 && (
+              <span
+                title="Tasks without a tag"
+                className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-200"
+              >
+                {untagged}
+              </span>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
