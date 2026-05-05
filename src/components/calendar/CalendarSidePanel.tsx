@@ -130,18 +130,6 @@ function DayRow({
             {dayLabel(day.date)}
           </span>
         )}
-        {hasBirthday && (
-          <HiCake
-            className="h-4 w-4 flex-shrink-0 text-pink-500"
-            title="Birthday"
-          />
-        )}
-        {hasEvent && (
-          <HiCalendarDays
-            className="h-4 w-4 flex-shrink-0 text-amber-500"
-            title="Event"
-          />
-        )}
         {onOpenInSplit && (
           <button
             type="button"
@@ -166,9 +154,15 @@ function DayRow({
       </div>
       {(() => {
         const untagged = day.personal_pending_notes + day.auto_pending_notes;
-        if (day.category_counts.length === 0 && untagged === 0) return null;
+        if (
+          day.category_counts.length === 0 &&
+          untagged === 0 &&
+          !hasBirthday &&
+          !hasEvent
+        )
+          return null;
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {day.category_counts.slice(0, 4).map((c) => (
               <span
                 key={c.category_id}
@@ -188,6 +182,18 @@ function DayRow({
               >
                 {untagged}
               </span>
+            )}
+            {hasBirthday && (
+              <HiCake
+                className="h-4 w-4 flex-shrink-0 text-pink-500"
+                title="Birthday"
+              />
+            )}
+            {hasEvent && (
+              <HiCalendarDays
+                className="h-4 w-4 flex-shrink-0 text-amber-500"
+                title="Event"
+              />
             )}
           </div>
         );

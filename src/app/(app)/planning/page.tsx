@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   HiCalendar,
@@ -13,8 +12,8 @@ import {
 } from "react-icons/hi2";
 
 import { TaskModal } from "@/components/calendar/TaskModal";
-import { api } from "@/lib/api";
-import { heavyKeys, usePlanning } from "@/lib/queries/heavy";
+import { ClosePlanningPeriodDialog } from "@/components/planning/ClosePlanningPeriodDialog";
+import { usePlanning } from "@/lib/queries/heavy";
 import type { PlanningPeriod, PlanningTaskLite } from "@/types/heavy";
 
 type StatusFilter = "all" | "incomplete" | "completed";
@@ -270,22 +269,23 @@ function StarGroup({
 function PeriodCard({
   period,
   label,
+  mode,
   onPrev,
   onNext,
   navTitle,
 }: {
   period: PlanningPeriod | null;
   label: string;
+  mode: PeriodMode;
   navTitle: string;
   onPrev: () => void;
   onNext: () => void;
 }) {
-  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("incomplete");
   const [taskSectionOpen, setTaskSectionOpen] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTask, setModalTask] = useState<PlanningTaskLite | null>(null);
-  const [closing, setClosing] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
   const tasks = useMemo<PlanningTaskLite[]>(
     () =>
@@ -332,26 +332,7 @@ function PeriodCard({
     setModalTask(null);
   }
 
-  async function handleCloseMonth() {
-    if (!period) return;
-    if (
-      !confirm(
-        "Close this period? Incomplete tasks will be carried forward to the next period.",
-      )
-    )
-      return;
-    setClosing(true);
-    try {
-      await api.post("/planning-periods/close", {
-        start_date: period.start_date,
-        end_date: period.end_date,
-        planning_type_id: period.planning_type_id,
-      });
-      queryClient.invalidateQueries({ queryKey: heavyKeys.planning });
-    } finally {
-      setClosing(false);
-    }
-  }
+  const closeButtonLabel = mode === "month" ? "Close Month" : "Close Year";
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
@@ -395,11 +376,10 @@ function PeriodCard({
           {period?.can_be_closed && (
             <button
               type="button"
-              disabled={closing}
-              onClick={handleCloseMonth}
-              className="rounded-md bg-red-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60"
+              onClick={() => setCloseDialogOpen(true)}
+              className="rounded-md bg-red-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600"
             >
-              {closing ? "Closing…" : "Close Month"}
+              {closeButtonLabel}
             </button>
           )}
         </div>
@@ -462,6 +442,15 @@ function PeriodCard({
             : undefined
         }
       />
+
+      {period && (
+        <ClosePlanningPeriodDialog
+          open={closeDialogOpen}
+          onClose={() => setCloseDialogOpen(false)}
+          period={period}
+          mode={mode}
+        />
+      )}
     </div>
   );
 }
@@ -523,6 +512,7 @@ export default function PlanningPage() {
         <PeriodCard
           period={period ?? null}
           label={cardLabel}
+          mode={periodMode}
           navTitle={navTitle}
           onPrev={() =>
             periodMode === "month"
