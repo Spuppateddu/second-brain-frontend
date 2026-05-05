@@ -67,7 +67,7 @@ function NoteRow({
       type="button"
       onClick={() => onOpen(note)}
       className={[
-        "group flex w-full items-center gap-3 rounded-md border border-zinc-200 border-l-4 p-3 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60",
+        "group flex w-full items-center gap-3 rounded-md border border-zinc-200 border-l-4 px-3 py-1.5 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60",
         borderColor,
         bgColor,
       ].join(" ")}
@@ -97,12 +97,14 @@ function StarGroup({
   stars,
   notes,
   onOpen,
+  defaultOpen,
 }: {
   stars: number;
   notes: OutOfPlanNote[];
   onOpen: (n: OutOfPlanNote) => void;
+  defaultOpen: boolean;
 }) {
-  const [open, setOpen] = useState(stars >= 4);
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
       <button
@@ -128,9 +130,14 @@ function StarGroup({
         />
       </button>
       {open && (
-        <div className="flex flex-col gap-2 p-2">
+        <div className="flex flex-wrap gap-2 p-2">
           {notes.map((n) => (
-            <NoteRow key={n.id} note={n} onOpen={onOpen} />
+            <div
+              key={n.id}
+              className="flex min-w-full sm:min-w-[calc(50%-0.25rem)] flex-1"
+            >
+              <NoteRow note={n} onOpen={onOpen} />
+            </div>
           ))}
         </div>
       )}
@@ -172,6 +179,20 @@ export default function OutOfPlanPage() {
     return Array.from(buckets.entries()).sort(([a], [b]) => a - b);
   }, [filtered]);
 
+  const defaultOpenStars = useMemo(() => {
+    const open = new Set<number>([5, 4, 3]);
+    const counts = new Map<number, number>();
+    for (const [s, list] of groups) counts.set(s, list.length);
+    let total = 0;
+    for (const s of open) total += counts.get(s) ?? 0;
+    for (const s of [2, 1, 0]) {
+      if (total >= 10) break;
+      open.add(s);
+      total += counts.get(s) ?? 0;
+    }
+    return open;
+  }, [groups]);
+
   function openCreate() {
     setModalNote(null);
     setModalOpen(true);
@@ -186,8 +207,8 @@ export default function OutOfPlanPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3">
+      <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6 sm:py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
             Out of Plan Tasks
@@ -250,6 +271,7 @@ export default function OutOfPlanPage() {
                       stars={stars}
                       notes={list}
                       onOpen={openEdit}
+                      defaultOpen={defaultOpenStars.has(stars)}
                     />
                   ))
                 )}

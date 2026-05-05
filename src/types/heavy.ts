@@ -238,6 +238,46 @@ export type YoutubeVideosForDateResponse = {
   search: string;
 };
 
+export type YoutubeChannelDetail = {
+  id: number;
+  channel_id: string;
+  name: string;
+  url: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  is_active: boolean;
+  hide_from_videos_page: boolean;
+  push_notifications_enabled: boolean;
+  last_sync_at: string | null;
+};
+
+export type YoutubeChannelVideo = {
+  id: number;
+  video_id: string;
+  title: string;
+  duration: string | null;
+  duration_seconds: number | null;
+  human_duration: string | null;
+  published_at: string;
+  published_time: string;
+  thumbnail_url: string | null;
+  video_url: string;
+  is_watched: boolean;
+  is_watchlist: boolean;
+};
+
+export type YoutubeChannelShowResponse = {
+  channel: YoutubeChannelDetail;
+  videos: {
+    data: YoutubeChannelVideo[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  filters: { search?: string };
+};
+
 export type TwitchChannelView = {
   id: number;
   url: string;

@@ -464,11 +464,15 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
 
   function commitProgress(video: YoutubeVideo) {
     const trimmed = editingValue.trim();
-    const parsed = trimmed === "" ? null : parseProgressInput(trimmed);
+    let parsed = trimmed === "" ? null : parseProgressInput(trimmed);
     if (trimmed !== "" && parsed === null) {
       setEditingId(null);
       return;
     }
+    if (parsed != null && video.duration_seconds && parsed >= video.duration_seconds) {
+      parsed = video.duration_seconds - 1;
+    }
+    if (parsed != null && parsed < 0) parsed = 0;
     if (parsed !== (video.progress_seconds ?? null)) {
       updateProgress.mutate({ videoId: video.id, progressSeconds: parsed });
     }
@@ -605,26 +609,34 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                           <span className="flex items-center">
                             <HiClock className="mr-1 h-4 w-4" />
                             {editingId === video.id ? (
-                              <input
-                                type="text"
-                                value={editingValue}
-                                onChange={(e) =>
-                                  setEditingValue(e.target.value)
-                                }
-                                onBlur={() => commitProgress(video)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    commitProgress(video);
-                                  } else if (e.key === "Escape") {
-                                    e.preventDefault();
-                                    setEditingId(null);
+                              <>
+                                <input
+                                  type="text"
+                                  value={editingValue}
+                                  onChange={(e) =>
+                                    setEditingValue(e.target.value)
                                   }
-                                }}
-                                placeholder="mm:ss"
-                                autoFocus
-                                className="w-24 rounded border border-red-300 bg-white px-1.5 py-0.5 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-gray-800 dark:text-gray-100"
-                              />
+                                  onBlur={() => commitProgress(video)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      commitProgress(video);
+                                    } else if (e.key === "Escape") {
+                                      e.preventDefault();
+                                      setEditingId(null);
+                                    }
+                                  }}
+                                  placeholder={
+                                    video.duration_seconds &&
+                                    video.duration_seconds >= 3600
+                                      ? "h:mm:ss"
+                                      : "mm:ss"
+                                  }
+                                  autoFocus
+                                  className="w-24 rounded border border-red-300 bg-white px-1.5 py-0.5 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-gray-800 dark:text-gray-100"
+                                />
+                                <span className="ml-1">/ {duration}</span>
+                              </>
                             ) : (
                               <button
                                 type="button"

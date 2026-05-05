@@ -117,9 +117,20 @@ function TabButton({
 
 function ChannelsTab() {
   const [search, setSearch] = useState("");
-  const { data, isLoading, error } = useYoutubeChannels({ search });
-  const channels = data?.channels.data ?? [];
+  const { data, isLoading, error } = useYoutubeChannels();
+  const allChannels = data?.channels.data ?? [];
   const totalChannelsCount = data?.totalChannelsCount ?? 0;
+
+  const channels = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return allChannels;
+    return allChannels.filter((channel) => {
+      return (
+        channel.name.toLowerCase().includes(term) ||
+        (channel.description?.toLowerCase().includes(term) ?? false)
+      );
+    });
+  }, [allChannels, search]);
 
   return (
     <EntityListShell

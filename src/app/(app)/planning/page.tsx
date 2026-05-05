@@ -12,6 +12,7 @@ import {
   HiPlus,
   HiQueueList,
   HiStar,
+  HiViewColumns,
 } from "react-icons/hi2";
 
 import { TaskModal } from "@/components/calendar/TaskModal";
@@ -103,7 +104,7 @@ function ProgressBar({ value }: { value: number }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
       <div
-        className="h-full bg-blue-500 transition-all"
+        className="h-full bg-green-500 transition-all"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -117,29 +118,51 @@ function StatusFilterToggle({
   value: StatusFilter;
   onChange: (v: StatusFilter) => void;
 }) {
-  const items: { key: StatusFilter; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "incomplete", label: "Not completed" },
-    { key: "completed", label: "Completed" },
+  const items: {
+    key: StatusFilter;
+    icon: typeof HiViewColumns;
+    title: string;
+    activeBg: string;
+  }[] = [
+    {
+      key: "all",
+      icon: HiViewColumns,
+      title: "All",
+      activeBg: "bg-blue-500 text-white",
+    },
+    {
+      key: "incomplete",
+      icon: HiQueueList,
+      title: "Not completed",
+      activeBg: "bg-blue-500 text-white",
+    },
+    {
+      key: "completed",
+      icon: HiCheck,
+      title: "Completed",
+      activeBg: "bg-green-500 text-white",
+    },
   ];
   return (
     <div className="flex items-center overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
-      {items.map(({ key, label }, i) => {
+      {items.map(({ key, icon: Icon, title, activeBg }, i) => {
         const active = value === key;
         return (
           <button
             key={key}
             type="button"
+            title={title}
+            aria-label={title}
             onClick={() => onChange(key)}
             className={[
-              "px-3 py-1.5 text-sm transition-colors",
+              "p-1.5 transition-colors",
               i > 0 ? "border-l border-zinc-200 dark:border-zinc-700" : "",
               active
-                ? "bg-blue-500 text-white"
-                : "bg-white text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
+                ? activeBg
+                : "bg-white text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700",
             ].join(" ")}
           >
-            {label}
+            <Icon className="h-4 w-4" />
           </button>
         );
       })}
@@ -193,7 +216,7 @@ function TaskRow({
       aria-disabled={!interactive}
       title={isBlocked ? "Closed — carried forward to another period" : undefined}
       className={[
-        "group flex w-full items-start gap-3 rounded-md border border-zinc-200 border-l-4 p-3 text-left transition-colors dark:border-zinc-800",
+        "group flex w-full items-start gap-3 rounded-md border border-zinc-200 border-l-4 px-3 py-1.5 text-left transition-colors dark:border-zinc-800",
         interactive
           ? "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
           : "cursor-not-allowed",
@@ -263,12 +286,14 @@ function StarGroup({
   stars,
   tasks,
   onOpen,
+  defaultOpen,
 }: {
   stars: number;
   tasks: PlanningTaskLite[];
   onOpen: (t: PlanningTaskLite) => void;
+  defaultOpen: boolean;
 }) {
-  const [open, setOpen] = useState(stars >= 4);
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
       <button
@@ -294,9 +319,14 @@ function StarGroup({
         />
       </button>
       {open && (
-        <div className="grid grid-cols-1 gap-2 p-2 sm:grid-cols-2">
+        <div className="flex flex-wrap gap-2 p-2">
           {tasks.map((t) => (
-            <TaskRow key={t.id} task={t} onOpen={onOpen} />
+            <div
+              key={t.id}
+              className="flex min-w-full sm:min-w-[calc(50%-0.25rem)] flex-1"
+            >
+              <TaskRow task={t} onOpen={onOpen} />
+            </div>
           ))}
         </div>
       )}
@@ -353,6 +383,20 @@ function PeriodCard({
     return Array.from(buckets.entries()).sort(([a], [b]) => b - a);
   }, [visibleTasks]);
 
+  const defaultOpenStars = useMemo(() => {
+    const open = new Set<number>([5, 4, 3]);
+    const counts = new Map<number, number>();
+    for (const [s, list] of groups) counts.set(s, list.length);
+    let total = 0;
+    for (const s of open) total += counts.get(s) ?? 0;
+    for (const s of [2, 1, 0]) {
+      if (total >= 10) break;
+      open.add(s);
+      total += counts.get(s) ?? 0;
+    }
+    return open;
+  }, [groups]);
+
   const total = tasks.length;
   const done = tasks.filter((t) => t.is_done).length;
   const progress = total === 0 ? 0 : Math.round((done / total) * 100);
@@ -373,7 +417,7 @@ function PeriodCard({
   const closeButtonLabel = mode === "month" ? "Close Month" : "Close Year";
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+    <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6 sm:py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -453,10 +497,11 @@ function PeriodCard({
               ) : (
                 groups.map(([stars, list]) => (
                   <StarGroup
-                    key={stars}
+                    key={`${period?.start_date ?? "p"}-${stars}`}
                     stars={stars}
                     tasks={list}
                     onOpen={openEdit}
+                    defaultOpen={defaultOpenStars.has(stars)}
                   />
                 ))
               )}
@@ -498,46 +543,15 @@ export default function PlanningPage() {
   const initialMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
   const initialYear = String(today.getFullYear());
 
-  const [periodMode, setPeriodMode] = useState<PeriodMode>("month");
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
 
   const { data, isLoading, error } = usePlanning({ month, year });
 
-  const period = periodMode === "month" ? data?.monthlyPlanning : data?.yearlyPlanning;
-  const navTitle = periodMode === "month" ? monthLabel(month) : year;
-  const cardLabel = periodMode === "month" ? "Monthly Planning" : "Yearly Planning";
-
   return (
-    <div className="flex flex-col gap-4 p-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Planning Dashboard</h1>
-        <div className="flex items-center overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
-          {(
-            [
-              { key: "month", label: "Monthly" },
-              { key: "year", label: "Yearly" },
-            ] as const
-          ).map(({ key, label }, i) => {
-            const active = periodMode === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setPeriodMode(key)}
-                className={[
-                  "px-3 py-1.5 text-sm transition-colors",
-                  i > 0 ? "border-l border-zinc-200 dark:border-zinc-700" : "",
-                  active
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
-                ].join(" ")}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
       </header>
 
       {isLoading ? (
@@ -547,22 +561,24 @@ export default function PlanningPage() {
           Couldn&rsquo;t load the planning. Try refreshing.
         </p>
       ) : (
-        <PeriodCard
-          period={period ?? null}
-          label={cardLabel}
-          mode={periodMode}
-          navTitle={navTitle}
-          onPrev={() =>
-            periodMode === "month"
-              ? setMonth((m) => shiftMonth(m, -1))
-              : setYear((y) => shiftYear(y, -1))
-          }
-          onNext={() =>
-            periodMode === "month"
-              ? setMonth((m) => shiftMonth(m, 1))
-              : setYear((y) => shiftYear(y, 1))
-          }
-        />
+        <>
+          <PeriodCard
+            period={data?.monthlyPlanning ?? null}
+            label="Monthly Planning"
+            mode="month"
+            navTitle={monthLabel(month)}
+            onPrev={() => setMonth((m) => shiftMonth(m, -1))}
+            onNext={() => setMonth((m) => shiftMonth(m, 1))}
+          />
+          <PeriodCard
+            period={data?.yearlyPlanning ?? null}
+            label="Yearly Planning"
+            mode="year"
+            navTitle={year}
+            onPrev={() => setYear((y) => shiftYear(y, -1))}
+            onNext={() => setYear((y) => shiftYear(y, 1))}
+          />
+        </>
       )}
     </div>
   );

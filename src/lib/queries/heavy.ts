@@ -17,6 +17,7 @@ import type {
   TwitchChannelView,
   TwitchLiveStream,
   TwitchStreamView,
+  YoutubeChannelShowResponse,
   YoutubeChannelsResponse,
   YoutubeVideo,
   YoutubeVideosForDateResponse,
@@ -36,6 +37,7 @@ export const heavyKeys = {
   cashflow: ["cashflow"] as const,
   calendarBudgets: (date: string) => ["calendar-budgets", date] as const,
   youtubeChannels: ["youtube-channels"] as const,
+  youtubeChannel: (id: number) => ["youtube-channels", id] as const,
   youtubeVideosByDate: ["youtube-videos", "by-date"] as const,
   youtubeWatchlist: ["youtube-videos", "watchlist"] as const,
   twitchChannels: ["twitch-channels"] as const,
@@ -919,6 +921,46 @@ export function useYoutubeVideosForDate(
   });
 }
 
+export function useYoutubeChannel(
+  id: number | null,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey:
+      id != null ? heavyKeys.youtubeChannel(id) : ["youtube-channels", "none"],
+    enabled: (options?.enabled ?? true) && id != null,
+    queryFn: async () => {
+      const { data } = await api.get<YoutubeChannelShowResponse>(
+        `/youtube-channels/${id}`,
+      );
+      return data;
+    },
+  });
+}
+
+export function useDownloadYoutubeChannelLatest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (channelId: number) => {
+      const { data } = await api.post<{
+        ok: boolean;
+        success?: string;
+        error?: string;
+      }>(`/youtube-channels/${channelId}/download-latest`);
+      return data;
+    },
+    onSuccess: (_data, channelId) => {
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
+      queryClient.invalidateQueries({
+        queryKey: heavyKeys.youtubeChannel(channelId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: heavyKeys.youtubeVideosByDate,
+      });
+    },
+  });
+}
+
 export function useToggleYoutubeChannelActive() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -968,6 +1010,7 @@ export function useToggleYoutubeVideoWatched() {
         queryKey: heavyKeys.youtubeVideosByDate,
       });
       queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeWatchlist });
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
     },
   });
 }
@@ -983,6 +1026,7 @@ export function useToggleYoutubeVideoWatchlist() {
         queryKey: heavyKeys.youtubeVideosByDate,
       });
       queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeWatchlist });
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
     },
   });
 }

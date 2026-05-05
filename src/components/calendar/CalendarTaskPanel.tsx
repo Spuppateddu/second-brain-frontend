@@ -3,6 +3,7 @@
 import { useMemo, useState, type DragEvent } from "react";
 import {
   HiBars3,
+  HiBeaker,
   HiBriefcase,
   HiCake,
   HiCalendar,
@@ -21,6 +22,10 @@ import {
 import { TaskModal } from "@/components/calendar/TaskModal";
 import { WaterTracker } from "@/components/calendar/WaterTracker";
 import { useCalendarDay } from "@/lib/queries/calendar";
+import {
+  usePillsForDate,
+  type PillForDate,
+} from "@/lib/queries/entities";
 import type { CalendarTask } from "@/types/calendar";
 
 type StatusFilter = "all" | "not_completed" | "completed" | "cancelled";
@@ -51,6 +56,47 @@ function isLinkedToPlanning(t: CalendarTask): boolean {
     !!t.linkedPlanningSubTask ||
     !!t.linked_planning_task_id ||
     !!t.linked_planning_sub_task_id
+  );
+}
+
+// ── Pill card ───────────────────────────────────────────────────────────────
+
+function PillCard({ pill }: { pill: PillForDate }) {
+  const taken = pill.today_log?.status === "taken";
+  const dismissed = pill.today_log?.status === "dismissed";
+  const titleStyle = dismissed
+    ? "line-through text-gray-400"
+    : taken
+      ? "text-gray-400 dark:text-gray-500"
+      : "text-gray-800 dark:text-gray-100";
+
+  return (
+    <div className="group relative w-full text-left p-3 rounded-lg border-l-4 bg-purple-500/20 dark:bg-purple-500/10 border-l-purple-500">
+      <div className="relative flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className={["font-medium truncate", titleStyle].join(" ")}>
+            {pill.name}
+          </p>
+          <p className="mt-1 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <HiClock className="w-3 h-3" />
+            {pill.taking_time.slice(0, 5)}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {taken && (
+            <span className="p-1 rounded-full bg-green-100 dark:bg-green-900/30">
+              <HiCheck className="w-3 h-3 text-green-600 dark:text-green-400" />
+            </span>
+          )}
+          {dismissed && (
+            <span className="p-1 rounded-full bg-red-100 dark:bg-red-900/30">
+              <HiNoSymbol className="w-3 h-3 text-red-600 dark:text-red-400" />
+            </span>
+          )}
+          <HiBeaker className="w-4 h-4 text-purple-600 dark:text-purple-300" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -271,6 +317,7 @@ export function CalendarTaskPanel({
   onDragEndTask,
 }: CalendarTaskPanelProps) {
   const { data, isLoading, error } = useCalendarDay(date);
+  const { data: pills } = usePillsForDate(date);
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("not_completed");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -308,13 +355,36 @@ export function CalendarTaskPanel({
     });
   }, [allTasks, statusFilter, typeFilter]);
 
-  const withTime = useMemo(
-    () =>
-      filtered
-        .filter((t) => !!t.start_time)
-        .sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? "")),
-    [filtered],
-  );
+  type TimedItem =
+    | { kind: "task"; time: string; task: CalendarTask }
+    | { kind: "pill"; time: string; pill: PillForDate };
+
+  const timedItems = useMemo<TimedItem[]>(() => {
+    const taskItems: TimedItem[] = filtered
+      .filter((t) => !!t.start_time)
+      .map((t) => ({ kind: "task", time: t.start_time ?? "", task: t }));
+    const pillItems: TimedItem[] =
+      // Pill type filter respects the toolbar: hide under "work".
+      typeFilter === "work"
+        ? []
+        : (pills ?? [])
+            .filter((p) => {
+              const status = p.today_log?.status;
+              if (statusFilter === "not_completed" && status && status !== "pending")
+                return false;
+              if (statusFilter === "completed" && status !== "taken") return false;
+              if (statusFilter === "cancelled" && status !== "dismissed") return false;
+              return true;
+            })
+            .map((p) => ({
+              kind: "pill",
+              time: p.taking_time.slice(0, 5),
+              pill: p,
+            }));
+    return [...taskItems, ...pillItems].sort((a, b) =>
+      a.time.localeCompare(b.time),
+    );
+  }, [filtered, pills, statusFilter, typeFilter]);
 
   const withoutTime = useMemo(
     () =>
@@ -367,27 +437,31 @@ export function CalendarTaskPanel({
           <div className="text-sm text-danger">
             Couldn&rsquo;t load this day.
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 && timedItems.length === 0 ? (
           <div className="text-sm text-zinc-500">No tasks match the filters.</div>
         ) : (
           <>
-            {withTime.length > 0 && (
+            {timedItems.length > 0 && (
               <section>
                 <h3 className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <HiClock className="w-3.5 h-3.5" />
-                  With time ({withTime.length})
+                  With time ({timedItems.length})
                 </h3>
                 <div className="space-y-2">
-                  {withTime.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      date={date}
-                      onDragStart={onDragStartTask}
-                      onDragEnd={onDragEndTask}
-                      onOpen={openEdit}
-                    />
-                  ))}
+                  {timedItems.map((item) =>
+                    item.kind === "pill" ? (
+                      <PillCard key={`pill-${item.pill.id}`} pill={item.pill} />
+                    ) : (
+                      <TaskCard
+                        key={`task-${item.task.id}`}
+                        task={item.task}
+                        date={date}
+                        onDragStart={onDragStartTask}
+                        onDragEnd={onDragEndTask}
+                        onOpen={openEdit}
+                      />
+                    ),
+                  )}
                 </div>
               </section>
             )}

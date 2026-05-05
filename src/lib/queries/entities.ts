@@ -1070,6 +1070,61 @@ export function useTogglePillActive() {
   });
 }
 
+export type PillLog = {
+  id: number;
+  pill_id: number;
+  scheduled_date: string;
+  scheduled_time: string;
+  status: "pending" | "taken" | "dismissed";
+  taken_at: string | null;
+  dismissed_at: string | null;
+};
+
+export type PillForDate = Pill & {
+  today_log?: PillLog;
+};
+
+export const pillForDateKey = (date: string) =>
+  ["pills", "for-date", date] as const;
+
+export function usePillsForDate(date: string, enabled: boolean = true) {
+  return useQuery<PillForDate[]>({
+    queryKey: pillForDateKey(date),
+    enabled: enabled && /^\d{4}-\d{2}-\d{2}$/.test(date),
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await api.get<{ pills: PillForDate[] }>(
+        `/pills/for-date/${date}`,
+      );
+      return data.pills;
+    },
+  });
+}
+
+export function useMarkPillTaken() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, date }: { id: number; date: string }) => {
+      await api.post(`/pills/${id}/mark-taken`, { date });
+    },
+    onSuccess: (_, { date }) => {
+      queryClient.invalidateQueries({ queryKey: pillForDateKey(date) });
+    },
+  });
+}
+
+export function useDismissPill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, date }: { id: number; date: string }) => {
+      await api.post(`/pills/${id}/dismiss`, { date });
+    },
+    onSuccess: (_, { date }) => {
+      queryClient.invalidateQueries({ queryKey: pillForDateKey(date) });
+    },
+  });
+}
+
 // Bag
 export type BagInput = { title: string; description?: string | null; tag_ids?: number[] };
 export const useBag = makeOne<Bag>({ resource: "bags", wrapKey: "bag", queryKey: entityKeys.bags });

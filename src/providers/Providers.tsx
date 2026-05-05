@@ -7,8 +7,10 @@ import { useState } from "react";
 import { RouterProvider } from "react-aria-components";
 
 import { InactivityLockModal } from "@/components/InactivityLockModal";
+import { PillReminderModal } from "@/components/PillReminderModal";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { InactivityProvider } from "@/contexts/InactivityContext";
+import { PillsReminderProvider } from "@/contexts/PillsReminderContext";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -36,8 +38,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <InactivityProvider>
-            {children}
-            <InactivityLockModal />
+            <PillsReminderProvider>
+              {children}
+              <InactivityLockModal />
+              <PillReminderModal />
+            </PillsReminderProvider>
           </InactivityProvider>
         </AuthProvider>
         <ReactQueryDevtools initialIsOpen={false} />
