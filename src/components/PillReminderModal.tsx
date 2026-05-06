@@ -2,13 +2,7 @@
 
 import { Button } from "@heroui/react";
 import { useEffect, useState } from "react";
-import {
-  HiArrowPath,
-  HiBeaker,
-  HiCheck,
-  HiClock,
-  HiXMark,
-} from "react-icons/hi2";
+import { HiArrowPath, HiBeaker, HiCheck, HiXMark } from "react-icons/hi2";
 
 import { usePillsReminder } from "@/contexts/PillsReminderContext";
 
@@ -48,81 +42,77 @@ export function PillReminderModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-zinc-950/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-zinc-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="pill-reminder-title"
     >
-      <div className="w-full sm:max-w-md overflow-hidden rounded-t-2xl sm:rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 pb-[env(safe-area-inset-bottom)]">
+      <div className="w-full overflow-hidden rounded-t-2xl border-t border-zinc-200 bg-white shadow-xl pb-[env(safe-area-inset-bottom)] dark:border-zinc-800 dark:bg-zinc-950 sm:max-w-md sm:rounded-2xl sm:border">
         <div className="flex justify-center pt-2 sm:hidden">
-          <div className="h-1.5 w-10 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+          <div className="h-1 w-9 rounded-full bg-zinc-300 dark:bg-zinc-700" />
         </div>
 
-        <div className="p-5 sm:p-6">
-          <div className="mb-4 flex items-center gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/40 sm:h-16 sm:w-16">
-              <HiBeaker className="h-7 w-7 text-purple-600 dark:text-purple-300 sm:h-8 sm:w-8" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3
-                id="pill-reminder-title"
-                className="text-lg font-bold text-zinc-900 dark:text-zinc-100 sm:text-xl"
-              >
-                Time to take your pill!
-              </h3>
-              <p className="truncate text-base text-zinc-700 dark:text-zinc-300 sm:text-lg">
-                {current.name}
-              </p>
-              <div className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400">
-                <HiClock className="h-4 w-4" />
-                <span>Scheduled for {formatTime(current.taking_time)}</span>
-              </div>
-            </div>
+        <div className="flex items-center gap-3 px-4 pt-3 sm:px-6 sm:pt-5">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/40 sm:h-11 sm:w-11">
+            <HiBeaker className="h-5 w-5 text-purple-600 dark:text-purple-300 sm:h-6 sm:w-6" />
           </div>
+          <h3
+            id="pill-reminder-title"
+            className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100 sm:text-base"
+          >
+            Time to take your pill
+          </h3>
+          {extra > 0 ? (
+            <span className="flex-shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              +{extra} more
+            </span>
+          ) : null}
+        </div>
 
+        <div className="px-4 pt-3 sm:px-6">
+          <p className="text-xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-2xl">
+            {current.name}
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 sm:text-sm">
+            Scheduled for {formatTime(current.taking_time)}
+          </p>
           {current.description ? (
-            <p className="mb-4 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+            <p className="mt-3 rounded-lg bg-zinc-50 p-2.5 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400 sm:text-sm">
               {current.description}
             </p>
           ) : null}
+        </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+        <div className="flex flex-col gap-2 px-4 py-4 sm:px-6 sm:py-5">
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => markAsTaken(current.id)}
+            className="w-full justify-center"
+          >
+            <HiCheck className="mr-2 h-5 w-5" />
+            Mark as Taken
+          </Button>
+          <div className="grid grid-cols-2 gap-2">
             <Button
-              variant="primary"
-              size="md"
-              onClick={() => markAsTaken(current.id)}
-              className="flex-1 justify-center"
+              variant="outline"
+              size="sm"
+              onClick={() => snoozeReminder(current.id, 5)}
+              className="justify-center"
             >
-              <HiCheck className="mr-2 h-5 w-5" />
-              Mark as Taken
+              <HiArrowPath className="mr-1.5 h-4 w-4" />
+              Snooze 5m
             </Button>
-            <div className="flex gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => snoozeReminder(current.id, 5)}
-                className="flex-1 justify-center sm:flex-initial"
-              >
-                <HiArrowPath className="mr-1 h-5 w-5" />
-                5 min
-              </Button>
-              <Button
-                variant="danger"
-                size="md"
-                onClick={() => dismissReminder(current.id)}
-                className="flex-1 justify-center sm:flex-initial"
-              >
-                <HiXMark className="mr-1 h-5 w-5" />
-                Dismiss
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => dismissReminder(current.id)}
+              className="justify-center text-danger"
+            >
+              <HiXMark className="mr-1.5 h-4 w-4" />
+              Dismiss
+            </Button>
           </div>
-
-          {extra > 0 ? (
-            <p className="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-              +{extra} more pill{extra > 1 ? "s" : ""} to take
-            </p>
-          ) : null}
         </div>
       </div>
     </div>
