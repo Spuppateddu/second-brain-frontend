@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 import type { SecondBrainPayload } from "@/types/graph";
@@ -886,22 +891,26 @@ export function useGenerateSubscriptionPayments() {
 }
 
 export function useYoutubeChannels(
-  params?: { search?: string; page?: number },
+  params?: { search?: string },
   options?: { enabled?: boolean },
 ) {
   const search = params?.search?.trim() ?? "";
-  const page = params?.page ?? 1;
-  return useQuery({
-    queryKey: [...heavyKeys.youtubeChannels, { search, page }] as const,
+  return useInfiniteQuery({
+    queryKey: [...heavyKeys.youtubeChannels, { search }] as const,
     enabled: options?.enabled ?? true,
-    queryFn: async () => {
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
       const qs = new URLSearchParams();
       if (search) qs.set("search", search);
-      if (page > 1) qs.set("page", String(page));
+      if (pageParam > 1) qs.set("page", String(pageParam));
       const url = `/youtube-channels${qs.toString() ? `?${qs.toString()}` : ""}`;
       const { data } = await api.get<YoutubeChannelsResponse>(url);
       return data;
     },
+    getNextPageParam: (lastPage) =>
+      lastPage.channels.current_page < lastPage.channels.last_page
+        ? lastPage.channels.current_page + 1
+        : undefined,
   });
 }
 

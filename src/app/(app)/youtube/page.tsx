@@ -2,7 +2,7 @@
 
 import { Button } from "@heroui/react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HiBookmark,
   HiBookmarkSlash,
@@ -117,20 +117,29 @@ function TabButton({
 
 function ChannelsTab() {
   const [search, setSearch] = useState("");
-  const { data, isLoading, error } = useYoutubeChannels();
-  const allChannels = data?.channels.data ?? [];
-  const totalChannelsCount = data?.totalChannelsCount ?? 0;
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const channels = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return allChannels;
-    return allChannels.filter((channel) => {
-      return (
-        channel.name.toLowerCase().includes(term) ||
-        (channel.description?.toLowerCase().includes(term) ?? false)
-      );
-    });
-  }, [allChannels, search]);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 250);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search]);
+
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useYoutubeChannels({ search: debouncedSearch });
+  const channels = data?.pages.flatMap((p) => p.channels.data) ?? [];
+  const totalChannelsCount = data?.pages[0]?.totalChannelsCount ?? 0;
 
   return (
     <EntityListShell
@@ -167,19 +176,31 @@ function ChannelsTab() {
           <div className="py-12 text-center">
             <HiMagnifyingGlass className="mx-auto h-12 w-12 text-zinc-400" />
             <h3 className="mt-2 text-sm font-medium">No channels found</h3>
-            {search ? (
+            {debouncedSearch ? (
               <p className="mt-1 text-sm text-zinc-500">
-                No channels match &ldquo;{search}&rdquo;. Try adjusting your
-                search terms.
+                No channels match &ldquo;{debouncedSearch}&rdquo;. Try adjusting
+                your search terms.
               </p>
             ) : null}
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {channels.map((channel) => (
-              <ChannelRow key={channel.id} channel={channel} />
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-3">
+              {channels.map((channel) => (
+                <ChannelRow key={channel.id} channel={channel} />
+              ))}
+            </div>
+            {hasNextPage ? (
+              <Button
+                variant="secondary"
+                fullWidth
+                isDisabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                {isFetchingNextPage ? "Loading…" : "Load more"}
+              </Button>
+            ) : null}
+          </>
         )}
       </div>
     </EntityListShell>
