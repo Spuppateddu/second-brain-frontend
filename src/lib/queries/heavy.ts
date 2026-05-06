@@ -982,6 +982,31 @@ export function useToggleYoutubeChannelActive() {
   });
 }
 
+export type YoutubeChannelSettingsInput = {
+  is_active: boolean;
+  hide_from_videos_page: boolean;
+  push_notifications_enabled: boolean;
+};
+
+export function useUpdateYoutubeChannel(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: YoutubeChannelSettingsInput) => {
+      const { data } = await api.patch(`/youtube-channels/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
+      queryClient.invalidateQueries({
+        queryKey: heavyKeys.youtubeChannel(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: heavyKeys.youtubeVideosByDate,
+      });
+    },
+  });
+}
+
 export function useDeleteYoutubeChannel() {
   const queryClient = useQueryClient();
   return useMutation({

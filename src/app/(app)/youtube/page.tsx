@@ -285,12 +285,7 @@ function ChannelRow({ channel }: { channel: YoutubeChannelView }) {
       <div className="flex flex-wrap gap-2 sm:shrink-0 sm:items-center">
         <Link href={`/youtube/${channel.id}`}>
           <Button size="sm" variant="secondary">
-            View Videos
-          </Button>
-        </Link>
-        <Link href={`/youtube/${channel.id}/edit`}>
-          <Button size="sm" variant="secondary">
-            Edit
+            Open
           </Button>
         </Link>
         <Button

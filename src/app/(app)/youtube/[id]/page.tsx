@@ -12,6 +12,7 @@ import {
   HiBookmarkSlash,
   HiEye,
   HiEyeSlash,
+  HiInformationCircle,
   HiMagnifyingGlass,
   HiPlay,
 } from "react-icons/hi2";
@@ -21,10 +22,9 @@ import { Input } from "@/components/UI/Input";
 import {
   useDeleteYoutubeChannel,
   useDownloadYoutubeChannelLatest,
-  useToggleYoutubeChannelActive,
-  useToggleYoutubeChannelVisibility,
   useToggleYoutubeVideoWatched,
   useToggleYoutubeVideoWatchlist,
+  useUpdateYoutubeChannel,
   useYoutubeChannel,
 } from "@/lib/queries/heavy";
 import type {
@@ -47,8 +47,6 @@ export default function YoutubeChannelDetailPage({
   const { data, isLoading, error } = useYoutubeChannel(
     isValidId ? channelId : null,
   );
-  const toggleActive = useToggleYoutubeChannelActive();
-  const toggleVisibility = useToggleYoutubeChannelVisibility();
   const downloadLatest = useDownloadYoutubeChannelLatest();
   const remove = useDeleteYoutubeChannel();
 
@@ -90,7 +88,7 @@ export default function YoutubeChannelDetailPage({
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-3 py-6 sm:px-6 sm:py-12">
+    <div className="mx-auto w-full max-w-2xl space-y-6 px-3 py-6 sm:px-6 sm:py-12">
       <div>
         <Link
           href="/youtube"
@@ -101,18 +99,43 @@ export default function YoutubeChannelDetailPage({
         </Link>
       </div>
 
-      <ChannelCard
+      <h1 className="text-xl font-semibold sm:text-2xl">
+        Edit YouTube Channel
+      </h1>
+
+      <ChannelSettingsCard
         channel={channel}
         videosCount={data.videos.total}
-        onToggleActive={() => toggleActive.mutate(channel.id)}
-        toggleActivePending={toggleActive.isPending}
-        onToggleVisibility={() => toggleVisibility.mutate(channel.id)}
-        toggleVisibilityPending={toggleVisibility.isPending}
         onDownloadLatest={() => downloadLatest.mutate(channel.id)}
         downloadPending={downloadLatest.isPending}
         onDelete={onDelete}
         deletePending={remove.isPending}
       />
+
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/30">
+        <div className="flex items-start">
+          <HiInformationCircle className="h-5 w-5 shrink-0 text-red-400" />
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+              Editing YouTube Channel
+            </h3>
+            <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  Toggle <strong>Active</strong> to enable/disable video tracking
+                </li>
+                <li>
+                  Toggle <strong>Hide from videos page</strong> to keep videos
+                  syncing without appearing on the daily videos list
+                </li>
+                <li>
+                  All changes will be saved when you click Update Channel
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
@@ -157,13 +180,9 @@ export default function YoutubeChannelDetailPage({
   );
 }
 
-function ChannelCard({
+function ChannelSettingsCard({
   channel,
   videosCount,
-  onToggleActive,
-  toggleActivePending,
-  onToggleVisibility,
-  toggleVisibilityPending,
   onDownloadLatest,
   downloadPending,
   onDelete,
@@ -171,18 +190,43 @@ function ChannelCard({
 }: {
   channel: YoutubeChannelDetail;
   videosCount: number;
-  onToggleActive: () => void;
-  toggleActivePending: boolean;
-  onToggleVisibility: () => void;
-  toggleVisibilityPending: boolean;
   onDownloadLatest: () => void;
   downloadPending: boolean;
   onDelete: () => void;
   deletePending: boolean;
 }) {
+  const router = useRouter();
+  const update = useUpdateYoutubeChannel(channel.id);
+
+  const [isActive, setIsActive] = useState(channel.is_active);
+  const [hideFromVideos, setHideFromVideos] = useState(
+    channel.hide_from_videos_page,
+  );
+  const [pushEnabled, setPushEnabled] = useState(
+    channel.push_notifications_enabled,
+  );
+  const [generalError, setGeneralError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setGeneralError(null);
+    try {
+      await update.mutateAsync({
+        is_active: isActive,
+        hide_from_videos_page: hideFromVideos,
+        push_notifications_enabled: pushEnabled,
+      });
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save.";
+      setGeneralError(message);
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="space-y-4 p-6">
+      <form onSubmit={handleSubmit} className="space-y-6 p-6">
         <div className="flex items-start gap-4">
           {channel.thumbnail_url ? (
             /* eslint-disable-next-line @next/next/no-img-element */
@@ -198,9 +242,7 @@ function ChannelCard({
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-xl font-semibold">
-                {channel.name}
-              </h1>
+              <h2 className="truncate text-lg font-semibold">{channel.name}</h2>
               <span className="rounded-full bg-danger-100 px-2 py-0.5 text-xs font-medium text-danger-700 dark:bg-danger-900/40 dark:text-danger-300">
                 YouTube
               </span>
@@ -222,29 +264,102 @@ function ChannelCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 border-t border-zinc-200 pt-4 text-sm dark:border-zinc-800 sm:grid-cols-2">
-          <InfoRow label="Videos" value={String(videosCount)} />
-          <InfoRow
-            label="Hidden from videos page"
-            value={channel.hide_from_videos_page ? "Yes" : "No"}
+        <div>
+          <label
+            htmlFor="channel-url"
+            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-200"
+          >
+            YouTube Channel URL
+          </label>
+          <input
+            id="channel-url"
+            type="url"
+            value={channel.url}
+            readOnly
+            className="block w-full cursor-not-allowed rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 shadow-sm focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
           />
-          <InfoRow
-            label="Push notifications"
-            value={channel.push_notifications_enabled ? "Enabled" : "Disabled"}
-          />
-          <InfoRow
-            label="Last sync"
-            value={
-              channel.last_sync_at
-                ? new Date(channel.last_sync_at).toLocaleString("it-IT")
-                : "Never"
-            }
-          />
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            URL is managed by YouTube and cannot be changed
+          </p>
         </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+                Active (automatically sync new videos from this channel)
+              </span>
+            </label>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Uncheck this to temporarily stop tracking this channel without
+              deleting it
+            </p>
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={hideFromVideos}
+                onChange={(e) => setHideFromVideos(e.target.checked)}
+                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+                Hide from videos page
+              </span>
+            </label>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Videos will still sync but won&rsquo;t appear on the daily videos
+              list
+            </p>
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={pushEnabled}
+                onChange={(e) => setPushEnabled(e.target.checked)}
+                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+                Send push notification when this channel uploads a new video
+              </span>
+            </label>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Uncheck to stop receiving push notifications for this channel only
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
+          <h3 className="mb-3 text-sm font-medium">Channel Information</h3>
+          <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <InfoRow label="Videos" value={String(videosCount)} />
+            <InfoRow
+              label="Last Sync"
+              value={
+                channel.last_sync_at
+                  ? new Date(channel.last_sync_at).toLocaleString("it-IT")
+                  : "Never"
+              }
+            />
+          </div>
+        </div>
+
+        {generalError ? (
+          <p className="text-sm text-danger">{generalError}</p>
+        ) : null}
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <a href={channel.url} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" variant="primary">
+            <Button size="sm" variant="secondary">
               <HiArrowTopRightOnSquare className="mr-1 h-4 w-4" />
               Open on YouTube
             </Button>
@@ -254,43 +369,38 @@ function ChannelCard({
             variant="secondary"
             isDisabled={downloadPending}
             onClick={onDownloadLatest}
+            type="button"
           >
             <HiArrowDownTray className="mr-1 h-4 w-4" />
             {downloadPending ? "Syncing…" : "Sync latest"}
           </Button>
           <Button
             size="sm"
-            variant="secondary"
-            isDisabled={toggleVisibilityPending}
-            onClick={onToggleVisibility}
-          >
-            {channel.hide_from_videos_page
-              ? "Show on videos page"
-              : "Hide from videos page"}
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            isDisabled={toggleActivePending}
-            onClick={onToggleActive}
-          >
-            {channel.is_active ? "Deactivate" : "Activate"}
-          </Button>
-          <Link href={`/youtube/${channel.id}/edit`}>
-            <Button size="sm" variant="secondary">
-              Edit
-            </Button>
-          </Link>
-          <Button
-            size="sm"
             variant="danger"
             isDisabled={deletePending}
             onClick={onDelete}
+            type="button"
           >
             {deletePending ? "Deleting…" : "Delete"}
           </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => router.push("/youtube")}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            variant="primary"
+            isDisabled={update.isPending}
+          >
+            {update.isPending ? "Updating…" : "Update Channel"}
+          </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
