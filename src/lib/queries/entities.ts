@@ -480,15 +480,44 @@ export type AutoTaskRuleInput = {
   task_category_ids?: number[];
 };
 
+// Laravel serializes relation keys in snake_case (`task_categories`,
+// `linked_bookmarks`, …). The `AutoTaskRule` type — and the auto-task edit
+// form — uses camelCase. Normalize at the query boundary so consumers can
+// stay on the typed names.
+function normalizeAutoTaskRule(raw: Record<string, unknown>): AutoTaskRule {
+  const pick = <T = Record<string, unknown>>(
+    snake: string,
+    camel: string,
+  ): T[] => {
+    const v = (raw[snake] ?? raw[camel]) as T[] | undefined;
+    return Array.isArray(v) ? v : [];
+  };
+  return {
+    ...(raw as unknown as AutoTaskRule),
+    subTasks: pick("sub_tasks", "subTasks"),
+    taskCategories: pick("task_categories", "taskCategories"),
+    linkedBookmarks: pick("linked_bookmarks", "linkedBookmarks"),
+    linkedNotes: pick("linked_notes", "linkedNotes"),
+    linkedPersons: pick("linked_persons", "linkedPersons"),
+    linkedPlaces: pick("linked_places", "linkedPlaces"),
+    linkedBags: pick("linked_bags", "linkedBags"),
+    linkedHardware: pick("linked_hardware", "linkedHardware"),
+    linkedSoftware: pick("linked_software", "linkedSoftware"),
+    linkedRecipes: pick("linked_recipes", "linkedRecipes"),
+    linkedWishlistItems: pick("linked_wishlist_items", "linkedWishlistItems"),
+    linkedTrips: pick("linked_trips", "linkedTrips"),
+  } as AutoTaskRule;
+}
+
 export function useAutoTaskRule(id: number | null) {
   return useQuery<AutoTaskRule>({
     queryKey: [...entityKeys.autoTasks, "one", id] as const,
     enabled: id != null,
     queryFn: async () => {
-      const { data } = await api.get<{ rule: AutoTaskRule }>(
+      const { data } = await api.get<{ rule: Record<string, unknown> }>(
         `/auto-tasks/${id}`,
       );
-      return data.rule;
+      return normalizeAutoTaskRule(data.rule);
     },
   });
 }

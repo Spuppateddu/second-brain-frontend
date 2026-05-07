@@ -24,7 +24,7 @@ import {
 } from "react-icons/fa";
 
 import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
-import { api } from "@/lib/api";
+import { entityFetchConfig, fetchEntityForEdit } from "@/lib/entity-fetch";
 import {
   useSecondBrainSearch,
   type SearchResult,
@@ -61,22 +61,6 @@ const SECTION_BY_TYPE: Record<string, SectionConfig> = SECTIONS.reduce(
   },
   {} as Record<string, SectionConfig>,
 );
-
-// Endpoint shape used to fetch the full entity behind a search hit so it can
-// be passed to EntityModalsProvider's openEdit. Keys mirror /api/v1 routes.
-const FETCH_BY_TYPE: Record<string, { url: (id: number) => string; key?: string }> = {
-  bookmark: { url: (id) => `/bookmarks/${id}`, key: "bookmark" },
-  note: { url: (id) => `/notes/${id}`, key: "note" },
-  recipe: { url: (id) => `/recipes/${id}`, key: "recipe" },
-  wishlist_item: { url: (id) => `/wishlist/${id}`, key: "item" },
-  place: { url: (id) => `/places/${id}`, key: "place" },
-  person: { url: (id) => `/persons/${id}`, key: "person" },
-  bag: { url: (id) => `/bags/${id}`, key: "bag" },
-  hardware: { url: (id) => `/hardware/${id}`, key: "hardware" },
-  software: { url: (id) => `/software/${id}`, key: "software" },
-  trip: { url: (id) => `/trips/${id}`, key: "trip" },
-  mega_file: { url: (id) => `/mega-files/${id}`, key: "mega_file" },
-};
 
 type SpotlightSearchProps = {
   open?: boolean;
@@ -162,15 +146,17 @@ export function SpotlightSearch({
       close();
       return;
     }
-    const cfg = FETCH_BY_TYPE[r.type];
-    if (!cfg) {
+    if (!entityFetchConfig(r.type)) {
       router.push(SECTION_BY_TYPE[r.type]?.fullPagePath(r.id) ?? "/second-brain");
       close();
       return;
     }
     try {
-      const { data } = await api.get<Record<string, unknown>>(cfg.url(r.id));
-      const entity = (cfg.key ? data[cfg.key] : data) as Parameters<typeof modals.openEdit>[1];
+      const entity = await fetchEntityForEdit<Parameters<typeof modals.openEdit>[1]>(
+        r.type,
+        r.id,
+      );
+      if (!entity) throw new Error("Empty entity payload");
       modals.openEdit(r.type as Exclude<GraphNodeKind, "tag">, entity);
       // Seed react-query cache so the page render after closing the modal is
       // already warm.

@@ -18,7 +18,12 @@ import {
 } from "react-icons/hi2";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
 import { api } from "@/lib/api";
+import {
+  fetchEntityForEdit,
+  isEditableEntityType,
+} from "@/lib/entity-fetch";
 import {
   calendarKeys,
   useCalendarDay,
@@ -1619,6 +1624,27 @@ function LinkedItemsSection({
   const [query, setQuery] = useState("");
   const search = useSecondBrainSearch(query);
   const showResults = query.trim().length >= 2;
+  const modals = useEntityModals();
+  const queryClient = useQueryClient();
+  const [openingChipKey, setOpeningChipKey] = useState<string | null>(null);
+
+  async function openChip(c: LinkChip) {
+    if (!isEditableEntityType(c.type)) return;
+    const key = `${c.type}-${c.id}`;
+    setOpeningChipKey(key);
+    try {
+      const entity = await fetchEntityForEdit<
+        Parameters<typeof modals.openEdit>[1]
+      >(c.type, c.id);
+      if (!entity) return;
+      modals.openEdit(c.type, entity);
+      queryClient.setQueryData([c.type, c.id], entity);
+    } catch (err) {
+      console.error("Failed to load linked entity", err);
+    } finally {
+      setOpeningChipKey(null);
+    }
+  }
 
   return (
     <section>
@@ -1628,26 +1654,45 @@ function LinkedItemsSection({
 
       {chips.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {chips.map((c) => (
-            <span
-              key={`${c.type}-${c.id}`}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
-            >
-              <HiLink className="h-3 w-3" />
-              <span className="text-[10px] uppercase tracking-wide text-blue-500">
-                {TYPE_LABEL[c.type] ?? c.type}
-              </span>
-              <span>{c.label}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(c)}
-                title="Unlink"
-                className="rounded-full p-0.5 hover:bg-blue-100"
+          {chips.map((c) => {
+            const key = `${c.type}-${c.id}`;
+            const editable = isEditableEntityType(c.type);
+            const opening = openingChipKey === key;
+            return (
+              <span
+                key={key}
+                className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
               >
-                <HiXMark className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
+                <HiLink className="h-3 w-3" />
+                <button
+                  type="button"
+                  onClick={() => editable && void openChip(c)}
+                  disabled={!editable || opening}
+                  title={editable ? "Open" : undefined}
+                  className={[
+                    "inline-flex items-center gap-1 rounded-sm",
+                    editable
+                      ? "cursor-pointer hover:underline"
+                      : "cursor-default",
+                    opening ? "opacity-60" : "",
+                  ].join(" ")}
+                >
+                  <span className="text-[10px] uppercase tracking-wide text-blue-500">
+                    {TYPE_LABEL[c.type] ?? c.type}
+                  </span>
+                  <span>{c.label}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemove(c)}
+                  title="Unlink"
+                  className="rounded-full p-0.5 hover:bg-blue-100"
+                >
+                  <HiXMark className="h-3 w-3" />
+                </button>
+              </span>
+            );
+          })}
         </div>
       )}
 
