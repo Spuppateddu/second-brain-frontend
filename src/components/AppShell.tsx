@@ -10,7 +10,7 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HiBars3,
   HiBeaker,
@@ -34,6 +34,7 @@ import { FastNoteModal } from "@/components/FastNoteModal";
 import { PushNotificationBell } from "@/components/PushNotificationBell";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { useAuth } from "@/contexts/AuthContext";
+import { env } from "@/lib/env";
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -132,6 +133,47 @@ const NAV: NavEntry[] = [
   },
 ];
 
+const PAGE_TITLES: Record<string, string> = {
+  "/calendar": "Calendar",
+  "/planning": "Planning",
+  "/out-of-plan": "Out of Plan",
+  "/reviews": "Reviews",
+  "/second-brain": "Second Brain",
+  "/media": "Media",
+  "/youtube": "YouTube",
+  "/twitch": "Twitch",
+  "/news": "News",
+  "/auto-tasks": "Auto Tasks",
+  "/event-tasks": "Event Tasks",
+  "/pills": "Pills",
+  "/task-categories": "Task Categories",
+  "/cashflow": "Cashflow",
+  "/cashflow-options": "Cashflow Options",
+  "/budgets": "Budgets",
+  "/subscriptions": "Subscriptions",
+  "/profile": "Profile",
+  "/persons": "Persons",
+  "/notes": "Notes",
+  "/note-categories": "Note Categories",
+  "/bookmarks": "Bookmarks",
+  "/bookmark-categories": "Bookmark Categories",
+  "/tags": "Tags",
+  "/bags": "Bags",
+  "/hardware": "Hardware",
+  "/software": "Software",
+  "/mega-files": "Mega Files",
+  "/places": "Places",
+  "/recipes": "Recipes",
+  "/trips": "Trips",
+  "/wishlist": "Wishlist",
+  "/untagged": "Untagged",
+};
+
+function pageTitleFor(pathname: string): string | null {
+  const firstSegment = "/" + (pathname.split("/")[1] ?? "");
+  return PAGE_TITLES[firstSegment] ?? null;
+}
+
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
@@ -154,6 +196,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [fastNoteOpen, setFastNoteOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
+
+  useEffect(() => {
+    const pageTitle = pageTitleFor(pathname);
+    document.title = pageTitle ? `${env.appName} - ${pageTitle}` : env.appName;
+  }, [pathname]);
 
   const hasPrivilege = (privilege?: string) =>
     !privilege || privileges.includes(privilege);
