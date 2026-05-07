@@ -12,6 +12,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreatePlace, useUpdatePlace } from "@/lib/queries/entities";
 import type { Place } from "@/types/entities";
 
@@ -81,6 +82,9 @@ function PlaceFormModalInner({
     <EntityModalShell
       isOpen
       onClose={onClose}
+      fullPagePath={
+        initial ? entityFullPagePath("place", initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={name}

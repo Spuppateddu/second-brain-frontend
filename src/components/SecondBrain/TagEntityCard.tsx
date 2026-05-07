@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { FaExpand } from "react-icons/fa";
 import {
   HiDocumentDuplicate,
   HiLink,
@@ -19,6 +21,7 @@ import {
 } from "@/constants/entityIcons";
 import { isUntaggedTag } from "@/constants/untagged";
 import { api } from "@/lib/api";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import type { Tag } from "@/types/entities";
 import type { GraphNodeKind } from "@/types/graph";
 
@@ -94,6 +97,7 @@ export default function TagEntityCard({
   onDeleteTag,
 }: TagEntityCardProps) {
   const modals = useEntityModals();
+  const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createMenuPosition, setCreateMenuPosition] = useState<{
@@ -432,6 +436,23 @@ export default function TagEntityCard({
                         >
                           <HiPencilSquare className="h-4 w-4" />
                         </button>
+                        {(() => {
+                          const fullPath = entityFullPagePath(g.type, it.id);
+                          if (!fullPath) return null;
+                          return (
+                            <button
+                              onClick={() => {
+                                onClose();
+                                router.push(fullPath);
+                              }}
+                              className="p-1 text-zinc-500 hover:text-sky-600 dark:text-zinc-400"
+                              title="Open full page"
+                              aria-label="Open full page"
+                            >
+                              <FaExpand className="h-4 w-4" />
+                            </button>
+                          );
+                        })()}
                         <button
                           onClick={() =>
                             handleCopy(g.type, it.id, it.title, it.url)

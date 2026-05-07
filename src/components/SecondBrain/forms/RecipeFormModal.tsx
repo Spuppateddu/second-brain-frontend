@@ -12,6 +12,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreateRecipe, useUpdateRecipe } from "@/lib/queries/entities";
 import type { Recipe } from "@/types/entities";
 
@@ -92,6 +93,9 @@ function RecipeFormModalInner({
       isOpen
       onClose={onClose}
       size="xl"
+      fullPagePath={
+        initial ? entityFullPagePath("recipe", initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

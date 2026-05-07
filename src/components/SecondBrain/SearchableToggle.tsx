@@ -30,7 +30,9 @@ export default function SearchableToggle({
         )}
       </button>
       <span className="text-sm text-zinc-600 dark:text-zinc-400">
-        {value ? "Visible in spotlight" : "Hidden from spotlight"}
+        {value
+          ? "Visible in spotlight & graph"
+          : "Hidden from spotlight & graph"}
       </span>
     </div>
   );

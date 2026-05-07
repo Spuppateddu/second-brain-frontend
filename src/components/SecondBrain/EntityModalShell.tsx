@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { FaExpand } from "react-icons/fa";
 
 interface EntityModalShellProps {
   isOpen: boolean;
@@ -15,6 +17,12 @@ interface EntityModalShellProps {
   size?: "lg" | "xl";
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
+  /**
+   * When set, renders an "open full page" icon button in the header that
+   * routes to this path on click. Mirrors the same affordance shown in the
+   * spotlight search results.
+   */
+  fullPagePath?: string;
 }
 
 export default function EntityModalShell({
@@ -26,7 +34,9 @@ export default function EntityModalShell({
   size = "lg",
   closeOnBackdrop = false,
   closeOnEscape = true,
+  fullPagePath,
 }: EntityModalShellProps) {
+  const router = useRouter();
   useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
     const onKey = (e: KeyboardEvent) => {
@@ -55,8 +65,22 @@ export default function EntityModalShell({
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-          {titleContent}
+        <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+          <div className="min-w-0 flex-1">{titleContent}</div>
+          {fullPagePath && (
+            <button
+              type="button"
+              aria-label="Open full page"
+              title="Open full page"
+              onClick={() => {
+                onClose();
+                router.push(fullPagePath);
+              }}
+              className="flex-shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-blue-100 hover:text-blue-600 dark:text-zinc-500 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
+            >
+              <FaExpand className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-4">{children}</div>
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">

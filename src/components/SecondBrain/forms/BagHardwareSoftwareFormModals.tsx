@@ -24,6 +24,7 @@ export function BagFormModal(props: CommonProps<Bag>) {
     <SimpleEntityFormModal
       {...props}
       entityLabel="Bag"
+      entityType="bag"
       titleField="title"
       createMutation={useCreateBag()}
       updateMutation={useUpdateBag(props.initial?.id ?? 0)}
@@ -36,6 +37,7 @@ export function HardwareFormModal(props: CommonProps<Hardware>) {
     <SimpleEntityFormModal
       {...props}
       entityLabel="Hardware"
+      entityType="hardware"
       titleField="title"
       createMutation={useCreateHardware()}
       updateMutation={useUpdateHardware(props.initial?.id ?? 0)}
@@ -48,6 +50,7 @@ export function SoftwareFormModal(props: CommonProps<Software>) {
     <SimpleEntityFormModal
       {...props}
       entityLabel="Software"
+      entityType="software"
       titleField="title"
       createMutation={useCreateSoftware()}
       updateMutation={useUpdateSoftware(props.initial?.id ?? 0)}

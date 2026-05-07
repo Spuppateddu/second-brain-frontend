@@ -14,6 +14,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import {
   useCreateBookmark,
   useUpdateBookmark,
@@ -108,6 +109,9 @@ function BookmarkFormModalInner({
     <EntityModalShell
       isOpen
       onClose={onClose}
+      fullPagePath={
+        initial ? entityFullPagePath("bookmark", initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

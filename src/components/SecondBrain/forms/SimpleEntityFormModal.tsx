@@ -13,6 +13,7 @@ import {
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 
 interface MutationLike<TPayload> {
   isPending: boolean;
@@ -28,6 +29,8 @@ interface SimpleEntityFormModalProps<
   prefillTagId?: number;
   /** Display name for the entity, e.g. "Bag", "Hardware". */
   entityLabel: string;
+  /** Backend entity kind, used to resolve the full-page route. */
+  entityType: "bag" | "hardware" | "software";
   /** Field on the entity that holds its display title — usually `title` or `name`. */
   titleField: "title" | "name";
   onClose: () => void;
@@ -52,6 +55,7 @@ function SimpleEntityFormModalInner<
   initial,
   prefillTagId,
   entityLabel,
+  entityType,
   titleField,
   onClose,
   onSaved,
@@ -118,6 +122,9 @@ function SimpleEntityFormModalInner<
     <EntityModalShell
       isOpen
       onClose={onClose}
+      fullPagePath={
+        initial ? entityFullPagePath(entityType, initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

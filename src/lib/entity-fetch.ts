@@ -27,6 +27,32 @@ export function isEditableEntityType(type: string): type is EditableEntityType {
   return entityFetchConfig(type) !== undefined;
 }
 
+// Frontend route slugs are not always identical to the API URL prefixes (e.g.
+// `wishlist_item` -> `/wishlist/{id}`, `mega_file` -> `/mega-files/{id}`), so
+// we keep a separate map rather than reusing `FETCH_BY_TYPE`.
+const FULL_PAGE_PATHS: Record<EditableEntityType, (id: number) => string> = {
+  bookmark: (id) => `/bookmarks/${id}`,
+  note: (id) => `/notes/${id}`,
+  recipe: (id) => `/recipes/${id}`,
+  wishlist_item: (id) => `/wishlist/${id}`,
+  place: (id) => `/places/${id}`,
+  person: (id) => `/persons/${id}`,
+  bag: (id) => `/bags/${id}`,
+  hardware: (id) => `/hardware/${id}`,
+  software: (id) => `/software/${id}`,
+  trip: (id) => `/trips/${id}`,
+  mega_file: (id) => `/mega-files/${id}`,
+};
+
+export function entityFullPagePath(
+  type: string,
+  id: number,
+): string | undefined {
+  return (FULL_PAGE_PATHS as Record<string, ((id: number) => string) | undefined>)[
+    type
+  ]?.(id);
+}
+
 export async function fetchEntityForEdit<T = unknown>(
   type: string,
   id: number,

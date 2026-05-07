@@ -12,6 +12,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreateMegaFile, useUpdateMegaFile } from "@/lib/queries/entities";
 import type { MegaFile } from "@/types/entities";
 
@@ -91,6 +92,9 @@ function MegaFileFormModalInner({
     <EntityModalShell
       isOpen
       onClose={onClose}
+      fullPagePath={
+        initial ? entityFullPagePath("mega_file", initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

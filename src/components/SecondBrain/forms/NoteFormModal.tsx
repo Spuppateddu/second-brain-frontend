@@ -12,6 +12,7 @@ import {
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreateNote, useUpdateNote } from "@/lib/queries/entities";
 import type { Note } from "@/types/entities";
 
@@ -82,6 +83,7 @@ function NoteFormModalInner({
       isOpen
       onClose={onClose}
       size="xl"
+      fullPagePath={initial ? entityFullPagePath("note", initial.id) : undefined}
       titleContent={
         <ModalTitleInput
           value={title}

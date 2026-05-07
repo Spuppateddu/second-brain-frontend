@@ -13,6 +13,7 @@ import {
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreateWishlist, useUpdateWishlist } from "@/lib/queries/entities";
 import type { WishlistItem } from "@/types/entities";
 
@@ -92,6 +93,9 @@ function WishlistFormModalInner({
     <EntityModalShell
       isOpen
       onClose={onClose}
+      fullPagePath={
+        initial ? entityFullPagePath("wishlist_item", initial.id) : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={name}

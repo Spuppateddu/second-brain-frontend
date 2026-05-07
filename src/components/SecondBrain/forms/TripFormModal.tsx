@@ -14,6 +14,7 @@ import {
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { entityFullPagePath } from "@/lib/entity-fetch";
 import { useCreateTrip, useUpdateTrip } from "@/lib/queries/entities";
 import type { Trip } from "@/types/entities";
 
@@ -141,6 +142,7 @@ function TripFormModalInner({
       isOpen
       onClose={onClose}
       size="xl"
+      fullPagePath={initial ? entityFullPagePath("trip", initial.id) : undefined}
       titleContent={
         <ModalTitleInput
           value={name}
