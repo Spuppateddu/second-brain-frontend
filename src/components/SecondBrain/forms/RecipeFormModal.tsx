@@ -96,6 +96,7 @@ function RecipeFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("recipe", initial.id) : undefined
       }
+      anchorEntity={initial ? { type: "recipe", id: initial.id } : undefined}
       titleContent={
         <ModalTitleInput
           value={title}

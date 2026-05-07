@@ -7,6 +7,7 @@ import { use, useState } from "react";
 import { EntityListShell } from "@/components/EntityListShell";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
 import { RecipeForm } from "@/components/RecipeForm";
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
 import {
   useDeleteRecipe,
@@ -23,6 +24,9 @@ function RecipeEditCard({ recipe }: { recipe: Recipe }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <AnchorToggleButton type="recipe" id={recipe.id} />
+      </div>
       <RecipeForm
         initial={recipe}
         submitLabel="Save"

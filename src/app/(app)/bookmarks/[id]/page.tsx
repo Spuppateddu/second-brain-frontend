@@ -7,6 +7,7 @@ import { use, useState } from "react";
 import { BookmarkForm } from "@/components/BookmarkForm";
 import { EntityListShell } from "@/components/EntityListShell";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
 import {
   useBookmark,
@@ -23,6 +24,9 @@ function BookmarkEditCard({ bookmark }: { bookmark: Bookmark }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <AnchorToggleButton type="bookmark" id={bookmark.id} />
+      </div>
       <BookmarkForm
         initial={bookmark}
         submitLabel="Save"

@@ -6,6 +6,7 @@ import { use, useState } from "react";
 
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
 import { TagPicker } from "@/components/TagPicker";
 import {
@@ -66,6 +67,7 @@ function NoteEditForm({ note }: { note: Note }) {
               Saved {savedAt.toLocaleTimeString()}
             </span>
           ) : null}
+          <AnchorToggleButton type="note" id={note.id} />
           <Button
             variant="primary"
             size="sm"

@@ -85,6 +85,7 @@ function PlaceFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("place", initial.id) : undefined
       }
+      anchorEntity={initial ? { type: "place", id: initial.id } : undefined}
       titleContent={
         <ModalTitleInput
           value={name}

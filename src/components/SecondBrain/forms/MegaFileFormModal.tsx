@@ -95,6 +95,9 @@ function MegaFileFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("mega_file", initial.id) : undefined
       }
+      anchorEntity={
+        initial ? { type: "mega_file", id: initial.id } : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

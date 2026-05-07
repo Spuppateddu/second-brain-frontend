@@ -37,6 +37,7 @@ export default function EditPlacePage({
         description: item.description ?? ""
 })}
       withTags
+      anchorEntityType="place"
 
       useOne={usePlace}
       useUpdate={useUpdatePlace}

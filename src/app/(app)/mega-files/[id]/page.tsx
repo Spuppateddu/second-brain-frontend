@@ -7,6 +7,7 @@ import { use, useState } from "react";
 import { EntityListShell } from "@/components/EntityListShell";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
 import { MegaFileForm } from "@/components/MegaFileForm";
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
 import {
   useDeleteMegaFile,
@@ -23,6 +24,9 @@ function MegaFileEditCard({ file }: { file: MegaFile }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <AnchorToggleButton type="mega_file" id={file.id} />
+      </div>
       <MegaFileForm
         initial={file}
         submitLabel="Save"

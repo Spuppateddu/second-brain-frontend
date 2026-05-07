@@ -85,6 +85,7 @@ function PersonFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("person", initial.id) : undefined
       }
+      anchorEntity={initial ? { type: "person", id: initial.id } : undefined}
       titleContent={
         <ModalTitleInput
           value={name}

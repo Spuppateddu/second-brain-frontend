@@ -143,6 +143,7 @@ function TripFormModalInner({
       onClose={onClose}
       size="xl"
       fullPagePath={initial ? entityFullPagePath("trip", initial.id) : undefined}
+      anchorEntity={initial ? { type: "trip", id: initial.id } : undefined}
       titleContent={
         <ModalTitleInput
           value={name}

@@ -96,6 +96,9 @@ function WishlistFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("wishlist_item", initial.id) : undefined
       }
+      anchorEntity={
+        initial ? { type: "wishlist_item", id: initial.id } : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={name}

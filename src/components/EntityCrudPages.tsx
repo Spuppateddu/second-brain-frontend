@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { EntityListShell } from "@/components/EntityListShell";
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import {
   SimpleEntityForm,
   type FieldDef,
   type FormValues,
 } from "@/components/SimpleEntityForm";
+import type { EditableEntityType } from "@/lib/entity-fetch";
 
 type ApiError = { response?: { data?: { message?: string } } };
 
@@ -80,6 +82,7 @@ export function GenericEditPage<T extends { id: number }, TInput>({
   useUpdate,
   useDelete,
   renderBelow,
+  anchorEntityType,
 }: {
   id: number;
   title: string;
@@ -95,6 +98,7 @@ export function GenericEditPage<T extends { id: number }, TInput>({
   useUpdate: (id: number) => Mutator<TInput, T>;
   useDelete: () => Mutator<number, void>;
   renderBelow?: (item: T) => React.ReactNode;
+  anchorEntityType?: EditableEntityType;
 }) {
   const router = useRouter();
   const { data, isLoading, error } = useOne(Number.isNaN(id) ? null : id);
@@ -115,6 +119,11 @@ export function GenericEditPage<T extends { id: number }, TInput>({
     >
       {data ? (
         <div className="flex flex-col gap-4">
+          {anchorEntityType ? (
+            <div className="flex items-center justify-end">
+              <AnchorToggleButton type={anchorEntityType} id={data.id} />
+            </div>
+          ) : null}
           <EditCard<T, TInput>
             item={data}
             fields={fields}

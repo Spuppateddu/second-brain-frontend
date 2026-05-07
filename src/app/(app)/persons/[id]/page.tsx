@@ -37,6 +37,7 @@ export default function EditPersonPage({
         description: item.description ?? ""
 })}
       withTags
+      anchorEntityType="person"
 
       useOne={usePerson}
       useUpdate={useUpdatePerson}

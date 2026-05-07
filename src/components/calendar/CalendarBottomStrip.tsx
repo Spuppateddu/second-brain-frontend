@@ -1,8 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HiArrowTopRightOnSquare,
+  HiArrowsPointingOut,
+  HiBookmark,
   HiCheck,
   HiChevronDown,
   HiClipboardDocumentList,
@@ -14,6 +17,7 @@ import {
   HiHome,
   HiLink,
   HiNewspaper,
+  HiPencilSquare,
   HiPlay,
   HiPlus,
   HiShoppingCart,
@@ -21,6 +25,16 @@ import {
   HiVideoCamera,
 } from "react-icons/hi2";
 import type { IconType } from "react-icons";
+
+import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
+import {
+  entityFullPagePath,
+  fetchEntityForEdit,
+} from "@/lib/entity-fetch";
+import {
+  useCalendarAnchors,
+  type CalendarAnchor,
+} from "@/lib/queries/entity-anchors";
 
 import {
   useMedia,
@@ -51,6 +65,7 @@ import type { MediaTask, WishlistItem } from "@/types/entities";
 
 type SectionKey =
   | "budget"
+  | "entities"
   | "wishlist"
   | "media"
   | "planning"
@@ -77,6 +92,7 @@ const ALL_SECTIONS: SectionDef[] = [
     icon: HiCurrencyDollar,
     privilege: "cashflow_track",
   },
+  { key: "entities", label: "Entities", icon: HiBookmark },
   { key: "wishlist", label: "Wishlist", icon: HiShoppingCart },
   { key: "media", label: "Media", icon: HiFilm },
   {
@@ -183,6 +199,82 @@ function BudgetRow({ budget }: { budget: CalendarBudgetRow }) {
         />
       </div>
     </li>
+  );
+}
+
+function EntitiesSection({ items }: { items: CalendarAnchor[] }) {
+  const router = useRouter();
+  const modals = useEntityModals();
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-zinc-500">
+        No anchored entities. Open any entity and click the bookmark icon to
+        anchor it here.
+      </p>
+    );
+  }
+
+  async function openInModal(item: CalendarAnchor) {
+    const key = `${item.type}-${item.id}`;
+    setBusyKey(key);
+    try {
+      const entity = await fetchEntityForEdit<
+        Parameters<typeof modals.openEdit>[1]
+      >(item.type, item.id);
+      if (entity) modals.openEdit(item.type, entity);
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  function openFullPage(item: CalendarAnchor) {
+    const path = entityFullPagePath(item.type, item.id);
+    if (path) router.push(path);
+  }
+
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => {
+        const key = `${item.type}-${item.id}`;
+        const busy = busyKey === key;
+        return (
+          <li
+            key={key}
+            className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{item.title}</p>
+              <p className="text-xs uppercase tracking-wide text-zinc-500">
+                {item.type.replace("_", " ")}
+              </p>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => openInModal(item)}
+                disabled={busy}
+                title="Open in modal"
+                aria-label="Open in modal"
+                className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                <HiPencilSquare className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => openFullPage(item)}
+                title="Open full page"
+                aria-label="Open full page"
+                className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                <HiArrowsPointingOut className="h-4 w-4" />
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -857,6 +949,7 @@ export function CalendarBottomStrip({
   const youtube = useYoutubeWatchlist({ enabled: hasYoutube });
   const twitch = useTwitchLive({ enabled: hasTwitch });
   const rss = useRssNews({ enabled: hasRss });
+  const anchors = useCalendarAnchors();
 
   const wishlistDue = useMemo(() => {
     const today = todayString();
@@ -886,9 +979,11 @@ export function CalendarBottomStrip({
   );
 
   const budgetRows = budgets.data?.budgets ?? [];
+  const anchoredEntities = anchors.data ?? [];
 
   const counts: Record<SectionKey, number> = {
     budget: budgetRows.length,
+    entities: anchoredEntities.length,
     wishlist: wishlistDue.length,
     media: watchlistMedia.length,
     planning: planningTasks.length,
@@ -908,6 +1003,7 @@ export function CalendarBottomStrip({
     [
       privileges,
       counts.budget,
+      counts.entities,
       counts.wishlist,
       counts.media,
       counts.planning,
@@ -946,6 +1042,8 @@ export function CalendarBottomStrip({
     switch (key) {
       case "budget":
         return <BudgetSection budgets={budgetRows} />;
+      case "entities":
+        return <EntitiesSection items={anchoredEntities} />;
       case "wishlist":
         return <WishlistSection items={wishlistDue} />;
       case "media":

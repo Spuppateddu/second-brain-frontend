@@ -125,6 +125,9 @@ function SimpleEntityFormModalInner<
       fullPagePath={
         initial ? entityFullPagePath(entityType, initial.id) : undefined
       }
+      anchorEntity={
+        initial ? { type: entityType, id: initial.id } : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

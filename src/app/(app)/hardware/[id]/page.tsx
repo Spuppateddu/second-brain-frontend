@@ -35,6 +35,7 @@ export default function EditHardwarePage({
         description: item.description ?? ""
 })}
       withTags
+      anchorEntityType="hardware"
 
       useOne={useHardwareOne}
       useUpdate={useUpdateHardware}

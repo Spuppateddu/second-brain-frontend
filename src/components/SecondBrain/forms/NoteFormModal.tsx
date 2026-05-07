@@ -84,6 +84,7 @@ function NoteFormModalInner({
       onClose={onClose}
       size="xl"
       fullPagePath={initial ? entityFullPagePath("note", initial.id) : undefined}
+      anchorEntity={initial ? { type: "note", id: initial.id } : undefined}
       titleContent={
         <ModalTitleInput
           value={title}

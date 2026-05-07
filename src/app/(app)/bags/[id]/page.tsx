@@ -35,6 +35,7 @@ export default function EditBagPage({
         description: item.description ?? ""
 })}
       withTags
+      anchorEntityType="bag"
 
       useOne={useBag}
       useUpdate={useUpdateBag}

@@ -112,6 +112,9 @@ function BookmarkFormModalInner({
       fullPagePath={
         initial ? entityFullPagePath("bookmark", initial.id) : undefined
       }
+      anchorEntity={
+        initial ? { type: "bookmark", id: initial.id } : undefined
+      }
       titleContent={
         <ModalTitleInput
           value={title}

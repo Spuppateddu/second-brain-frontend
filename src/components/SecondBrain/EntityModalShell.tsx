@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { FaExpand } from "react-icons/fa";
 
+import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
+import type { EditableEntityType } from "@/lib/entity-fetch";
+
 interface EntityModalShellProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +26,11 @@ interface EntityModalShellProps {
    * spotlight search results.
    */
   fullPagePath?: string;
+  /**
+   * When set, renders an anchor toggle so the user can pin this entity to
+   * the calendar Entities panel directly from the modal.
+   */
+  anchorEntity?: { type: EditableEntityType; id: number };
 }
 
 export default function EntityModalShell({
@@ -35,6 +43,7 @@ export default function EntityModalShell({
   closeOnBackdrop = false,
   closeOnEscape = true,
   fullPagePath,
+  anchorEntity,
 }: EntityModalShellProps) {
   const router = useRouter();
   useEffect(() => {
@@ -67,6 +76,12 @@ export default function EntityModalShell({
       >
         <div className="flex items-center gap-2 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
           <div className="min-w-0 flex-1">{titleContent}</div>
+          {anchorEntity && (
+            <AnchorToggleButton
+              type={anchorEntity.type}
+              id={anchorEntity.id}
+            />
+          )}
           {fullPagePath && (
             <button
               type="button"

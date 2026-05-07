@@ -35,6 +35,7 @@ export default function EditSoftwarePage({
         description: item.description ?? ""
 })}
       withTags
+      anchorEntityType="software"
 
       useOne={useSoftwareOne}
       useUpdate={useUpdateSoftware}
