@@ -35,6 +35,12 @@ export type TwitchChannelInput = {
   push_notifications_enabled: boolean;
 };
 
+export type YoutubeChannelInput = {
+  channel_id: string;
+  is_active: boolean;
+  push_notifications_enabled: boolean;
+};
+
 export const heavyKeys = {
   planning: ["planning"] as const,
   planningUnlinked: ["planning", "unlinked"] as const,
@@ -975,6 +981,19 @@ export function useToggleYoutubeChannelActive() {
   return useMutation({
     mutationFn: async (channelId: number) => {
       await api.patch(`/youtube-channels/${channelId}/toggle-active`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
+    },
+  });
+}
+
+export function useCreateYoutubeChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: YoutubeChannelInput) => {
+      const { data } = await api.post("/youtube-channels", payload);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: heavyKeys.youtubeChannels });
