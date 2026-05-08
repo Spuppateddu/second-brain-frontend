@@ -16,12 +16,19 @@ import { CashflowBreakdownChart } from "@/components/CashflowBreakdownChart";
 import { CashflowTrendsChart } from "@/components/cashflow/CashflowTrendsChart";
 import { Input } from "@/components/UI/Input";
 import {
+  SearchableMultiSelect,
+  SearchableSelect,
+} from "@/components/UI/SearchableSelect";
+import {
   type PaymentInput,
   useCashflow,
   useCashflowChartData,
   useCashflowFiltered,
   useCashflowTrends,
   useCreatePayment,
+  useCreatePaymentMethod,
+  useCreatePaymentPlatform,
+  useCreatePaymentType,
   useUpdatePayment,
 } from "@/lib/queries/heavy";
 import type {
@@ -285,6 +292,9 @@ function AddPaymentAccordion({
   paymentTypes: PaymentLookup[];
 }) {
   const create = useCreatePayment();
+  const createMethod = useCreatePaymentMethod();
+  const createPlatform = useCreatePaymentPlatform();
+  const createType = useCreatePaymentType();
   const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -396,29 +406,37 @@ function AddPaymentAccordion({
             />
           </FormField>
           <FormField label="Payment Method">
-            <SelectLookup
+            <SearchableSelect
               options={paymentMethods}
               value={methodId}
               onChange={setMethodId}
               placeholder="Select payment method"
+              createNoun="method"
+              onCreate={(n) => createMethod.mutateAsync({ name: n })}
             />
           </FormField>
           <FormField label="Payment Platform">
-            <SelectLookup
+            <SearchableSelect
               options={paymentPlatforms}
               value={platformId}
               onChange={setPlatformId}
               placeholder="Select payment platform"
+              createNoun="platform"
+              onCreate={(n) =>
+                createPlatform.mutateAsync({ name: n, is_digital: false })
+              }
             />
           </FormField>
         </div>
 
         <FormField label="Payment Types">
-          <MultiSelectDropdown
+          <SearchableMultiSelect
             options={paymentTypes}
             value={typeIds}
             onChange={setTypeIds}
             placeholder="Select payment types"
+            createNoun="type"
+            onCreate={(n) => createType.mutateAsync({ name: n })}
           />
         </FormField>
 
@@ -752,35 +770,6 @@ function FormField({
   );
 }
 
-function SelectLookup({
-  options,
-  value,
-  onChange,
-  placeholder = "Select…",
-}: {
-  options: PaymentLookup[];
-  value: number | null;
-  onChange: (id: number | null) => void;
-  placeholder?: string;
-}) {
-  return (
-    <select
-      value={value === null ? "" : String(value)}
-      onChange={(e) =>
-        onChange(e.target.value === "" ? null : Number(e.target.value))
-      }
-      className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.name}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function MultiSelectDropdown({
   options,
   value,
@@ -879,6 +868,9 @@ function EditPaymentModal({
   onClose: () => void;
 }) {
   const update = useUpdatePayment();
+  const createMethod = useCreatePaymentMethod();
+  const createPlatform = useCreatePaymentPlatform();
+  const createType = useCreatePaymentType();
   const [name, setName] = useState(payment.name);
   const [amount, setAmount] = useState(String(payment.amount));
   const [date, setDate] = useState(payment.date.split("T")[0]);
@@ -971,25 +963,35 @@ function EditPaymentModal({
               />
             </FormField>
             <FormField label="Method *">
-              <SelectLookup
+              <SearchableSelect
                 options={paymentMethods}
                 value={methodId}
                 onChange={setMethodId}
+                placeholder="Select payment method"
+                createNoun="method"
+                onCreate={(n) => createMethod.mutateAsync({ name: n })}
               />
             </FormField>
             <FormField label="Platform *">
-              <SelectLookup
+              <SearchableSelect
                 options={paymentPlatforms}
                 value={platformId}
                 onChange={setPlatformId}
+                placeholder="Select payment platform"
+                createNoun="platform"
+                onCreate={(n) =>
+                  createPlatform.mutateAsync({ name: n, is_digital: false })
+                }
               />
             </FormField>
             <FormField label="Types">
-              <MultiSelectDropdown
+              <SearchableMultiSelect
                 options={paymentTypes}
                 value={typeIds}
                 onChange={setTypeIds}
                 placeholder="Select payment types"
+                createNoun="type"
+                onCreate={(n) => createType.mutateAsync({ name: n })}
               />
             </FormField>
           </div>
