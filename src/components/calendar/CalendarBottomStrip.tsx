@@ -15,7 +15,6 @@ import {
   HiEye,
   HiFilm,
   HiHome,
-  HiLink,
   HiNewspaper,
   HiPencilSquare,
   HiPlay,
@@ -27,6 +26,7 @@ import {
 import type { IconType } from "react-icons";
 
 import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
+import { TaskModal } from "@/components/calendar/TaskModal";
 import {
   entityFullPagePath,
   fetchEntityForEdit,
@@ -44,13 +44,11 @@ import {
 import {
   useAddYoutubeByUrl,
   useCalendarBudgets,
-  useCopyPlanningToCalendar,
   usePlanningUnlinked,
   useRssNews,
   useToggleYoutubeVideoWatchlist,
   useToggleYoutubeWatched,
   useTwitchLive,
-  useUpdatePlanningTask,
   useUpdateYoutubeProgress,
   useYoutubeWatchlist,
 } from "@/lib/queries/heavy";
@@ -411,14 +409,10 @@ function planningTypeLabel(
 
 function PlanningSection({
   tasks,
-  selectedDate,
 }: {
   tasks: PlanningTaskUnlinked[];
-  selectedDate: string;
 }) {
-  const copyToCalendar = useCopyPlanningToCalendar();
-  const updateTask = useUpdatePlanningTask();
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [openTask, setOpenTask] = useState<PlanningTaskUnlinked | null>(null);
 
   if (tasks.length === 0) {
     return (
@@ -426,30 +420,26 @@ function PlanningSection({
     );
   }
 
-  async function linkToCalendar(taskId: number) {
-    setBusyId(taskId);
-    try {
-      await copyToCalendar.mutateAsync({ taskId, taskDate: selectedDate });
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function markDone(taskId: number) {
-    setBusyId(taskId);
-    try {
-      await updateTask.mutateAsync({ id: taskId, patch: { is_done: true } });
-    } finally {
-      setBusyId(null);
-    }
-  }
+  const planningPeriod =
+    openTask &&
+    openTask.start_date &&
+    openTask.end_date &&
+    openTask.planning_type_id != null
+      ? {
+          start_date: openTask.start_date,
+          end_date: openTask.end_date,
+          planning_type_id: openTask.planning_type_id,
+        }
+      : undefined;
 
   return (
     <div className="space-y-2">
       {tasks.map((task) => (
-        <div
+        <button
+          type="button"
           key={task.id}
-          className="rounded-lg border border-gray-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700"
+          onClick={() => setOpenTask(task)}
+          className="block w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700"
         >
           <div className="mb-2 flex items-center justify-between gap-3">
             <h4 className="flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
@@ -461,36 +451,20 @@ function PlanningSection({
               </span>
             ) : null}
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {planningTypeLabel(task.planning_type)}
-              {task.start_date ? ` · ${formatLocaleDate(task.start_date)}` : ""}
-            </p>
-            <div className="ml-auto flex gap-2">
-              <button
-                type="button"
-                onClick={() => linkToCalendar(task.id)}
-                disabled={busyId === task.id}
-                title={`Link to ${formatLocaleDate(selectedDate)}`}
-                className="inline-flex items-center gap-1 rounded-md bg-primary-100 px-2 py-1 text-xs font-medium text-primary-700 hover:bg-primary-200 disabled:opacity-50 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50"
-              >
-                <HiLink className="h-4 w-4" />
-                <span className="hidden sm:inline">Link</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => markDone(task.id)}
-                disabled={busyId === task.id}
-                title="Mark as done"
-                className="inline-flex items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
-              >
-                <HiCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Done</span>
-              </button>
-            </div>
-          </div>
-        </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {planningTypeLabel(task.planning_type)}
+            {task.start_date ? ` · ${formatLocaleDate(task.start_date)}` : ""}
+          </p>
+        </button>
       ))}
+
+      <TaskModal
+        open={openTask !== null}
+        onClose={() => setOpenTask(null)}
+        mode="planning"
+        planningTask={openTask}
+        planningPeriod={planningPeriod}
+      />
     </div>
   );
 }
@@ -1049,12 +1023,7 @@ export function CalendarBottomStrip({
       case "media":
         return <MediaSection items={watchlistMedia} />;
       case "planning":
-        return (
-          <PlanningSection
-            tasks={planningTasks}
-            selectedDate={selectedDate}
-          />
-        );
+        return <PlanningSection tasks={planningTasks} />;
       case "youtube":
         return <YouTubeSection videos={youtubeVideos} />;
       case "twitch":
