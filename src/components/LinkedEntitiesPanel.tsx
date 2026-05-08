@@ -1,8 +1,11 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
+import { HiPlus, HiXMark } from "react-icons/hi2";
 
+import { Button } from "@/components/UI/Button";
+import { FormSection } from "@/components/UI/FormSection";
+import { Input } from "@/components/UI/Input";
 import {
   useConnectEntities,
   useDisconnectEntities,
@@ -47,7 +50,7 @@ function LinkChip({
       type="button"
       disabled={pending}
       onClick={onRemove}
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
       style={{ backgroundColor: `${color}20`, color }}
       title={`Disconnect from ${link.label}`}
     >
@@ -61,7 +64,7 @@ function LinkChip({
         </span>{" "}
         {link.label}
       </span>
-      <span className="ml-1 text-zinc-500">×</span>
+      <span className="ml-1 opacity-70">×</span>
     </button>
   );
 }
@@ -83,7 +86,7 @@ function PickerResults({
 }) {
   if (results.length === 0) return null;
   return (
-    <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-950">
+    <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded-[var(--radius-control)] border border-secondary-200 bg-white p-1 dark:border-secondary-800 dark:bg-secondary-950">
       {results.map((r) => {
         const key = `${r.type}-${r.id}`;
         const linked = alreadyLinked.has(key);
@@ -99,7 +102,7 @@ function PickerResults({
                 "flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm",
                 disabled
                   ? "opacity-50"
-                  : "hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                  : "hover:bg-secondary-100 dark:hover:bg-secondary-800",
               ].join(" ")}
             >
               <span
@@ -108,8 +111,10 @@ function PickerResults({
                   backgroundColor: TYPE_COLORS[r.type] ?? "#94a3b8",
                 }}
               />
-              <span className="flex-1 truncate">{r.title}</span>
-              <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+              <span className="flex-1 truncate text-secondary-900 dark:text-secondary-100">
+                {r.title}
+              </span>
+              <span className="text-[10px] uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
                 {self ? "self" : linked ? "linked" : typeLabel(r.type)}
               </span>
             </button>
@@ -151,13 +156,14 @@ export function LinkedEntitiesPanel({
   const showSearch = query.trim().length >= 2;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Linked entities</h3>
-        <span className="text-xs text-zinc-500">
+    <FormSection
+      title="Linked entities"
+      actions={
+        <span className="text-xs text-secondary-500 dark:text-secondary-400">
           {links.isLoading ? "Loading…" : `${list.length} linked`}
         </span>
-      </div>
+      }
+    >
       {list.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {list.map((link) => (
@@ -185,11 +191,14 @@ export function LinkedEntitiesPanel({
             placeholder="Search anything (≥ 2 chars)…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoFocus
+            isFocused
+            fullWidth
           />
           {showSearch ? (
             search.isLoading ? (
-              <p className="text-xs text-zinc-500">Searching…</p>
+              <p className="text-xs text-secondary-500 dark:text-secondary-400">
+                Searching…
+              </p>
             ) : search.data && search.data.length > 0 ? (
               <PickerResults
                 results={search.data}
@@ -209,11 +218,13 @@ export function LinkedEntitiesPanel({
                 }
               />
             ) : (
-              <p className="text-xs text-zinc-500">No matches.</p>
+              <p className="text-xs text-secondary-500 dark:text-secondary-400">
+                No matches.
+              </p>
             )
           ) : (
             <>
-              <span className="text-xs uppercase tracking-wide text-zinc-500">
+              <span className="text-xs uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
                 Or pick a tag
               </span>
               <PickerResults
@@ -228,28 +239,32 @@ export function LinkedEntitiesPanel({
               />
             </>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setOpen(false);
-              setQuery("");
-            }}
-          >
-            Close
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              leftIcon={<HiXMark className="h-4 w-4" />}
+              onClick={() => {
+                setOpen(false);
+                setQuery("");
+              }}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       ) : (
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
+          leftIcon={<HiPlus className="h-4 w-4" />}
           onClick={() => setOpen(true)}
         >
-          + Link to another entity
+          Link to another entity
         </Button>
       )}
-    </div>
+    </FormSection>
   );
 }

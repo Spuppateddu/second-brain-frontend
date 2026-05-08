@@ -1,11 +1,14 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { HiArrowLongLeft } from "react-icons/hi2";
 
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 import { useCreateNote } from "@/lib/queries/entities";
 
 export default function NewNotePage() {
@@ -34,36 +37,43 @@ export default function NewNotePage() {
   }
 
   return (
-    <main className="flex flex-col gap-4 p-6">
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => router.push("/notes")}
-          className="text-sm text-zinc-500 hover:underline"
-        >
-          ← Back to notes
-        </button>
+    <main className="flex flex-col gap-4 p-4 sm:p-6 lg:py-10">
+      <header className="flex items-center justify-between">
+        <Link href="/notes">
+          <Button variant="ghost" size="xs" leftIcon={<HiArrowLongLeft />}>
+            Back to notes
+          </Button>
+        </Link>
         <Button
           variant="primary"
           size="sm"
-          isDisabled={!title.trim() || create.isPending}
+          disabled={!title.trim() || create.isPending}
+          loading={create.isPending}
           onClick={save}
         >
-          {create.isPending ? "Saving…" : "Create"}
+          Create
         </Button>
-      </div>
+      </header>
+
       <Input
         type="text"
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        fullWidth
       />
+
       <RichTextEditor
         value={content}
         onChange={setContent}
         placeholder="Write your first paragraph…"
       />
+
       <TagPicker value={tagIds} onChange={setTagIds} />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
     </main>
   );
 }

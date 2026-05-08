@@ -1,9 +1,19 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
+import {
+  HiArrowLongDown,
+  HiArrowLongUp,
+  HiPlus,
+  HiXMark,
+} from "react-icons/hi2";
 
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
+import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
+import { Textarea } from "@/components/UI/Textarea";
 import type { RecipeInput } from "@/lib/queries/entities";
 import type { Recipe } from "@/types/entities";
 
@@ -78,80 +88,61 @@ export function RecipeForm({
         });
       }}
     >
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Title <span className="text-danger">*</span>
-        </span>
-        <Input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          autoFocus
-        />
-      </label>
+      <Input
+        label="Title *"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        isFocused
+        fullWidth
+      />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Difficulty
-          </span>
-          <select
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            value={difficulty}
-            onChange={(e) =>
-              setDifficulty(
-                e.target.value as "" | "easy" | "medium" | "hard",
-              )
-            }
-          >
-            <option value="">—</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Time (minutes)
-          </span>
-          <Input
-            type="number"
-            min={1}
-            value={timeMinutes}
-            onChange={(e) => setTimeMinutes(e.target.value)}
-          />
-        </label>
+        <Select
+          label="Difficulty"
+          value={difficulty}
+          onChange={(e) =>
+            setDifficulty(e.target.value as "" | "easy" | "medium" | "hard")
+          }
+          fullWidth
+        >
+          <option value="">—</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </Select>
+        <Input
+          label="Time (minutes)"
+          type="number"
+          min={1}
+          value={timeMinutes}
+          onChange={(e) => setTimeMinutes(e.target.value)}
+          fullWidth
+        />
       </div>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Ingredients
-        </span>
-        <textarea
-          className="min-h-[100px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-          value={ingredients ?? ""}
-          onChange={(e) => setIngredients(e.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          General instructions
-        </span>
-        <textarea
-          className="min-h-[100px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-          value={instructions ?? ""}
-          onChange={(e) => setInstructions(e.target.value)}
-        />
-      </label>
+      <Textarea
+        label="Ingredients"
+        value={ingredients ?? ""}
+        onChange={(e) => setIngredients(e.target.value)}
+        className="min-h-[100px]"
+        fullWidth
+      />
+      <Textarea
+        label="General instructions"
+        value={instructions ?? ""}
+        onChange={(e) => setInstructions(e.target.value)}
+        className="min-h-[100px]"
+        fullWidth
+      />
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs uppercase tracking-wide text-zinc-500">
+        <legend className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
           Steps
         </legend>
         {steps.map((step, i) => (
           <div key={i} className="flex items-start gap-2">
-            <span className="mt-2 w-6 text-right text-xs text-zinc-500">
+            <span className="mt-2 w-6 text-right text-xs text-secondary-500 dark:text-secondary-400">
               {i + 1}.
             </span>
-            <textarea
-              className="min-h-[60px] flex-1 rounded-lg border border-zinc-200 bg-white p-2 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            <Textarea
               placeholder="Describe this step…"
               value={step}
               onChange={(e) =>
@@ -159,60 +150,71 @@ export function RecipeForm({
                   s.map((v, idx) => (idx === i ? e.target.value : v)),
                 )
               }
+              className="min-h-[60px] flex-1"
+              fullWidth
             />
             <div className="flex flex-col gap-1">
-              <button
-                type="button"
-                className="rounded px-2 py-1 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30"
+              <IconButton
+                size="xs"
+                variant="ghost"
+                label="Move up"
                 disabled={i === 0}
                 onClick={() => moveStep(i, -1)}
               >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="rounded px-2 py-1 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30"
+                <HiArrowLongUp />
+              </IconButton>
+              <IconButton
+                size="xs"
+                variant="ghost"
+                label="Move down"
                 disabled={i === steps.length - 1}
                 onClick={() => moveStep(i, 1)}
               >
-                ↓
-              </button>
+                <HiArrowLongDown />
+              </IconButton>
             </div>
-            <button
-              type="button"
-              className="rounded px-2 py-1 text-xs text-zinc-500 hover:text-danger"
+            <IconButton
+              size="xs"
+              variant="danger"
+              label="Remove step"
               onClick={() =>
                 setSteps((s) =>
                   s.length === 1 ? [""] : s.filter((_, idx) => idx !== i),
                 )
               }
             >
-              ×
-            </button>
+              <HiXMark />
+            </IconButton>
           </div>
         ))}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setSteps((s) => [...s, ""])}
-        >
-          + Add step
-        </Button>
+        <div>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            leftIcon={<HiPlus className="h-4 w-4" />}
+            onClick={() => setSteps((s) => [...s, ""])}
+          >
+            Add step
+          </Button>
+        </div>
       </fieldset>
       <TagPicker value={tagIds} onChange={setTagIds} />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
       <div className="flex items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           type="submit"
           variant="primary"
           size="sm"
-          isDisabled={!valid || isPending}
+          disabled={!valid || isPending}
+          loading={isPending}
         >
-          {isPending ? "Saving…" : submitLabel}
+          {submitLabel}
         </Button>
       </div>
     </form>

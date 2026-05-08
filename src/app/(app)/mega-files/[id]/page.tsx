@@ -1,14 +1,16 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { HiTrash } from "react-icons/hi2";
 
 import { EntityListShell } from "@/components/EntityListShell";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
 import { MegaFileForm } from "@/components/MegaFileForm";
 import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
+import { FormSection } from "@/components/UI/FormSection";
+import { IconButton } from "@/components/UI/IconButton";
 import {
   useDeleteMegaFile,
   useMegaFile,
@@ -24,46 +26,48 @@ function MegaFileEditCard({ file }: { file: MegaFile }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <AnchorToggleButton type="mega_file" id={file.id} />
-      </div>
-      <MegaFileForm
-        initial={file}
-        submitLabel="Save"
-        isPending={update.isPending}
-        error={error}
-        onCancel={() => router.push("/mega-files")}
-        onSubmit={async (input) => {
-          setError(null);
-          try {
-            await update.mutateAsync(input);
-            router.push("/mega-files");
-          } catch (err) {
-            const message =
-              (err as { response?: { data?: { message?: string } } })?.response
-                ?.data?.message ?? "Failed to save.";
-            setError(message);
-          }
-        }}
-      />
-      <div className="flex justify-end">
-        <Button
-          variant="danger-soft"
-          size="sm"
-          isDisabled={remove.isPending}
-          onClick={async () => {
-            if (!confirm("Delete this mega file?")) return;
+      <FormSection
+        title="Details"
+        actions={
+          <IconButton
+            size="sm"
+            variant="danger"
+            label="Delete mega file"
+            disabled={remove.isPending}
+            onClick={async () => {
+              if (!confirm("Delete this mega file?")) return;
+              try {
+                await remove.mutateAsync(file.id);
+                router.push("/mega-files");
+              } catch {
+                setError("Failed to delete.");
+              }
+            }}
+          >
+            <HiTrash />
+          </IconButton>
+        }
+      >
+        <MegaFileForm
+          initial={file}
+          submitLabel="Save"
+          isPending={update.isPending}
+          error={error}
+          onCancel={() => router.push("/mega-files")}
+          onSubmit={async (input) => {
+            setError(null);
             try {
-              await remove.mutateAsync(file.id);
+              await update.mutateAsync(input);
               router.push("/mega-files");
-            } catch {
-              setError("Failed to delete.");
+            } catch (err) {
+              const message =
+                (err as { response?: { data?: { message?: string } } })
+                  ?.response?.data?.message ?? "Failed to save.";
+              setError(message);
             }
           }}
-        >
-          Delete
-        </Button>
-      </div>
+        />
+      </FormSection>
       <SharableLinksPanel type="mega_file" id={file.id} />
       <LinkedEntitiesPanel type="mega_file" id={file.id} />
     </div>
@@ -83,8 +87,10 @@ export default function EditMegaFilePage({
 
   if (Number.isNaN(fileId)) {
     return (
-      <main className="p-6">
-        <p className="text-sm text-danger">Invalid mega file id.</p>
+      <main className="p-4 sm:p-6 lg:py-10">
+        <p className="text-sm text-danger-600 dark:text-danger-400">
+          Invalid mega file id.
+        </p>
       </main>
     );
   }
@@ -94,6 +100,9 @@ export default function EditMegaFilePage({
       title={data ? `Mega file · ${data.title}` : "Mega file"}
       isLoading={isLoading}
       error={error}
+      headerActions={
+        data ? <AnchorToggleButton type="mega_file" id={data.id} /> : undefined
+      }
     >
       {data ? <MegaFileEditCard file={data} key={data.id} /> : null}
     </EntityListShell>

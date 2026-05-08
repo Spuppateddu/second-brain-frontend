@@ -1,17 +1,21 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import {
   HiChevronDown,
-  HiPause,
+  HiPauseCircle,
   HiPencilSquare,
-  HiPlay,
+  HiPlayCircle,
   HiPlus,
   HiTrash,
 } from "react-icons/hi2";
 
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
+import { Textarea } from "@/components/UI/Textarea";
 import {
   type Subscription,
   type SubscriptionFrequency,
@@ -122,18 +126,20 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Subscription Management</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Subscription management
+          </h1>
+        </header>
 
-      {error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the subscriptions. Try refreshing.
-        </p>
-      ) : null}
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the subscriptions. Try refreshing.
+          </p>
+        ) : null}
 
-      <div className="mx-auto w-full max-w-7xl space-y-6">
         <CreateSubscriptionAccordion
           open={formOpen}
           onToggle={() => (formOpen ? closeForm() : startCreate())}
@@ -147,33 +153,37 @@ export default function SubscriptionsPage() {
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <StatCard label="Active Subscriptions" value={activeCount} tone="green" />
           <StatCard
-            label="Total Subscriptions"
+            label="Active subscriptions"
+            value={activeCount}
+            tone="success"
+          />
+          <StatCard
+            label="Total subscriptions"
             value={subscriptions.length}
-            tone="zinc"
+            tone="neutral"
           />
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-5">
+        <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-semibold">
-                Generate Monthly Payments
+              <h3 className="text-base font-semibold text-secondary-900 dark:text-secondary-100">
+                Generate monthly payments
               </h3>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-secondary-500 dark:text-secondary-400">
                 Create payment entries for active subscriptions for the current
                 month (future/present dates only).
               </p>
             </div>
             <Button
               variant="secondary"
+              size="sm"
               onClick={handleGenerate}
-              isDisabled={generatePayments.isPending}
+              disabled={generatePayments.isPending}
+              loading={generatePayments.isPending}
             >
-              {generatePayments.isPending
-                ? "Generating…"
-                : "Generate Payments"}
+              Generate payments
             </Button>
           </div>
           {genMessage ? (
@@ -181,7 +191,7 @@ export default function SubscriptionsPage() {
               className={`mt-3 text-sm ${
                 genMessage.tone === "success"
                   ? "text-success-600 dark:text-success-400"
-                  : "text-danger"
+                  : "text-danger-600 dark:text-danger-400"
               }`}
             >
               {genMessage.text}
@@ -190,22 +200,24 @@ export default function SubscriptionsPage() {
         </div>
 
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-zinc-500">Loading…</p>
+          <p className="py-12 text-center text-sm text-secondary-500 dark:text-secondary-400">
+            Loading…
+          </p>
         ) : subscriptions.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="mb-4 text-lg text-zinc-500 dark:text-zinc-400">
+          <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white py-12 text-center shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
+            <p className="mb-4 text-base text-secondary-600 dark:text-secondary-400">
               No subscriptions configured yet.
             </p>
-            <Button variant="primary" onClick={startCreate}>
-              Create Your First Subscription
+            <Button variant="primary" size="sm" onClick={startCreate}>
+              Create your first subscription
             </Button>
           </div>
         ) : (
           <div>
-            <h2 className="text-lg font-semibold">
-              Active Subscriptions ({activeCount})
+            <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">
+              Active subscriptions ({activeCount})
             </h2>
-            <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mb-4 text-sm text-secondary-500 dark:text-secondary-400">
               Currently active subscription tracking
             </p>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -235,25 +247,27 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  tone: "green" | "zinc";
+  tone: "success" | "neutral";
 }) {
   const map = {
-    green: {
-      bg: "bg-green-50 dark:bg-green-900/30",
-      border: "border-green-200 dark:border-green-700",
-      title: "text-green-800 dark:text-green-300",
-      value: "text-green-900 dark:text-green-100",
+    success: {
+      bg: "bg-success-50 dark:bg-success-900/30",
+      border: "border-success-200 dark:border-success-700",
+      title: "text-success-800 dark:text-success-300",
+      value: "text-success-900 dark:text-success-100",
     },
-    zinc: {
-      bg: "bg-zinc-50 dark:bg-zinc-900",
-      border: "border-zinc-200 dark:border-zinc-700",
-      title: "text-zinc-700 dark:text-zinc-300",
-      value: "text-zinc-900 dark:text-zinc-100",
+    neutral: {
+      bg: "bg-secondary-50 dark:bg-secondary-900",
+      border: "border-secondary-200 dark:border-secondary-700",
+      title: "text-secondary-700 dark:text-secondary-300",
+      value: "text-secondary-900 dark:text-secondary-100",
     },
   } as const;
   const c = map[tone];
   return (
-    <div className={`rounded-lg border p-4 ${c.bg} ${c.border}`}>
+    <div
+      className={`rounded-[var(--radius-card)] border p-4 ${c.bg} ${c.border}`}
+    >
       <p className={`text-sm font-medium ${c.title}`}>{label}</p>
       <p className={`mt-1 text-3xl font-bold ${c.value}`}>{value}</p>
     </div>
@@ -281,24 +295,26 @@ function CreateSubscriptionAccordion({
   onSubmit: (payload: SubscriptionInput) => Promise<void>;
   isPending: boolean;
 }) {
-  const title = editing ? "Edit Subscription" : "Create Subscription";
+  const title = editing ? "Edit subscription" : "Create subscription";
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-900"
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-secondary-50 dark:hover:bg-secondary-900"
       >
         <div className="flex items-center gap-2">
-          <HiPlus className="h-4 w-4 text-zinc-500" />
-          <span className="text-sm font-medium">{title}</span>
+          <HiPlus className="h-4 w-4 text-secondary-500" />
+          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">
+            {title}
+          </span>
         </div>
         <HiChevronDown
-          className={`h-5 w-5 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-5 w-5 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="border-t border-zinc-200 p-5 dark:border-zinc-800">
+        <div className="border-t border-secondary-200 p-5 dark:border-secondary-800">
           <SubscriptionForm
             key={editing?.id ?? "new"}
             initial={editing}
@@ -421,133 +437,101 @@ function SubscriptionForm({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="mb-1 block text-sm font-medium">
-          Subscription Name
-        </label>
+      <Input
+        label="Subscription name"
+        type="text"
+        placeholder="e.g., Netflix Premium"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        fullWidth
+      />
+
+      <Textarea
+        label="Description (optional)"
+        placeholder="Brief description of this subscription…"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
+        fullWidth
+      />
+
+      <Input
+        label="Subscription amount"
+        type="number"
+        step="0.01"
+        min={0}
+        placeholder="0.00"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        fullWidth
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
-          type="text"
-          placeholder="e.g., Netflix Premium"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          label="Start date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
           fullWidth
         />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium">
-          Description (Optional)
-        </label>
-        <textarea
-          placeholder="Brief description of this subscription..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium">
-          Subscription Amount
-        </label>
         <Input
-          type="number"
-          step="0.01"
-          min={0}
-          placeholder="0.00"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          label="End date (optional)"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          helperText="Leave empty for ongoing subscription"
           fullWidth
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Start Date</label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            fullWidth
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            End Date (Optional)
-          </label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            fullWidth
-          />
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Leave empty for ongoing subscription
-          </p>
-        </div>
+        <Select
+          label="Payment day"
+          value={paymentDay}
+          onChange={(e) => setPaymentDay(Number(e.target.value))}
+          helperText="Day of the month for payment"
+          fullWidth
+        >
+          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </Select>
+        <Select
+          label="Payment frequency"
+          value={frequency}
+          onChange={(e) =>
+            setFrequency(e.target.value as SubscriptionFrequency)
+          }
+          fullWidth
+        >
+          <option value="monthly">Monthly</option>
+          <option value="3_months">Every 3 months</option>
+          <option value="6_months">Every 6 months</option>
+          <option value="annual">Annual</option>
+        </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Payment Day</label>
-          <select
-            value={paymentDay}
-            onChange={(e) => setPaymentDay(Number(e.target.value))}
-            className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          >
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Day of the month for payment
-          </p>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Payment Frequency
-          </label>
-          <select
-            value={frequency}
-            onChange={(e) =>
-              setFrequency(e.target.value as SubscriptionFrequency)
-            }
-            className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          >
-            <option value="monthly">Monthly</option>
-            <option value="3_months">Every 3 months</option>
-            <option value="6_months">Every 6 months</option>
-            <option value="annual">Annual</option>
-          </select>
-        </div>
-      </div>
-
+      <SelectLookup
+        label="Payment method"
+        options={paymentMethods}
+        value={methodId}
+        onChange={setMethodId}
+        placeholder="Select payment method"
+      />
+      <SelectLookup
+        label="Payment platform"
+        options={paymentPlatforms}
+        value={platformId}
+        onChange={setPlatformId}
+        placeholder="Select payment platform"
+      />
       <div>
-        <label className="mb-1 block text-sm font-medium">Payment Method</label>
-        <SelectLookup
-          options={paymentMethods}
-          value={methodId}
-          onChange={setMethodId}
-          placeholder="Select payment method"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">
-          Payment Platform
+        <label className="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-300">
+          Payment types
         </label>
-        <SelectLookup
-          options={paymentPlatforms}
-          value={platformId}
-          onChange={setPlatformId}
-          placeholder="Select payment platform"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Payment Types</label>
-        <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mb-1 text-xs text-secondary-500 dark:text-secondary-400">
           Select at least one payment type for this subscription.
         </p>
         <MultiSelectDropdown
@@ -558,22 +542,27 @@ function SubscriptionForm({
         />
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
 
-      <div className="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+      <div className="flex justify-end gap-2 border-t border-secondary-200 pt-4 dark:border-secondary-800">
         <Button
           variant="secondary"
+          size="sm"
           onClick={onCancel}
-          isDisabled={isPending}
+          disabled={isPending}
         >
           Cancel
         </Button>
-        <Button variant="primary" onClick={submit} isDisabled={isPending}>
-          {isPending
-            ? "Saving…"
-            : editing
-              ? "Update Subscription"
-              : "Create Subscription"}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={submit}
+          disabled={isPending}
+          loading={isPending}
+        >
+          {editing ? "Update subscription" : "Create subscription"}
         </Button>
       </div>
     </div>
@@ -581,23 +570,26 @@ function SubscriptionForm({
 }
 
 function SelectLookup({
+  label,
   options,
   value,
   onChange,
   placeholder,
 }: {
+  label?: string;
   options: PaymentLookup[];
   value: number | null;
   onChange: (id: number | null) => void;
   placeholder: string;
 }) {
   return (
-    <select
+    <Select
+      label={label}
       value={value === null ? "" : String(value)}
       onChange={(e) =>
         onChange(e.target.value === "" ? null : Number(e.target.value))
       }
-      className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      fullWidth
     >
       <option value="">{placeholder}</option>
       {options.map((opt) => (
@@ -605,7 +597,7 @@ function SelectLookup({
           {opt.name}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -653,30 +645,30 @@ function MultiSelectDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-md border border-zinc-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="flex w-full items-center justify-between rounded-md border border-secondary-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-100"
       >
         <span
           className={
             value.length === 0
-              ? "text-zinc-400 dark:text-zinc-500"
+              ? "text-secondary-400 dark:text-secondary-500"
               : "truncate"
           }
         >
           {label}
         </span>
         <HiChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`ml-2 h-4 w-4 shrink-0 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-secondary-200 bg-white py-1 shadow-lg dark:border-secondary-700 dark:bg-secondary-900">
           {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-zinc-500">No options.</p>
+            <p className="px-3 py-2 text-xs text-secondary-500">No options.</p>
           ) : (
             options.map((opt) => (
               <label
                 key={opt.id}
-                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800"
               >
                 <input
                   type="checkbox"
@@ -712,113 +704,94 @@ function SubscriptionCard({
   const paymentText = `Day ${subscription.payment_day} - ${FREQUENCY_LABEL[subscription.payment_frequency]}`;
 
   return (
-    <div className="flex flex-col rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="border-b border-zinc-200 p-4 dark:border-zinc-800">
+    <article className="flex flex-col rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700">
+      <div className="border-b border-secondary-200 p-4 dark:border-secondary-800">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-base font-semibold">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="truncate text-base font-semibold text-secondary-900 dark:text-secondary-100">
                 {subscription.name}
               </h3>
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  subscription.is_active
-                    ? "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300"
-                    : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                }`}
-              >
+              <Badge variant={subscription.is_active ? "success" : "neutral"}>
                 {subscription.is_active ? "Active" : "Inactive"}
-              </span>
+              </Badge>
             </div>
             {subscription.description ? (
-              <p className="mt-1 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="mt-1 line-clamp-2 text-sm text-secondary-600 dark:text-secondary-400">
                 {subscription.description}
               </p>
             ) : null}
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <IconAction
-              title={subscription.is_active ? "Deactivate" : "Activate"}
+            <IconButton
+              size="sm"
+              variant="secondary"
+              label={subscription.is_active ? "Deactivate" : "Activate"}
               onClick={onToggleActive}
               disabled={isToggling}
             >
-              {subscription.is_active ? (
-                <HiPause className="h-4 w-4" />
-              ) : (
-                <HiPlay className="h-4 w-4" />
-              )}
-            </IconAction>
-            <IconAction title="Edit" onClick={onEdit}>
-              <HiPencilSquare className="h-4 w-4" />
-            </IconAction>
-            <IconAction
-              title="Delete"
+              {subscription.is_active ? <HiPauseCircle /> : <HiPlayCircle />}
+            </IconButton>
+            <IconButton
+              size="sm"
+              variant="secondary"
+              label="Edit"
+              onClick={onEdit}
+            >
+              <HiPencilSquare />
+            </IconButton>
+            <IconButton
+              size="sm"
+              variant="danger"
+              label="Delete"
               onClick={onDelete}
               disabled={isDeleting}
-              danger
             >
-              <HiTrash className="h-4 w-4" />
-            </IconAction>
+              <HiTrash />
+            </IconButton>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 p-4 text-sm">
-        <DetailRow icon="💵" label="Amount:" value={CURRENCY.format(Number(subscription.amount))} />
+        <DetailRow
+          icon="💵"
+          label="Amount:"
+          value={CURRENCY.format(Number(subscription.amount))}
+        />
         <DetailRow icon="📅" label="Period:" value={periodText} multiline />
         <DetailRow icon="🗓️" label="Payment:" value={paymentText} multiline />
       </div>
 
-      <div className="space-y-2 border-t border-zinc-200 p-4 text-sm dark:border-zinc-800">
+      <div className="space-y-2 border-t border-secondary-200 p-4 text-sm dark:border-secondary-800">
         {subscription.paymentMethod ? (
-          <ChipRow label="Method" value={subscription.paymentMethod.name} tone="green" />
+          <ChipRow
+            label="Method"
+            value={subscription.paymentMethod.name}
+            variant="success"
+          />
         ) : null}
         {subscription.paymentPlatform ? (
-          <ChipRow label="Platform" value={subscription.paymentPlatform.name} tone="purple" />
+          <ChipRow
+            label="Platform"
+            value={subscription.paymentPlatform.name}
+            variant="accent"
+          />
         ) : null}
         {subscription.paymentTypes && subscription.paymentTypes.length > 0 ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-zinc-500">Types:</span>
+            <span className="text-xs text-secondary-500 dark:text-secondary-400">
+              Types:
+            </span>
             {subscription.paymentTypes.map((t) => (
-              <span
-                key={t.id}
-                className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-              >
+              <Badge key={t.id} variant="info">
                 {t.name}
-              </span>
+              </Badge>
             ))}
           </div>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-function IconAction({
-  children,
-  onClick,
-  title,
-  disabled,
-  danger,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  title: string;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      disabled={disabled}
-      className={`rounded p-1.5 text-zinc-500 hover:bg-zinc-100 disabled:opacity-40 dark:hover:bg-zinc-800 ${
-        danger ? "hover:text-danger dark:hover:text-danger" : ""
-      }`}
-    >
-      {children}
-    </button>
+    </article>
   );
 }
 
@@ -836,9 +809,9 @@ function DetailRow({
   return (
     <div className="flex items-start gap-1.5">
       <span aria-hidden>{icon}</span>
-      <span className="text-zinc-500">{label}</span>
+      <span className="text-secondary-500 dark:text-secondary-400">{label}</span>
       <span
-        className={`font-medium ${
+        className={`font-medium text-secondary-900 dark:text-secondary-100 ${
           multiline ? "" : "truncate"
         }`}
       >
@@ -851,26 +824,18 @@ function DetailRow({
 function ChipRow({
   label,
   value,
-  tone,
+  variant,
 }: {
   label: string;
   value: string;
-  tone: "green" | "purple";
+  variant: "success" | "accent";
 }) {
-  const map = {
-    green:
-      "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300",
-    purple:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-  } as const;
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-zinc-500">{label}:</span>
-      <span
-        className={`rounded-md px-2 py-0.5 text-xs font-medium ${map[tone]}`}
-      >
-        {value}
+      <span className="text-xs text-secondary-500 dark:text-secondary-400">
+        {label}:
       </span>
+      <Badge variant={variant}>{value}</Badge>
     </div>
   );
 }

@@ -26,10 +26,10 @@ export default function AnchorToggleButton({
   );
 
   const baseClasses =
-    "flex-shrink-0 rounded-lg p-2 transition-colors disabled:opacity-50";
+    "flex-shrink-0 rounded-[var(--radius-control)] p-2 transition-colors disabled:opacity-50";
   const colorClasses = anchored
     ? "text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-    : "text-zinc-400 hover:bg-amber-100 hover:text-amber-600 dark:text-zinc-500 dark:hover:bg-amber-900/30 dark:hover:text-amber-400";
+    : "text-secondary-400 hover:bg-amber-100 hover:text-amber-600 dark:text-secondary-500 dark:hover:bg-amber-900/30 dark:hover:text-amber-400";
 
   return (
     <button

@@ -1,16 +1,17 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useMemo, useState } from "react";
 import {
+  HiCheck,
   HiChevronLeft,
   HiChevronRight,
-  HiPencil,
+  HiPencilSquare,
   HiPlus,
   HiTrash,
   HiXMark,
 } from "react-icons/hi2";
 
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
 import {
   type PaymentMethodFull,
@@ -36,21 +37,22 @@ export default function CashflowOptionsPage() {
   const [search, setSearch] = useState("");
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Cashflow Options</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Cashflow options
+          </h1>
+        </header>
 
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <label className="block text-sm font-medium">Search</label>
+        <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
           <Input
+            label="Search"
             type="text"
-            placeholder="Search all categories..."
+            placeholder="Search all categories…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             fullWidth
-            className="mt-1"
           />
         </div>
 
@@ -76,13 +78,19 @@ function ColumnShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="flex flex-col rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">{title}</h2>
-        <Button variant="primary" size="sm" onClick={onAdd}>
-          <HiPlus className="mr-1 h-4 w-4" />
-          {addLabel}
-        </Button>
+        <h2 className="text-base font-semibold text-secondary-900 dark:text-secondary-100">
+          {title}
+        </h2>
+        <IconButton
+          variant="primary"
+          size="sm"
+          label={addLabel}
+          onClick={onAdd}
+        >
+          <HiPlus />
+        </IconButton>
       </div>
       {children}
     </div>
@@ -102,28 +110,28 @@ function Pager({
 }) {
   if (totalPages <= 1) return null;
   return (
-    <div className="mt-3 flex items-center justify-center gap-3 text-sm text-zinc-500">
-      <button
-        type="button"
+    <div className="mt-3 flex items-center justify-center gap-3 text-sm text-secondary-500 dark:text-secondary-400">
+      <IconButton
+        size="xs"
+        variant="ghost"
+        label="Previous page"
         onClick={onPrev}
         disabled={page <= 1}
-        className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-zinc-100 disabled:opacity-40 dark:hover:bg-zinc-800"
-        aria-label="Previous page"
       >
-        <HiChevronLeft className="h-4 w-4" />
-      </button>
+        <HiChevronLeft />
+      </IconButton>
       <span>
         Pagina {page} di {totalPages}
       </span>
-      <button
-        type="button"
+      <IconButton
+        size="xs"
+        variant="ghost"
+        label="Next page"
         onClick={onNext}
         disabled={page >= totalPages}
-        className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-zinc-100 disabled:opacity-40 dark:hover:bg-zinc-800"
-        aria-label="Next page"
       >
-        <HiChevronRight className="h-4 w-4" />
-      </button>
+        <HiChevronRight />
+      </IconButton>
     </div>
   );
 }
@@ -208,21 +216,22 @@ function PaymentPlatformsColumn({ search }: { search: string }) {
 
   return (
     <ColumnShell
-      title="Payment Platforms"
-      addLabel="Add Platform"
+      title="Payment platforms"
+      addLabel="Add platform"
       onAdd={startCreate}
     >
       {showForm ? (
         <FormCard
-          title={editing ? "Edit Platform" : "New Platform"}
+          title={editing ? "Edit platform" : "New platform"}
           name={name}
           onNameChange={setName}
           extra={
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
               <input
                 type="checkbox"
                 checked={isDigital}
                 onChange={(e) => setIsDigital(e.target.checked)}
+                className="h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
               />
               Digital
             </label>
@@ -231,14 +240,16 @@ function PaymentPlatformsColumn({ search }: { search: string }) {
           onCancel={cancel}
           onSubmit={submit}
           isSubmitting={isSubmitting}
-          submitLabel={editing ? "Update" : "Create"}
+          editing={!!editing}
         />
       ) : null}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-zinc-500">Loading…</p>
+        <p className="py-6 text-center text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : pageItems.length === 0 ? (
-        <p className="py-6 text-center text-sm italic text-zinc-500">
+        <p className="py-6 text-center text-sm italic text-secondary-500 dark:text-secondary-400">
           {search ? "No matches." : "No platforms yet."}
         </p>
       ) : (
@@ -246,11 +257,13 @@ function PaymentPlatformsColumn({ search }: { search: string }) {
           {pageItems.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-900"
+              className="flex items-center justify-between rounded-[var(--radius-control)] bg-secondary-50 px-3 py-2 dark:bg-secondary-900"
             >
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{p.name}</div>
-                <div className="text-xs text-zinc-500">
+                <div className="truncate text-sm font-medium text-secondary-900 dark:text-secondary-100">
+                  {p.name}
+                </div>
+                <div className="text-xs text-secondary-500 dark:text-secondary-400">
                   Digital: {p.is_digital ? "✓" : "✗"}
                 </div>
               </div>
@@ -328,24 +341,26 @@ function PaymentTypesColumn({ search }: { search: string }) {
   const isSubmitting = create.isPending || update.isPending;
 
   return (
-    <ColumnShell title="Payment Types" addLabel="Add Type" onAdd={startCreate}>
+    <ColumnShell title="Payment types" addLabel="Add type" onAdd={startCreate}>
       {showForm ? (
         <FormCard
-          title={editing ? "Edit Type" : "New Type"}
+          title={editing ? "Edit type" : "New type"}
           name={name}
           onNameChange={setName}
           error={error}
           onCancel={cancel}
           onSubmit={submit}
           isSubmitting={isSubmitting}
-          submitLabel={editing ? "Update" : "Create"}
+          editing={!!editing}
         />
       ) : null}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-zinc-500">Loading…</p>
+        <p className="py-6 text-center text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : pageItems.length === 0 ? (
-        <p className="py-6 text-center text-sm italic text-zinc-500">
+        <p className="py-6 text-center text-sm italic text-secondary-500 dark:text-secondary-400">
           {search ? "No matches." : "No types yet."}
         </p>
       ) : (
@@ -353,9 +368,11 @@ function PaymentTypesColumn({ search }: { search: string }) {
           {pageItems.map((t) => (
             <li
               key={t.id}
-              className="flex items-center justify-between rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-900"
+              className="flex items-center justify-between rounded-[var(--radius-control)] bg-secondary-50 px-3 py-2 dark:bg-secondary-900"
             >
-              <span className="truncate text-sm font-medium">{t.name}</span>
+              <span className="truncate text-sm font-medium text-secondary-900 dark:text-secondary-100">
+                {t.name}
+              </span>
               <RowActions
                 onEdit={() => startEdit(t)}
                 onDelete={() => destroy(t.id)}
@@ -431,27 +448,29 @@ function PaymentMethodsColumn({ search }: { search: string }) {
 
   return (
     <ColumnShell
-      title="Payment Methods"
-      addLabel="Add Method"
+      title="Payment methods"
+      addLabel="Add method"
       onAdd={startCreate}
     >
       {showForm ? (
         <FormCard
-          title={editing ? "Edit Method" : "New Method"}
+          title={editing ? "Edit method" : "New method"}
           name={name}
           onNameChange={setName}
           error={error}
           onCancel={cancel}
           onSubmit={submit}
           isSubmitting={isSubmitting}
-          submitLabel={editing ? "Update" : "Create"}
+          editing={!!editing}
         />
       ) : null}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-zinc-500">Loading…</p>
+        <p className="py-6 text-center text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : pageItems.length === 0 ? (
-        <p className="py-6 text-center text-sm italic text-zinc-500">
+        <p className="py-6 text-center text-sm italic text-secondary-500 dark:text-secondary-400">
           {search ? "No matches." : "No methods yet."}
         </p>
       ) : (
@@ -459,9 +478,11 @@ function PaymentMethodsColumn({ search }: { search: string }) {
           {pageItems.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-900"
+              className="flex items-center justify-between rounded-[var(--radius-control)] bg-secondary-50 px-3 py-2 dark:bg-secondary-900"
             >
-              <span className="truncate text-sm font-medium">{m.name}</span>
+              <span className="truncate text-sm font-medium text-secondary-900 dark:text-secondary-100">
+                {m.name}
+              </span>
               <RowActions
                 onEdit={() => startEdit(m)}
                 onDelete={() => destroy(m.id)}
@@ -490,7 +511,7 @@ function FormCard({
   onCancel,
   onSubmit,
   isSubmitting,
-  submitLabel,
+  editing,
 }: {
   title: string;
   name: string;
@@ -500,11 +521,13 @@ function FormCard({
   onCancel: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
-  submitLabel: string;
+  editing: boolean;
 }) {
   return (
-    <div className="mb-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    <div className="mb-3 rounded-[var(--radius-control)] border border-secondary-200 bg-secondary-50 p-3 dark:border-secondary-800 dark:bg-secondary-900">
+      <h3 className="mb-2 text-sm font-semibold text-secondary-900 dark:text-secondary-100">
+        {title}
+      </h3>
       <div className="space-y-2">
         <Input
           type="text"
@@ -512,30 +535,37 @@ function FormCard({
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           fullWidth
+          isFocused
           onKeyDown={(e) => {
             if (e.key === "Enter" && !isSubmitting) onSubmit();
           }}
         />
         {extra}
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            {error}
+          </p>
+        ) : null}
         <div className="flex justify-end gap-2">
-          <Button
+          <IconButton
             size="sm"
-            variant="secondary"
+            variant="ghost"
+            label="Cancel"
             onClick={onCancel}
-            isDisabled={isSubmitting}
+            disabled={isSubmitting}
           >
-            <HiXMark className="mr-1 h-4 w-4" />
-            Cancel
-          </Button>
-          <Button
+            <HiXMark />
+          </IconButton>
+          <IconButton
             size="sm"
             variant="primary"
+            label={editing ? "Update" : "Create"}
             onClick={onSubmit}
-            isDisabled={isSubmitting || !name.trim()}
+            disabled={isSubmitting || !name.trim()}
+            loading={isSubmitting}
           >
-            {isSubmitting ? "Saving…" : submitLabel}
-          </Button>
+            <HiCheck />
+          </IconButton>
         </div>
       </div>
     </div>
@@ -551,22 +581,12 @@ function RowActions({
 }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <button
-        type="button"
-        onClick={onEdit}
-        title="Edit"
-        className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
-      >
-        <HiPencil className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        title="Delete"
-        className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
-      >
-        <HiTrash className="h-4 w-4" />
-      </button>
+      <IconButton size="xs" variant="secondary" label="Edit" onClick={onEdit}>
+        <HiPencilSquare />
+      </IconButton>
+      <IconButton size="xs" variant="danger" label="Delete" onClick={onDelete}>
+        <HiTrash />
+      </IconButton>
     </div>
   );
 }
@@ -589,3 +609,4 @@ function extractError(err: unknown): string {
   }
   return response?.data?.message ?? "Failed to save.";
 }
+

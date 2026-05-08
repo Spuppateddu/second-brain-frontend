@@ -2,7 +2,17 @@
 
 import type { ReactNode } from "react";
 
-type MaxWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
+type MaxWidth =
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "2xl"
+  | "3xl"
+  | "4xl"
+  | "5xl"
+  | "6xl"
+  | "7xl";
 
 const MAX_WIDTH_CLASSES: Record<MaxWidth, string> = {
   sm: "max-w-sm",
@@ -38,27 +48,39 @@ export function EntityListShell({
 }) {
   const inner = (
     <>
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold">{title}</h1>
-          {description ? (
-            <p className="text-sm text-zinc-500">{description}</p>
-          ) : null}
-        </div>
-        {headerActions ? (
-          <div className="flex shrink-0 items-center gap-2">
-            {headerActions}
+      {title || description || headerActions ? (
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {title ? (
+              <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+                {title}
+              </h1>
+            ) : null}
+            {description ? (
+              <p className="text-sm text-secondary-500 dark:text-secondary-400">
+                {description}
+              </p>
+            ) : null}
           </div>
-        ) : null}
-      </header>
+          {headerActions ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {headerActions}
+            </div>
+          ) : null}
+        </header>
+      ) : null}
       {isLoading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : error ? (
-        <p className="text-sm text-danger">
+        <p className="text-sm text-danger-600 dark:text-danger-400">
           Couldn&rsquo;t load the data. Try refreshing.
         </p>
       ) : empty ? (
-        <p className="text-sm text-zinc-500">Nothing to show yet.</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Nothing to show yet.
+        </p>
       ) : (
         children
       )}
@@ -77,12 +99,14 @@ export function EntityListShell({
     );
   }
 
-  return <div className="flex flex-col gap-4 p-6">{inner}</div>;
+  return (
+    <div className="flex flex-col gap-4 p-4 sm:p-6 lg:py-10">{inner}</div>
+  );
 }
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
       {children}
     </div>
   );
@@ -96,16 +120,10 @@ export function CardGrid({ children }: { children: ReactNode }) {
   );
 }
 
-export function TagChip({
-  name,
-  color,
-}: {
-  name: string;
-  color: string;
-}) {
+export function TagChip({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
       style={{ backgroundColor: `${color}20`, color }}
     >
       <span

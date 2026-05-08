@@ -1,9 +1,11 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
 
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
+import { Textarea } from "@/components/UI/Textarea";
 
 export type FieldDef =
   | {
@@ -54,7 +56,9 @@ export function SimpleEntityForm({
   });
   const [tagIds, setTagIds] = useState<number[]>(initialTagIds ?? []);
 
-  const valid = fields.every((f) => !f.required || values[f.key].trim() !== "");
+  const valid = fields.every(
+    (f) => !f.required || values[f.key].trim() !== "",
+  );
 
   return (
     <form
@@ -71,63 +75,66 @@ export function SimpleEntityForm({
     >
       {fields.map((field) => {
         const id = `field-${field.key}`;
+        const labelText = field.required ? `${field.label} *` : field.label;
+        if (field.kind === "textarea") {
+          return (
+            <Textarea
+              key={field.key}
+              id={id}
+              label={labelText}
+              placeholder={field.placeholder}
+              value={values[field.key]}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, [field.key]: e.target.value }))
+              }
+              className="min-h-[100px]"
+              fullWidth
+            />
+          );
+        }
         return (
-          <label key={field.key} className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
-              {field.label}
-              {field.required ? <span className="ml-1 text-danger">*</span> : null}
-            </span>
-            {field.kind === "textarea" ? (
-              <textarea
-                id={id}
-                className="min-h-[100px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-                placeholder={field.placeholder}
-                value={values[field.key]}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, [field.key]: e.target.value }))
-                }
-              />
-            ) : (
-              <Input
-                id={id}
-                type={
-                  field.kind === "url"
-                    ? "url"
-                    : field.kind === "date"
-                      ? "date"
-                      : "text"
-                }
-                placeholder={
-                  field.kind === "url"
-                    ? "https://…"
-                    : "placeholder" in field
-                      ? field.placeholder
-                      : undefined
-                }
-                value={values[field.key]}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, [field.key]: e.target.value }))
-                }
-              />
-            )}
-          </label>
+          <Input
+            key={field.key}
+            id={id}
+            label={labelText}
+            type={
+              field.kind === "url"
+                ? "url"
+                : field.kind === "date"
+                  ? "date"
+                  : "text"
+            }
+            placeholder={
+              field.kind === "url"
+                ? "https://…"
+                : "placeholder" in field
+                  ? field.placeholder
+                  : undefined
+            }
+            value={values[field.key]}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, [field.key]: e.target.value }))
+            }
+            fullWidth
+          />
         );
       })}
-      {withTags ? (
-        <TagPicker value={tagIds} onChange={setTagIds} />
+      {withTags ? <TagPicker value={tagIds} onChange={setTagIds} /> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
       ) : null}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
       <div className="flex items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           type="submit"
           variant="primary"
           size="sm"
-          isDisabled={!valid || isPending}
+          disabled={!valid || isPending}
+          loading={isPending}
         >
-          {isPending ? "Saving…" : submitLabel}
+          {submitLabel}
         </Button>
       </div>
     </form>

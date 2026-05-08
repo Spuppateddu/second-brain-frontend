@@ -1,12 +1,11 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useMemo, useState } from "react";
 import {
   HiArrowDownTray,
-  HiArrowLeft,
+  HiArrowLongLeft,
   HiArrowTopRightOnSquare,
   HiBookmark,
   HiBookmarkSlash,
@@ -15,9 +14,14 @@ import {
   HiInformationCircle,
   HiMagnifyingGlass,
   HiPlay,
+  HiPlayCircle,
 } from "react-icons/hi2";
 
 import { EntityListShell } from "@/components/EntityListShell";
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { FormSection } from "@/components/UI/FormSection";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
 import {
   useDeleteYoutubeChannel,
@@ -61,8 +65,10 @@ export default function YoutubeChannelDetailPage({
 
   if (!isValidId) {
     return (
-      <main className="p-6">
-        <p className="text-sm text-danger">Invalid channel id.</p>
+      <main className="p-4 sm:p-6 lg:py-10">
+        <p className="mx-auto max-w-2xl text-sm text-danger-600 dark:text-danger-400">
+          Invalid channel id.
+        </p>
       </main>
     );
   }
@@ -70,11 +76,13 @@ export default function YoutubeChannelDetailPage({
   if (isLoading || error || !data) {
     return (
       <EntityListShell
-        title="YouTube Channel"
+        title="YouTube channel"
         isLoading={isLoading}
         error={error}
       >
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       </EntityListShell>
     );
   }
@@ -88,39 +96,36 @@ export default function YoutubeChannelDetailPage({
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 px-3 py-6 sm:px-6 sm:py-12">
-      <div>
-        <Link
-          href="/youtube"
-          className="inline-flex items-center text-sm text-zinc-500 hover:underline"
-        >
-          <HiArrowLeft className="mr-1 h-4 w-4" />
-          Back to YouTube
-        </Link>
-      </div>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <header>
+          <Link href="/youtube">
+            <Button variant="ghost" size="xs" leftIcon={<HiArrowLongLeft />}>
+              Back to YouTube
+            </Button>
+          </Link>
+          <h1 className="mt-1 text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Edit YouTube channel
+          </h1>
+        </header>
 
-      <h1 className="text-xl font-semibold sm:text-2xl">
-        Edit YouTube Channel
-      </h1>
+        <ChannelSettingsCard
+          channel={channel}
+          videosCount={data.videos.total}
+          onDownloadLatest={() => downloadLatest.mutate(channel.id)}
+          downloadPending={downloadLatest.isPending}
+          onDelete={onDelete}
+          deletePending={remove.isPending}
+        />
 
-      <ChannelSettingsCard
-        channel={channel}
-        videosCount={data.videos.total}
-        onDownloadLatest={() => downloadLatest.mutate(channel.id)}
-        downloadPending={downloadLatest.isPending}
-        onDelete={onDelete}
-        deletePending={remove.isPending}
-      />
-
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/30">
-        <div className="flex items-start">
-          <HiInformationCircle className="h-5 w-5 shrink-0 text-red-400" />
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-              Editing YouTube Channel
-            </h3>
-            <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-              <ul className="list-disc space-y-1 pl-5">
+        <div className="rounded-[var(--radius-card)] border border-info-200 bg-info-50 p-4 dark:border-info-800 dark:bg-info-900/20">
+          <div className="flex items-start gap-3">
+            <HiInformationCircle className="h-5 w-5 shrink-0 text-info-500" />
+            <div>
+              <h3 className="text-sm font-medium text-info-800 dark:text-info-200">
+                Editing YouTube channel
+              </h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-info-700 dark:text-info-300">
                 <li>
                   Toggle <strong>Active</strong> to enable/disable video tracking
                 </li>
@@ -128,54 +133,46 @@ export default function YoutubeChannelDetailPage({
                   Toggle <strong>Hide from videos page</strong> to keep videos
                   syncing without appearing on the daily videos list
                 </li>
-                <li>
-                  All changes will be saved when you click Update Channel
-                </li>
+                <li>All changes will be saved when you click Update channel</li>
               </ul>
             </div>
           </div>
         </div>
+
+        <FormSection title={`Videos (${data.videos.total})`}>
+          {allVideos.length > 0 ? (
+            <Input
+              type="text"
+              placeholder="Search videos…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
+              fullWidth
+            />
+          ) : null}
+
+          {allVideos.length === 0 ? (
+            <div className="rounded-[var(--radius-control)] border border-dashed border-secondary-300 py-10 text-center dark:border-secondary-700">
+              <p className="text-sm text-secondary-500 dark:text-secondary-400">
+                No videos for this channel yet.
+              </p>
+              <p className="mt-1 text-xs text-secondary-500 dark:text-secondary-400">
+                Try syncing the latest videos from RSS.
+              </p>
+            </div>
+          ) : videos.length === 0 ? (
+            <p className="py-8 text-center text-sm text-secondary-500 dark:text-secondary-400">
+              No videos match &ldquo;{search}&rdquo;.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {videos.map((video) => (
+                <VideoRow key={video.id} video={video} />
+              ))}
+            </ul>
+          )}
+        </FormSection>
       </div>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">
-            Videos ({data.videos.total})
-          </h2>
-        </div>
-
-        {allVideos.length > 0 ? (
-          <Input
-            type="text"
-            placeholder="Search videos..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
-            fullWidth
-          />
-        ) : null}
-
-        {allVideos.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 py-10 text-center dark:border-zinc-700">
-            <p className="text-sm text-zinc-500">
-              No videos for this channel yet.
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Try syncing the latest videos from RSS.
-            </p>
-          </div>
-        ) : videos.length === 0 ? (
-          <p className="py-8 text-center text-sm text-zinc-500">
-            No videos match &ldquo;{search}&rdquo;.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {videos.map((video) => (
-              <VideoRow key={video.id} video={video} />
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }
@@ -225,8 +222,8 @@ function ChannelSettingsCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <form onSubmit={handleSubmit} className="space-y-6 p-6">
+    <FormSection title="Channel settings">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex items-start gap-4">
           {channel.thumbnail_url ? (
             /* eslint-disable-next-line @next/next/no-img-element */
@@ -236,114 +233,102 @@ function ChannelSettingsCard({
               className="h-16 w-16 shrink-0 rounded-full object-cover sm:h-20 sm:w-20"
             />
           ) : (
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/30 sm:h-20 sm:w-20">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-danger-100 text-2xl dark:bg-danger-900/30 sm:h-20 sm:w-20">
               📺
             </div>
           )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-lg font-semibold">{channel.name}</h2>
-              <span className="rounded-full bg-danger-100 px-2 py-0.5 text-xs font-medium text-danger-700 dark:bg-danger-900/40 dark:text-danger-300">
-                YouTube
-              </span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  channel.is_active
-                    ? "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300"
-                    : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                }`}
-              >
+              <h2 className="truncate text-lg font-semibold text-secondary-900 dark:text-secondary-100">
+                {channel.name}
+              </h2>
+              <Badge variant="danger">YouTube</Badge>
+              <Badge variant={channel.is_active ? "success" : "neutral"}>
                 {channel.is_active ? "Active" : "Inactive"}
-              </span>
+              </Badge>
             </div>
             {channel.description ? (
-              <p className="mt-2 line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="mt-2 line-clamp-3 text-sm text-secondary-600 dark:text-secondary-400">
                 {channel.description}
               </p>
             ) : null}
           </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="channel-url"
-            className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-200"
-          >
-            YouTube Channel URL
-          </label>
-          <input
-            id="channel-url"
-            type="url"
-            value={channel.url}
-            readOnly
-            className="block w-full cursor-not-allowed rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-600 shadow-sm focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-          />
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            URL is managed by YouTube and cannot be changed
-          </p>
-        </div>
+        <Input
+          id="channel-url"
+          label="YouTube channel URL"
+          type="url"
+          value={channel.url}
+          readOnly
+          helperText="URL is managed by YouTube and cannot be changed"
+          fullWidth
+        />
 
         <div className="space-y-3">
           <div>
-            <label className="flex items-center">
+            <label className="flex items-start gap-2">
               <input
                 type="checkbox"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+                className="mt-0.5 h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
               />
-              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="text-sm text-secondary-600 dark:text-secondary-400">
                 Active (automatically sync new videos from this channel)
               </span>
             </label>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 pl-6 text-xs text-secondary-500 dark:text-secondary-400">
               Uncheck this to temporarily stop tracking this channel without
               deleting it
             </p>
           </div>
 
           <div>
-            <label className="flex items-center">
+            <label className="flex items-start gap-2">
               <input
                 type="checkbox"
                 checked={hideFromVideos}
                 onChange={(e) => setHideFromVideos(e.target.checked)}
-                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+                className="mt-0.5 h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
               />
-              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="text-sm text-secondary-600 dark:text-secondary-400">
                 Hide from videos page
               </span>
             </label>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 pl-6 text-xs text-secondary-500 dark:text-secondary-400">
               Videos will still sync but won&rsquo;t appear on the daily videos
               list
             </p>
           </div>
 
           <div>
-            <label className="flex items-center">
+            <label className="flex items-start gap-2">
               <input
                 type="checkbox"
                 checked={pushEnabled}
                 onChange={(e) => setPushEnabled(e.target.checked)}
-                className="rounded border-zinc-300 text-danger-600 shadow-sm focus:ring-danger-500 dark:border-zinc-600 dark:bg-zinc-800"
+                className="mt-0.5 h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
               />
-              <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="text-sm text-secondary-600 dark:text-secondary-400">
                 Send push notification when this channel uploads a new video
               </span>
             </label>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Uncheck to stop receiving push notifications for this channel only
+            <p className="mt-1 pl-6 text-xs text-secondary-500 dark:text-secondary-400">
+              Uncheck to stop receiving push notifications for this channel
+              only
             </p>
           </div>
         </div>
 
-        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
-          <h3 className="mb-3 text-sm font-medium">Channel Information</h3>
-          <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="border-t border-secondary-200 pt-4 dark:border-secondary-800">
+          <h3 className="mb-3 text-sm font-medium text-secondary-700 dark:text-secondary-200">
+            Channel information
+          </h3>
+          <div className="space-y-2 text-sm text-secondary-600 dark:text-secondary-400">
             <InfoRow label="Videos" value={String(videosCount)} />
             <InfoRow
-              label="Last Sync"
+              label="Last sync"
               value={
                 channel.last_sync_at
                   ? new Date(channel.last_sync_at).toLocaleString("it-IT")
@@ -354,39 +339,46 @@ function ChannelSettingsCard({
         </div>
 
         {generalError ? (
-          <p className="text-sm text-danger">{generalError}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            {generalError}
+          </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-secondary-200 pt-4 dark:border-secondary-800">
           <a href={channel.url} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" variant="secondary">
-              <HiArrowTopRightOnSquare className="mr-1 h-4 w-4" />
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<HiArrowTopRightOnSquare className="h-4 w-4" />}
+            >
               Open on YouTube
             </Button>
           </a>
           <Button
             size="sm"
             variant="secondary"
-            isDisabled={downloadPending}
-            onClick={onDownloadLatest}
             type="button"
+            onClick={onDownloadLatest}
+            disabled={downloadPending}
+            loading={downloadPending}
+            leftIcon={<HiArrowDownTray className="h-4 w-4" />}
           >
-            <HiArrowDownTray className="mr-1 h-4 w-4" />
-            {downloadPending ? "Syncing…" : "Sync latest"}
+            Sync latest
           </Button>
           <Button
             size="sm"
             variant="danger"
-            isDisabled={deletePending}
-            onClick={onDelete}
             type="button"
+            onClick={onDelete}
+            disabled={deletePending}
+            loading={deletePending}
           >
-            {deletePending ? "Deleting…" : "Delete"}
+            Delete
           </Button>
           <Button
             type="button"
             size="sm"
-            variant="secondary"
+            variant="ghost"
             onClick={() => router.push("/youtube")}
           >
             Cancel
@@ -395,13 +387,14 @@ function ChannelSettingsCard({
             type="submit"
             size="sm"
             variant="primary"
-            isDisabled={update.isPending}
+            disabled={update.isPending}
+            loading={update.isPending}
           >
-            {update.isPending ? "Updating…" : "Update Channel"}
+            Update channel
           </Button>
         </div>
       </form>
-    </div>
+    </FormSection>
   );
 }
 
@@ -412,11 +405,12 @@ function VideoRow({ video }: { video: YoutubeChannelVideo }) {
 
   return (
     <li
-      className={`rounded-md border p-3 ${
+      className={[
+        "rounded-[var(--radius-control)] border p-3 transition-colors",
         video.is_watched
-          ? "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
-          : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
-      }`}
+          ? "border-secondary-200 bg-secondary-50 dark:border-secondary-800 dark:bg-secondary-900"
+          : "border-secondary-200 bg-white dark:border-secondary-800 dark:bg-secondary-950",
+      ].join(" ")}
     >
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 gap-3">
@@ -431,32 +425,33 @@ function VideoRow({ video }: { video: YoutubeChannelVideo }) {
               />
             ) : (
               <div
-                className="flex h-20 w-28 cursor-pointer items-center justify-center rounded bg-zinc-200 dark:bg-zinc-800 sm:h-24 sm:w-32"
+                className="flex h-20 w-28 cursor-pointer items-center justify-center rounded bg-secondary-200 dark:bg-secondary-800 sm:h-24 sm:w-32"
                 onClick={openVideo}
               >
-                <HiPlay className="h-8 w-8 text-zinc-400" />
+                <HiPlay className="h-8 w-8 text-secondary-400" />
               </div>
             )}
           </div>
 
           <div className="min-w-0 flex-1">
             <h4
-              className={`mb-1 line-clamp-2 text-sm font-semibold sm:text-base ${
+              className={[
+                "mb-1 line-clamp-2 text-sm font-semibold sm:text-base",
                 video.is_watched
-                  ? "text-zinc-600 dark:text-zinc-400"
-                  : "text-zinc-900 dark:text-zinc-100"
-              }`}
+                  ? "text-secondary-600 dark:text-secondary-400"
+                  : "text-secondary-900 dark:text-secondary-100",
+              ].join(" ")}
             >
               {video.title}
             </h4>
-            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+            <p className="text-xs text-secondary-500 dark:text-secondary-500">
               {video.human_duration ?? ""}
               {video.human_duration ? " • " : ""}
               {video.published_time}
             </p>
           </div>
 
-          <div className="ml-auto hidden shrink-0 items-center gap-2 sm:flex">
+          <div className="ml-auto hidden shrink-0 items-center gap-1.5 sm:flex">
             <ActionButtons
               video={video}
               onToggleWatchlist={() => toggleWatchlist.mutate(video.id)}
@@ -501,51 +496,82 @@ function ActionButtons({
   watchedPending: boolean;
   mobile?: boolean;
 }) {
-  const sizeClass = mobile ? "w-full" : "";
+  if (mobile) {
+    return (
+      <>
+        <Button
+          size="sm"
+          variant={video.is_watchlist ? "primary" : "secondary"}
+          fullWidth
+          disabled={watchlistPending}
+          onClick={onToggleWatchlist}
+          leftIcon={
+            video.is_watchlist ? (
+              <HiBookmark className="h-4 w-4" />
+            ) : (
+              <HiBookmarkSlash className="h-4 w-4" />
+            )
+          }
+        >
+          {video.is_watchlist ? "Saved" : "Save"}
+        </Button>
+        <Button
+          size="sm"
+          variant={video.is_watched ? "secondary" : "info"}
+          fullWidth
+          disabled={watchedPending}
+          onClick={onToggleWatched}
+          leftIcon={
+            video.is_watched ? (
+              <HiEye className="h-4 w-4" />
+            ) : (
+              <HiEyeSlash className="h-4 w-4" />
+            )
+          }
+        >
+          {video.is_watched ? "Watched" : "Watch"}
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          fullWidth
+          onClick={onPlay}
+          leftIcon={<HiPlay className="h-4 w-4" />}
+        >
+          Play
+        </Button>
+      </>
+    );
+  }
+
   return (
     <>
-      <Button
+      <IconButton
         size="sm"
-        variant={video.is_watchlist ? "primary" : "outline"}
-        isIconOnly={!mobile}
-        isDisabled={watchlistPending}
+        variant={video.is_watchlist ? "primary" : "secondary"}
+        label={video.is_watchlist ? "Remove from watchlist" : "Add to watchlist"}
+        disabled={watchlistPending}
         onClick={onToggleWatchlist}
-        className={sizeClass}
-        aria-label={
-          video.is_watchlist ? "Remove from watchlist" : "Add to watchlist"
-        }
       >
-        {video.is_watchlist ? (
-          <HiBookmark className="h-5 w-5" />
-        ) : (
-          <HiBookmarkSlash className="h-5 w-5" />
-        )}
-      </Button>
-      <Button
+        {video.is_watchlist ? <HiBookmark /> : <HiBookmarkSlash />}
+      </IconButton>
+      <IconButton
         size="sm"
-        variant={video.is_watched ? "secondary" : "outline"}
-        isIconOnly={!mobile}
-        isDisabled={watchedPending}
+        variant={video.is_watched ? "secondary" : "info"}
+        label={video.is_watched ? "Mark as unwatched" : "Mark as watched"}
+        disabled={watchedPending}
         onClick={onToggleWatched}
-        className={sizeClass}
-        aria-label={video.is_watched ? "Mark as unwatched" : "Mark as watched"}
       >
-        {video.is_watched ? (
-          <HiEye className="h-5 w-5" />
-        ) : (
-          <HiEyeSlash className="h-5 w-5" />
-        )}
-      </Button>
-      <Button
+        {video.is_watched ? <HiEye /> : <HiEyeSlash />}
+      </IconButton>
+      <IconButton
         size="sm"
         variant="danger"
-        isIconOnly={!mobile}
+        label="Play video"
         onClick={onPlay}
-        className={sizeClass}
-        aria-label="Play video"
       >
-        <HiPlay className="h-5 w-5" />
-      </Button>
+        <HiPlayCircle />
+      </IconButton>
     </>
   );
 }
@@ -553,10 +579,10 @@ function ActionButtons({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className="font-medium text-zinc-700 dark:text-zinc-300">
+      <span className="font-medium text-secondary-700 dark:text-secondary-300">
         {label}:
       </span>
-      <span className="text-zinc-600 dark:text-zinc-400">{value}</span>
+      <span className="text-secondary-600 dark:text-secondary-400">{value}</span>
     </div>
   );
 }

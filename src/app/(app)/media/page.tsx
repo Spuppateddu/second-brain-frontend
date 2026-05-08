@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useMemo, useState } from "react";
 import {
   HiBookmark,
@@ -13,7 +12,9 @@ import {
 
 import { MediaReviewModal } from "@/components/media/MediaReviewModal";
 import { MediaTaskModal } from "@/components/media/MediaTaskModal";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
 import {
   type MediaTaskInput,
   useCreateMediaTask,
@@ -84,116 +85,121 @@ export default function MediaPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Media</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Media
+          </h1>
+        </header>
 
-      {error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the media. Try refreshing.
-        </p>
-      ) : (
-        <div className="mx-auto w-full max-w-5xl space-y-8">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, description or category..."
-                leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
-                fullWidth
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  title="Clear search"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                >
-                  <HiXMark className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-            <select
-              value={
-                categoryFilter === "all" || categoryFilter === "none"
-                  ? categoryFilter
-                  : String(categoryFilter)
-              }
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "all" || v === "none") {
-                  setCategoryFilter(v);
-                } else {
-                  setCategoryFilter(Number(v));
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the media. Try refreshing.
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by title, description or category…"
+                  leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
+                  fullWidth
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    title="Clear search"
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 dark:hover:text-secondary-200"
+                  >
+                    <HiXMark className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+              <Select
+                value={
+                  categoryFilter === "all" || categoryFilter === "none"
+                    ? categoryFilter
+                    : String(categoryFilter)
                 }
-              }}
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 sm:w-56"
-            >
-              <option value="all">All types</option>
-              <option value="none">No category</option>
-              {reviewCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "all" || v === "none") {
+                    setCategoryFilter(v);
+                  } else {
+                    setCategoryFilter(Number(v));
+                  }
+                }}
+                className="sm:w-56"
+              >
+                <option value="all">All types</option>
+                <option value="none">No category</option>
+                {reviewCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <MediaSection
-            title="Watchlist"
-            emptyLabel={
-              searchQuery ? "No matches in Watchlist." : "Watchlist is empty."
-            }
-            isLoading={isLoading}
-            items={filteredWatchlist}
-            onAdd={() => openCreate(true)}
-            onEdit={openEdit}
-            onToggleWatchlist={(t) => toggleWatchlist.mutate(t.id)}
-            onToggleDone={handleToggleDone}
-            inWatchlistSection
-          />
+            <MediaSection
+              title="Watchlist"
+              emptyLabel={
+                searchQuery ? "No matches in Watchlist." : "Watchlist is empty."
+              }
+              isLoading={isLoading}
+              items={filteredWatchlist}
+              onAdd={() => openCreate(true)}
+              onEdit={openEdit}
+              onToggleWatchlist={(t) => toggleWatchlist.mutate(t.id)}
+              onToggleDone={handleToggleDone}
+              inWatchlistSection
+            />
 
-          <MediaSection
-            title="Near Future"
-            emptyLabel={
-              searchQuery
-                ? "No matches in Near Future."
-                : "Nothing planned — add something to watch or read soon."
-            }
-            isLoading={isLoading}
-            items={filteredNearFuture}
-            onAdd={() => openCreate(false)}
-            onEdit={openEdit}
-            onToggleWatchlist={(t) => toggleWatchlist.mutate(t.id)}
-            onToggleDone={handleToggleDone}
-            inWatchlistSection={false}
-          />
-        </div>
-      )}
+            <MediaSection
+              title="Near Future"
+              emptyLabel={
+                searchQuery
+                  ? "No matches in Near Future."
+                  : "Nothing planned — add something to watch or read soon."
+              }
+              isLoading={isLoading}
+              items={filteredNearFuture}
+              onAdd={() => openCreate(false)}
+              onEdit={openEdit}
+              onToggleWatchlist={(t) => toggleWatchlist.mutate(t.id)}
+              onToggleDone={handleToggleDone}
+              inWatchlistSection={false}
+            />
+          </>
+        )}
 
-      <MediaTaskModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        initialTask={editingTask}
-        defaultIsWatchlist={defaultIsWatchlist}
-        reviewCategories={reviewCategories}
-        onSave={handleSave}
-        onDelete={
-          editingTask ? async (id: number) => remove.mutateAsync(id) : undefined
-        }
-        isSaving={create.isPending || update.isPending}
-        isDeleting={remove.isPending}
-      />
+        <MediaTaskModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          initialTask={editingTask}
+          defaultIsWatchlist={defaultIsWatchlist}
+          reviewCategories={reviewCategories}
+          onSave={handleSave}
+          onDelete={
+            editingTask ? async (id: number) => remove.mutateAsync(id) : undefined
+          }
+          isSaving={create.isPending || update.isPending}
+          isDeleting={remove.isPending}
+        />
 
-      <MediaReviewModal
-        open={reviewTask !== null}
-        onClose={() => setReviewTask(null)}
-        task={reviewTask}
-        reviewCategories={reviewCategories}
-      />
+        <MediaReviewModal
+          open={reviewTask !== null}
+          onClose={() => setReviewTask(null)}
+          task={reviewTask}
+          reviewCategories={reviewCategories}
+        />
+      </div>
     </div>
   );
 }
@@ -242,17 +248,25 @@ function MediaSection({
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <Button variant="ghost" size="sm" onClick={onAdd}>
-          <HiPlus className="mr-1 h-4 w-4" />
-          Add
-        </Button>
+        <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">
+          {title}
+        </h2>
+        <IconButton
+          variant="primary"
+          size="sm"
+          label={`Add to ${title}`}
+          onClick={onAdd}
+        >
+          <HiPlus />
+        </IconButton>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : items.length === 0 ? (
-        <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm italic text-secondary-500 dark:text-secondary-400">
           {emptyLabel}
         </p>
       ) : (
@@ -287,22 +301,25 @@ function MediaRow({
   inWatchlistSection: boolean;
 }) {
   return (
-    <li className="group flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950">
-      <button
-        type="button"
+    <li className="group flex items-center gap-2 rounded-[var(--radius-card)] border border-secondary-200 bg-white px-3 py-2 shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700">
+      <IconButton
+        size="xs"
+        variant="ghost"
+        label="Mark done (write review)"
         onClick={() => onToggleDone(task)}
-        title="Mark done (write review)"
-        className="shrink-0 rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
       >
-        <HiCheck className="h-4 w-4" />
-      </button>
+        <HiCheck />
+      </IconButton>
 
       <button
         type="button"
         onClick={() => onEdit(task)}
         className="min-w-0 flex-1 text-left"
       >
-        <div className="truncate text-sm font-medium" title={task.title}>
+        <div
+          className="truncate text-sm font-medium text-secondary-900 dark:text-secondary-100"
+          title={task.title}
+        >
           {task.title}
         </div>
         {task.review_category ? (
@@ -319,20 +336,14 @@ function MediaRow({
         ) : null}
       </button>
 
-      <button
-        type="button"
+      <IconButton
+        size="xs"
+        variant="ghost"
+        label={inWatchlistSection ? "Move to Near Future" : "Move to Watchlist"}
         onClick={() => onToggleWatchlist(task)}
-        title={
-          inWatchlistSection ? "Move to Near Future" : "Move to Watchlist"
-        }
-        className="shrink-0 rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-indigo-600 dark:hover:bg-zinc-800"
       >
-        {inWatchlistSection ? (
-          <HiBookmark className="h-4 w-4" />
-        ) : (
-          <HiOutlineBookmark className="h-4 w-4" />
-        )}
-      </button>
+        {inWatchlistSection ? <HiBookmark /> : <HiOutlineBookmark />}
+      </IconButton>
     </li>
   );
 }

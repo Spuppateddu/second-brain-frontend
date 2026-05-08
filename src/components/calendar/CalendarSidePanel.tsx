@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { HiArrowsPointingOut, HiCake, HiCalendarDays } from "react-icons/hi2";
 
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 import type { CalendarDay } from "@/types/calendar";
 
 function todayString(): string {
@@ -90,12 +91,14 @@ function DayRow({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={[
-        "group m-1 p-1.5 rounded-md shadow cursor-pointer flex flex-col gap-1",
+        "group m-1 p-1.5 rounded-[var(--radius-control)] shadow-[var(--shadow-card)] cursor-pointer flex flex-col gap-1 transition-colors",
         isWeekend
           ? "bg-orange-50 border-l-4 border-orange-300 dark:bg-orange-900/20 dark:border-orange-500"
-          : "bg-white dark:bg-gray-700",
+          : "bg-white dark:bg-secondary-800",
         selected ? "ring-2 ring-primary-500" : "",
-        isDragHovering ? "ring-2 ring-green-500 bg-green-50 dark:bg-green-900/20" : "",
+        isDragHovering
+          ? "ring-2 ring-success-500 bg-success-50 dark:bg-success-900/20"
+          : "",
       ].join(" ")}
       style={
         isWeekend
@@ -109,15 +112,15 @@ function DayRow({
       <div className="flex items-center gap-1 w-full">
         {isToday && (
           <span
-            className="h-2 w-2 bg-red-500 rounded-full flex-shrink-0"
+            className="h-2 w-2 bg-danger-500 rounded-full flex-shrink-0"
             aria-label="Today"
           />
         )}
         {total > 0 ? (
           <div className="relative flex-1">
-            <div className="h-6 w-full bg-gray-300 rounded-lg overflow-hidden dark:bg-gray-600">
+            <div className="h-6 w-full bg-secondary-300 rounded-lg overflow-hidden dark:bg-secondary-600">
               <div
-                className="h-full bg-green-500 transition-all duration-300"
+                className="h-full bg-success-500 transition-all duration-300"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -126,7 +129,7 @@ function DayRow({
             </p>
           </div>
         ) : (
-          <span className="text-xs leading-tight flex-1">
+          <span className="text-xs leading-tight flex-1 text-secondary-700 dark:text-secondary-200">
             {dayLabel(day.date)}
           </span>
         )}
@@ -141,10 +144,13 @@ function DayRow({
             className={[
               "flex-shrink-0 p-0.5 rounded transition-opacity",
               splitOpen
-                ? "opacity-100 text-green-500 dark:text-green-400 cursor-not-allowed"
-                : "opacity-0 group-hover:opacity-100 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-500 dark:text-blue-400",
+                ? "opacity-100 text-success-500 dark:text-success-400 cursor-not-allowed"
+                : "opacity-0 group-hover:opacity-100 hover:bg-info-100 dark:hover:bg-info-900/40 text-info-500 dark:text-info-400",
             ].join(" ")}
             title={
+              splitOpen ? "Already open in split view" : "Open in split view"
+            }
+            aria-label={
               splitOpen ? "Already open in split view" : "Open in split view"
             }
           >
@@ -178,7 +184,7 @@ function DayRow({
             {untagged > 0 && (
               <span
                 title="Tasks without a tag"
-                className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-200"
+                className="inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-medium bg-secondary-300 text-secondary-700 dark:bg-secondary-600 dark:text-secondary-200"
               >
                 {untagged}
               </span>
@@ -243,12 +249,12 @@ export function CalendarSidePanel({
 
   return (
     <div className="flex flex-col p-1 min-h-full">
-      <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-primary-50 dark:bg-gray-800">
+      <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-primary-50 dark:bg-secondary-900">
         <Button
           variant="ghost"
           size="sm"
-          className="w-full"
-          onPress={() => setPickerDirection("prev")}
+          fullWidth
+          onClick={() => setPickerDirection("prev")}
         >
           Go to previous date
         </Button>
@@ -256,7 +262,7 @@ export function CalendarSidePanel({
 
       {grouped.map(([monthKey, monthDays]) => (
         <section key={monthKey} className="flex flex-col">
-          <h3 className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+          <h3 className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
             {monthLabel(monthKey)}
           </h3>
           {monthDays.map((day) => (
@@ -293,12 +299,12 @@ export function CalendarSidePanel({
         </section>
       ))}
 
-      <div className="sticky bottom-0 z-10 mt-auto -mx-1 px-1 py-1 bg-primary-50 dark:bg-gray-800">
+      <div className="sticky bottom-0 z-10 mt-auto -mx-1 px-1 py-1 bg-primary-50 dark:bg-secondary-900">
         <Button
           variant="ghost"
           size="sm"
-          className="w-full"
-          onPress={() => setPickerDirection("next")}
+          fullWidth
+          onClick={() => setPickerDirection("next")}
         >
           Go to next date
         </Button>
@@ -373,52 +379,45 @@ function DatePickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/40 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="calendar-date-picker-title"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="w-full max-w-sm overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+        <div className="border-b border-secondary-200 px-5 py-3 dark:border-secondary-800">
           <h3
             id="calendar-date-picker-title"
-            className="text-base font-semibold"
+            className="text-base font-semibold text-secondary-900 dark:text-secondary-100"
           >
             {title}
           </h3>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
-          <div>
-            <label
-              htmlFor="calendar-date-picker"
-              className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-200"
-            >
-              Date
-            </label>
-            <input
-              id="calendar-date-picker"
-              ref={inputRef}
-              type="date"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              min={min}
-              max={max}
-              className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-            />
-          </div>
+          <Input
+            ref={inputRef}
+            id="calendar-date-picker"
+            label="Date"
+            type="date"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            min={min}
+            max={max}
+            fullWidth
+          />
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onPress={onCancel}>
+            <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
               size="sm"
-              isDisabled={!/^\d{4}-\d{2}-\d{2}$/.test(value)}
+              disabled={!/^\d{4}-\d{2}-\d{2}$/.test(value)}
             >
               Go to this date
             </Button>

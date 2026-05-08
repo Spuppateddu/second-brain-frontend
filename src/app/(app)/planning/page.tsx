@@ -17,6 +17,9 @@ import {
 
 import { TaskModal } from "@/components/calendar/TaskModal";
 import { ClosePlanningPeriodDialog } from "@/components/planning/ClosePlanningPeriodDialog";
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
 import { usePlanning } from "@/lib/queries/heavy";
 import type { PlanningPeriod, PlanningTaskLite } from "@/types/heavy";
 
@@ -91,7 +94,9 @@ function StarRow({ stars, max = 5 }: { stars: number; max?: number }) {
           key={i}
           className={[
             "h-3.5 w-3.5",
-            i < stars ? "text-yellow-400" : "text-zinc-300 dark:text-zinc-600",
+            i < stars
+              ? "text-yellow-400"
+              : "text-secondary-300 dark:text-secondary-600",
           ].join(" ")}
         />
       ))}
@@ -102,9 +107,9 @@ function StarRow({ stars, max = 5 }: { stars: number; max?: number }) {
 function ProgressBar({ value }: { value: number }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary-100 dark:bg-secondary-800">
       <div
-        className="h-full bg-green-500 transition-all"
+        className="h-full bg-success-500 transition-all"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -128,23 +133,23 @@ function StatusFilterToggle({
       key: "all",
       icon: HiViewColumns,
       title: "All",
-      activeBg: "bg-blue-500 text-white",
+      activeBg: "bg-primary-600 text-white",
     },
     {
       key: "incomplete",
       icon: HiQueueList,
       title: "Not completed",
-      activeBg: "bg-blue-500 text-white",
+      activeBg: "bg-primary-600 text-white",
     },
     {
       key: "completed",
       icon: HiCheck,
       title: "Completed",
-      activeBg: "bg-green-500 text-white",
+      activeBg: "bg-success-500 text-white",
     },
   ];
   return (
-    <div className="flex items-center overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+    <div className="flex items-center overflow-hidden rounded-[var(--radius-control)] border border-secondary-200 dark:border-secondary-700">
       {items.map(({ key, icon: Icon, title, activeBg }, i) => {
         const active = value === key;
         return (
@@ -153,13 +158,16 @@ function StatusFilterToggle({
             type="button"
             title={title}
             aria-label={title}
+            aria-pressed={active}
             onClick={() => onChange(key)}
             className={[
               "p-1.5 transition-colors",
-              i > 0 ? "border-l border-zinc-200 dark:border-zinc-700" : "",
+              i > 0
+                ? "border-l border-secondary-200 dark:border-secondary-700"
+                : "",
               active
                 ? activeBg
-                : "bg-white text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700",
+                : "bg-white text-secondary-500 hover:bg-secondary-100 dark:bg-secondary-800 dark:text-secondary-400 dark:hover:bg-secondary-700",
             ].join(" ")}
           >
             <Icon className="h-4 w-4" />
@@ -188,23 +196,23 @@ function TaskRow({
   const categories = task.taskCategories ?? task.task_categories ?? [];
 
   const borderColor = isBlocked
-    ? "border-l-zinc-400"
+    ? "border-l-secondary-400"
     : isWork
       ? "border-l-orange-400"
       : "border-l-cyan-400";
   const bgColor = isBlocked
-    ? "bg-zinc-100/70 dark:bg-zinc-900/40"
+    ? "bg-secondary-100/70 dark:bg-secondary-900/40"
     : isWork
       ? "bg-orange-50/40 dark:bg-orange-500/5"
-      : "bg-white dark:bg-zinc-900";
+      : "bg-white dark:bg-secondary-900";
 
   const titleStyle = isCancelled
-    ? "line-through text-zinc-400"
+    ? "line-through text-secondary-400"
     : isBlocked
-      ? "italic text-zinc-400 dark:text-zinc-500"
+      ? "italic text-secondary-400 dark:text-secondary-500"
       : isDone
-        ? "line-through text-zinc-400 dark:text-zinc-500"
-        : "text-zinc-800 dark:text-zinc-100";
+        ? "line-through text-secondary-400 dark:text-secondary-500"
+        : "text-secondary-800 dark:text-secondary-100";
 
   const interactive = !isBlocked;
 
@@ -216,9 +224,9 @@ function TaskRow({
       aria-disabled={!interactive}
       title={isBlocked ? "Closed — carried forward to another period" : undefined}
       className={[
-        "group flex w-full items-start gap-3 rounded-md border border-zinc-200 border-l-4 px-3 py-1.5 text-left transition-colors dark:border-zinc-800",
+        "group flex w-full items-start gap-3 rounded-[var(--radius-control)] border border-secondary-200 border-l-4 px-3 py-1.5 text-left transition-colors dark:border-secondary-800",
         interactive
-          ? "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+          ? "hover:bg-secondary-50 dark:hover:bg-secondary-900/60"
           : "cursor-not-allowed",
         borderColor,
         bgColor,
@@ -233,34 +241,30 @@ function TaskRow({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isBlocked && (
-            <span className="inline-flex items-center gap-1 rounded bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
-              <HiLockClosed className="h-3 w-3" />
+            <Badge variant="neutral">
+              <HiLockClosed className="mr-1 h-3 w-3" />
               Closed
-            </span>
+            </Badge>
           )}
           {!isBlocked && isDone && (
-            <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-              <HiCheck className="h-3 w-3" />
+            <Badge variant="success">
+              <HiCheck className="mr-1 h-3 w-3" />
               Completed
-            </span>
+            </Badge>
           )}
           {!isBlocked && !isDone && isCancelled && (
-            <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-              <HiNoSymbol className="h-3 w-3" />
+            <Badge variant="danger">
+              <HiNoSymbol className="mr-1 h-3 w-3" />
               Cancelled
-            </span>
+            </Badge>
           )}
-          {carry && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-              {carry}
-            </span>
-          )}
+          {carry && <Badge variant="info">{carry}</Badge>}
           {linkedCalendarTasks.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-              <HiCalendar className="h-3 w-3" />
+            <Badge variant="info">
+              <HiCalendar className="mr-1 h-3 w-3" />
               {formatCalendarTaskDates(linkedCalendarTasks) ??
                 linkedCalendarTasks.length}
-            </span>
+            </Badge>
           )}
         </div>
       </div>
@@ -295,25 +299,25 @@ function StarGroup({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
+    <div className="rounded-[var(--radius-card)] border border-secondary-200 dark:border-secondary-800">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 rounded-md bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-900/60"
+        className="flex w-full items-center justify-between gap-2 rounded-[var(--radius-card)] bg-secondary-50 px-3 py-2 text-sm dark:bg-secondary-900/60"
       >
         <span className="flex items-center gap-2">
           {stars > 0 ? (
             <StarRow stars={stars} />
           ) : (
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
+            <span className="text-xs uppercase tracking-wide text-secondary-500">
               Unrated
             </span>
           )}
-          <span className="text-xs text-zinc-500">({tasks.length})</span>
+          <span className="text-xs text-secondary-500">({tasks.length})</span>
         </span>
         <HiChevronDown
           className={[
-            "h-4 w-4 text-zinc-500 transition-transform",
+            "h-4 w-4 text-secondary-500 transition-transform",
             open ? "" : "-rotate-90",
           ].join(" ")}
         />
@@ -417,52 +421,52 @@ function PeriodCard({
   const closeButtonLabel = mode === "month" ? "Close Month" : "Close Year";
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6 sm:py-4">
+    <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white px-4 py-3 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950 sm:px-6 sm:py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          <span className="text-base font-semibold text-secondary-900 dark:text-secondary-100">
             {label}
           </span>
-          <button
-            type="button"
+          <IconButton
+            size="xs"
+            variant="ghost"
+            label="Previous"
             onClick={onPrev}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            title="Previous"
           >
-            <HiChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="min-w-[7rem] text-center text-sm text-zinc-700 dark:text-zinc-300">
+            <HiChevronLeft />
+          </IconButton>
+          <span className="min-w-[7rem] text-center text-sm text-secondary-700 dark:text-secondary-300">
             {navTitle}
           </span>
-          <button
-            type="button"
+          <IconButton
+            size="xs"
+            variant="ghost"
+            label="Next"
             onClick={onNext}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            title="Next"
           >
-            <HiChevronRight className="h-4 w-4" />
-          </button>
+            <HiChevronRight />
+          </IconButton>
           <StatusFilterToggle value={statusFilter} onChange={setStatusFilter} />
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <IconButton
+            variant="primary"
+            size="sm"
+            label="Add task"
             onClick={openCreate}
             disabled={!period}
-            title="Add task"
-            className="rounded-md bg-blue-700 p-2 text-white hover:bg-blue-800 disabled:opacity-50"
           >
-            <HiPlus className="h-5 w-5" />
-          </button>
+            <HiPlus />
+          </IconButton>
           {period?.can_be_closed && (
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => setCloseDialogOpen(true)}
-              className="rounded-md bg-red-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600"
             >
               {closeButtonLabel}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -472,19 +476,21 @@ function PeriodCard({
       </div>
 
       {!period ? (
-        <p className="mt-4 text-sm text-zinc-500">No planning for this period.</p>
+        <p className="mt-4 text-sm text-secondary-500 dark:text-secondary-400">
+          No planning for this period.
+        </p>
       ) : (
         <div className="mt-4">
           <button
             type="button"
             onClick={() => setTaskSectionOpen((o) => !o)}
-            className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-200"
+            className="flex items-center gap-2 text-sm font-medium text-secondary-700 dark:text-secondary-200"
           >
-            <HiQueueList className="h-4 w-4 text-zinc-500" />
+            <HiQueueList className="h-4 w-4 text-secondary-500" />
             Task
             <HiChevronDown
               className={[
-                "h-4 w-4 text-zinc-500 transition-transform",
+                "h-4 w-4 text-secondary-500 transition-transform",
                 taskSectionOpen ? "" : "-rotate-90",
               ].join(" ")}
             />
@@ -493,7 +499,9 @@ function PeriodCard({
           {taskSectionOpen && (
             <div className="mt-3 flex flex-col gap-2">
               {groups.length === 0 ? (
-                <p className="text-sm text-zinc-500">No tasks yet.</p>
+                <p className="text-sm text-secondary-500 dark:text-secondary-400">
+                  No tasks yet.
+                </p>
               ) : (
                 groups.map(([stars, list]) => (
                   <StarGroup
@@ -549,37 +557,43 @@ export default function PlanningPage() {
   const { data, isLoading, error } = usePlanning({ month, year });
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Planning Dashboard</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Planning Dashboard
+          </h1>
+        </header>
 
-      {isLoading ? (
-        <p className="text-sm text-zinc-500">Loading…</p>
-      ) : error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the planning. Try refreshing.
-        </p>
-      ) : (
-        <>
-          <PeriodCard
-            period={data?.monthlyPlanning ?? null}
-            label="Monthly Planning"
-            mode="month"
-            navTitle={monthLabel(month)}
-            onPrev={() => setMonth((m) => shiftMonth(m, -1))}
-            onNext={() => setMonth((m) => shiftMonth(m, 1))}
-          />
-          <PeriodCard
-            period={data?.yearlyPlanning ?? null}
-            label="Yearly Planning"
-            mode="year"
-            navTitle={year}
-            onPrev={() => setYear((y) => shiftYear(y, -1))}
-            onNext={() => setYear((y) => shiftYear(y, 1))}
-          />
-        </>
-      )}
+        {isLoading ? (
+          <p className="text-sm text-secondary-500 dark:text-secondary-400">
+            Loading…
+          </p>
+        ) : error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the planning. Try refreshing.
+          </p>
+        ) : (
+          <>
+            <PeriodCard
+              period={data?.monthlyPlanning ?? null}
+              label="Monthly Planning"
+              mode="month"
+              navTitle={monthLabel(month)}
+              onPrev={() => setMonth((m) => shiftMonth(m, -1))}
+              onNext={() => setMonth((m) => shiftMonth(m, 1))}
+            />
+            <PeriodCard
+              period={data?.yearlyPlanning ?? null}
+              label="Yearly Planning"
+              mode="year"
+              navTitle={year}
+              onPrev={() => setYear((y) => shiftYear(y, -1))}
+              onNext={() => setYear((y) => shiftYear(y, 1))}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

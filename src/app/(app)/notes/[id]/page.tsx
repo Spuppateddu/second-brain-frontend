@@ -1,14 +1,19 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { HiArrowLongLeft, HiTrash } from "react-icons/hi2";
 
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
 import { SharableLinksPanel } from "@/components/SharableLinksPanel";
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { FormSection } from "@/components/UI/FormSection";
+import { IconButton } from "@/components/UI/IconButton";
+import { Input } from "@/components/UI/Input";
 import {
   useDeleteNote,
   useNote,
@@ -53,17 +58,16 @@ function NoteEditForm({ note }: { note: Note }) {
   }
 
   return (
-    <main className="flex flex-col gap-4 p-6">
-      <div className="flex items-center justify-between gap-2">
-        <button
-          onClick={() => router.push("/notes")}
-          className="text-sm text-zinc-500 hover:underline"
-        >
-          ← Back to notes
-        </button>
-        <div className="flex items-center gap-2">
+    <main className="flex flex-col gap-4 p-4 sm:p-6 lg:py-10">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <Link href="/notes">
+          <Button variant="ghost" size="xs" leftIcon={<HiArrowLongLeft />}>
+            Back to notes
+          </Button>
+        </Link>
+        <div className="flex flex-wrap items-center gap-2">
           {savedAt && !dirty ? (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-secondary-500 dark:text-secondary-400">
               Saved {savedAt.toLocaleTimeString()}
             </span>
           ) : null}
@@ -71,21 +75,24 @@ function NoteEditForm({ note }: { note: Note }) {
           <Button
             variant="primary"
             size="sm"
-            isDisabled={update.isPending || !title.trim() || !dirty}
+            disabled={update.isPending || !title.trim() || !dirty}
+            loading={update.isPending}
             onClick={save}
           >
-            {update.isPending ? "Saving…" : "Save"}
+            Save
           </Button>
-          <Button
-            variant="danger-soft"
+          <IconButton
+            variant="danger"
             size="sm"
-            isDisabled={remove.isPending}
+            label="Delete"
+            disabled={remove.isPending}
             onClick={destroy}
           >
-            Delete
-          </Button>
+            <HiTrash />
+          </IconButton>
         </div>
-      </div>
+      </header>
+
       <Input
         type="text"
         placeholder="Title"
@@ -94,7 +101,9 @@ function NoteEditForm({ note }: { note: Note }) {
           setTitle(e.target.value);
           setDirty(true);
         }}
+        fullWidth
       />
+
       <RichTextEditor
         value={content}
         onChange={(html) => {
@@ -103,6 +112,7 @@ function NoteEditForm({ note }: { note: Note }) {
         }}
         placeholder="Note body — markdown shortcuts work."
       />
+
       <TagPicker
         value={tagIds}
         onChange={(ids) => {
@@ -110,9 +120,15 @@ function NoteEditForm({ note }: { note: Note }) {
           setDirty(true);
         }}
       />
+
       <SharableLinksPanel type="note" id={note.id} />
       <LinkedEntitiesPanel type="note" id={note.id} />
-      {saveError ? <p className="text-sm text-danger">{saveError}</p> : null}
+
+      {saveError ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">
+          {saveError}
+        </p>
+      ) : null}
     </main>
   );
 }
@@ -131,19 +147,25 @@ export default function NoteEditPage({
 
   if (Number.isNaN(noteId)) {
     return (
-      <main className="p-6">
-        <p className="text-sm text-danger">Invalid note id.</p>
+      <main className="p-4 sm:p-6 lg:py-10">
+        <p className="text-sm text-danger-600 dark:text-danger-400">
+          Invalid note id.
+        </p>
       </main>
     );
   }
 
   if (isLoading) {
-    return <main className="p-6 text-sm text-zinc-500">Loading note…</main>;
+    return (
+      <main className="p-4 sm:p-6 lg:py-10 text-sm text-secondary-500 dark:text-secondary-400">
+        Loading note…
+      </main>
+    );
   }
 
   if (error || !note) {
     return (
-      <main className="p-6 text-sm text-danger">
+      <main className="p-4 sm:p-6 lg:py-10 text-sm text-danger-600 dark:text-danger-400">
         Couldn&rsquo;t load this note.
       </main>
     );

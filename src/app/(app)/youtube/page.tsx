@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,11 +10,18 @@ import {
   HiEye,
   HiEyeSlash,
   HiMagnifyingGlass,
+  HiPencilSquare,
   HiPlay,
+  HiPlayCircle,
+  HiPlus,
+  HiTrash,
   HiXMark,
 } from "react-icons/hi2";
 
 import { EntityListShell } from "@/components/EntityListShell";
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
 import {
   useDeleteYoutubeChannel,
@@ -57,36 +63,40 @@ export default function YoutubePage() {
   const [tab, setTab] = useState<Tab>("channels");
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">YouTube</h1>
-        {tab === "channels" ? (
-          <Link href="/youtube/new">
-            <Button variant="primary" size="sm">
-              Add New Channel
-            </Button>
-          </Link>
-        ) : null}
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <header className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            YouTube
+          </h1>
+          {tab === "channels" ? (
+            <Link href="/youtube/new" aria-label="Add new channel">
+              <IconButton variant="primary" size="sm" label="Add new channel">
+                <HiPlus />
+              </IconButton>
+            </Link>
+          ) : null}
+        </header>
 
-      <div className="border-b border-zinc-200 dark:border-zinc-800">
-        <nav className="-mb-px flex gap-4" aria-label="Tabs">
-          <TabButton
-            active={tab === "channels"}
-            onClick={() => setTab("channels")}
-          >
-            Channels
-          </TabButton>
-          <TabButton
-            active={tab === "videos"}
-            onClick={() => setTab("videos")}
-          >
-            Videos
-          </TabButton>
-        </nav>
+        <div className="border-b border-secondary-200 dark:border-secondary-800">
+          <nav className="-mb-px flex gap-4" aria-label="Tabs">
+            <TabButton
+              active={tab === "channels"}
+              onClick={() => setTab("channels")}
+            >
+              Channels
+            </TabButton>
+            <TabButton
+              active={tab === "videos"}
+              onClick={() => setTab("videos")}
+            >
+              Videos
+            </TabButton>
+          </nav>
+        </div>
+
+        {tab === "channels" ? <ChannelsTab /> : <VideosTab />}
       </div>
-
-      {tab === "channels" ? <ChannelsTab /> : <VideosTab />}
     </div>
   );
 }
@@ -104,11 +114,13 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors ${
+      aria-pressed={active}
+      className={[
+        "whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors",
         active
-          ? "border-danger-500 text-danger-600 dark:text-danger-400"
-          : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-      }`}
+          ? "border-primary-600 text-primary-700 dark:border-primary-400 dark:text-primary-300"
+          : "border-transparent text-secondary-500 hover:border-secondary-300 hover:text-secondary-700 dark:text-secondary-400 dark:hover:text-secondary-200",
+      ].join(" ")}
     >
       {children}
     </button>
@@ -151,7 +163,7 @@ function ChannelsTab() {
         {totalChannelsCount > 0 ? (
           <Input
             type="text"
-            placeholder="Search channels..."
+            placeholder="Search channels…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
@@ -160,24 +172,32 @@ function ChannelsTab() {
         ) : null}
 
         {totalChannelsCount === 0 && !isLoading ? (
-          <div className="py-12 text-center">
-            <p className="mb-4 text-lg text-zinc-500 dark:text-zinc-400">
+          <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-12 text-center shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
+            <p className="mb-2 text-base text-secondary-700 dark:text-secondary-200">
               No YouTube channels configured yet.
             </p>
-            <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mb-6 text-sm text-secondary-500 dark:text-secondary-400">
               Add your favorite YouTube channels to track their latest videos
               automatically.
             </p>
-            <Link href="/youtube/new">
-              <Button variant="primary">Add Your First Channel</Button>
+            <Link href="/youtube/new" aria-label="Add your first channel">
+              <IconButton
+                variant="primary"
+                size="lg"
+                label="Add your first channel"
+              >
+                <HiPlus />
+              </IconButton>
             </Link>
           </div>
         ) : channels.length === 0 && !isLoading ? (
           <div className="py-12 text-center">
-            <HiMagnifyingGlass className="mx-auto h-12 w-12 text-zinc-400" />
-            <h3 className="mt-2 text-sm font-medium">No channels found</h3>
+            <HiMagnifyingGlass className="mx-auto h-12 w-12 text-secondary-400" />
+            <h3 className="mt-2 text-sm font-medium text-secondary-700 dark:text-secondary-200">
+              No channels found
+            </h3>
             {debouncedSearch ? (
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-secondary-500 dark:text-secondary-400">
                 No channels match &ldquo;{debouncedSearch}&rdquo;. Try adjusting
                 your search terms.
               </p>
@@ -194,10 +214,11 @@ function ChannelsTab() {
               <Button
                 variant="secondary"
                 fullWidth
-                isDisabled={isFetchingNextPage}
+                disabled={isFetchingNextPage}
+                loading={isFetchingNextPage}
                 onClick={() => fetchNextPage()}
               >
-                {isFetchingNextPage ? "Loading…" : "Load more"}
+                Load more
               </Button>
             ) : null}
           </>
@@ -220,11 +241,12 @@ function ChannelRow({ channel }: { channel: YoutubeChannelView }) {
 
   return (
     <div
-      className={`flex flex-col gap-3 rounded-lg border-l-4 bg-white p-4 shadow-sm dark:bg-zinc-950 sm:flex-row sm:items-start sm:gap-4 ${
+      className={[
+        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-secondary-200 border-l-4 bg-white p-4 shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700 sm:flex-row sm:items-start sm:gap-4",
         channel.is_active
           ? "border-l-danger-500"
-          : "border-l-zinc-300 dark:border-l-zinc-700"
-      } border border-zinc-200 dark:border-zinc-800`}
+          : "border-l-secondary-300 dark:border-l-secondary-700",
+      ].join(" ")}
     >
       {channel.thumbnail_url ? (
         /* eslint-disable-next-line @next/next/no-img-element */
@@ -234,39 +256,31 @@ function ChannelRow({ channel }: { channel: YoutubeChannelView }) {
           className="h-14 w-14 shrink-0 rounded-full object-cover sm:h-20 sm:w-20"
         />
       ) : (
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/30 sm:h-20 sm:w-20 sm:text-3xl">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-danger-100 text-2xl dark:bg-danger-900/30 sm:h-20 sm:w-20 sm:text-3xl">
           📺
         </div>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="mb-2 flex items-start gap-2">
-          <h3 className="truncate text-base font-semibold sm:text-lg">
+          <h3 className="truncate text-base font-semibold text-secondary-900 dark:text-secondary-100 sm:text-lg">
             {channel.name}
           </h3>
           <div className="flex shrink-0 gap-1">
-            <span className="rounded-full bg-danger-100 px-2 py-0.5 text-xs font-medium text-danger-700 dark:bg-danger-900/40 dark:text-danger-300">
-              YouTube
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                channel.is_active
-                  ? "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300"
-                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-              }`}
-            >
+            <Badge variant="danger">YouTube</Badge>
+            <Badge variant={channel.is_active ? "success" : "neutral"}>
               {channel.is_active ? "Active" : "Inactive"}
-            </span>
+            </Badge>
           </div>
         </div>
 
         {channel.description ? (
-          <p className="mb-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mb-2 line-clamp-2 text-sm text-secondary-600 dark:text-secondary-400">
             {channel.description}
           </p>
         ) : null}
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary-500 dark:text-secondary-400">
           <span className="whitespace-nowrap">
             📹 {channel.videos_count} video
           </span>
@@ -282,28 +296,30 @@ function ChannelRow({ channel }: { channel: YoutubeChannelView }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 sm:shrink-0 sm:items-center">
-        <Link href={`/youtube/${channel.id}`}>
-          <Button size="sm" variant="secondary">
-            Open
-          </Button>
+      <div className="flex flex-wrap gap-1.5 sm:shrink-0 sm:items-center">
+        <Link href={`/youtube/${channel.id}`} aria-label="Open">
+          <IconButton size="sm" variant="secondary" label="Open">
+            <HiPencilSquare />
+          </IconButton>
         </Link>
-        <Button
+        <IconButton
           size="sm"
           variant="secondary"
-          isDisabled={toggleActive.isPending}
+          label={channel.is_active ? "Deactivate" : "Activate"}
+          disabled={toggleActive.isPending}
           onClick={() => toggleActive.mutate(channel.id)}
         >
-          {channel.is_active ? "Deactivate" : "Activate"}
-        </Button>
-        <Button
+          {channel.is_active ? <HiEyeSlash /> : <HiEye />}
+        </IconButton>
+        <IconButton
           size="sm"
           variant="danger"
-          isDisabled={deleteChannel.isPending}
+          label="Delete"
+          disabled={deleteChannel.isPending}
           onClick={onDelete}
         >
-          Delete
-        </Button>
+          <HiTrash />
+        </IconButton>
       </div>
     </div>
   );
@@ -340,32 +356,32 @@ function VideosTab() {
   };
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-6">
+    <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-        <Button
-          variant="ghost"
+        <IconButton
           size="sm"
+          variant="ghost"
+          label="Previous"
           onClick={() => changeDate("prev")}
         >
-          <HiChevronLeft className="h-5 w-5" />
-          <span className="ml-1 hidden sm:inline">Previous</span>
-        </Button>
+          <HiChevronLeft />
+        </IconButton>
 
         <div className="min-w-0 flex-1 text-center">
-          <h3 className="truncate px-1 text-sm font-semibold sm:text-lg">
+          <h3 className="truncate px-1 text-sm font-semibold text-secondary-900 dark:text-secondary-100 sm:text-lg">
             <span className="sm:hidden">{formatShortDate(date)}</span>
             <span className="hidden sm:inline">{formatLongDate(date)}</span>
           </h3>
         </div>
 
-        <Button
-          variant="ghost"
+        <IconButton
           size="sm"
+          variant="ghost"
+          label="Next"
           onClick={() => changeDate("next")}
         >
-          <span className="mr-1 hidden sm:inline">Successivo</span>
-          <HiChevronRight className="h-5 w-5" />
-        </Button>
+          <HiChevronRight />
+        </IconButton>
       </div>
 
       <div className="mb-4 sm:mb-6">
@@ -373,24 +389,26 @@ function VideosTab() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search videos or channels..."
+          placeholder="Search videos or channels…"
           leftIcon={<HiMagnifyingGlass className="h-5 w-5" />}
           fullWidth
         />
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-zinc-500">Loading…</p>
+        <p className="py-8 text-center text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       ) : error ? (
-        <p className="py-8 text-center text-sm text-danger">
+        <p className="py-8 text-center text-sm text-danger-600 dark:text-danger-400">
           Couldn&rsquo;t load the videos. Try refreshing.
         </p>
       ) : !hasVideos ? (
-        <p className="py-8 text-center text-zinc-500">
+        <p className="py-8 text-center text-secondary-500 dark:text-secondary-400">
           No videos found for {formatLongDate(date)}
         </p>
       ) : filteredVideos.length === 0 ? (
-        <p className="py-8 text-center text-zinc-500">
+        <p className="py-8 text-center text-secondary-500 dark:text-secondary-400">
           No videos found for &ldquo;{search}&rdquo;
         </p>
       ) : (
@@ -424,11 +442,12 @@ function VideoRow({ video }: { video: YoutubeDateVideo }) {
 
   return (
     <div
-      className={`rounded-md border p-3 ${
+      className={[
+        "rounded-[var(--radius-control)] border p-3 transition-colors",
         video.is_watched
-          ? "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
-          : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
-      }`}
+          ? "border-secondary-200 bg-secondary-50 dark:border-secondary-800 dark:bg-secondary-900"
+          : "border-secondary-200 bg-white dark:border-secondary-800 dark:bg-secondary-950",
+      ].join(" ")}
     >
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 gap-3">
@@ -443,33 +462,34 @@ function VideoRow({ video }: { video: YoutubeDateVideo }) {
               />
             ) : (
               <div
-                className="flex h-20 w-28 cursor-pointer items-center justify-center rounded bg-zinc-200 dark:bg-zinc-800 sm:h-24 sm:w-32"
+                className="flex h-20 w-28 cursor-pointer items-center justify-center rounded bg-secondary-200 dark:bg-secondary-800 sm:h-24 sm:w-32"
                 onClick={openVideo}
               >
-                <HiPlay className="h-8 w-8 text-zinc-400" />
+                <HiPlay className="h-8 w-8 text-secondary-400" />
               </div>
             )}
           </div>
 
           <div className="min-w-0 flex-1">
             <h4
-              className={`mb-1 line-clamp-2 text-sm font-semibold sm:text-base ${
+              className={[
+                "mb-1 line-clamp-2 text-sm font-semibold sm:text-base",
                 video.is_watched
-                  ? "text-zinc-600 dark:text-zinc-400"
-                  : "text-zinc-900 dark:text-zinc-100"
-              }`}
+                  ? "text-secondary-600 dark:text-secondary-400"
+                  : "text-secondary-900 dark:text-secondary-100",
+              ].join(" ")}
             >
               {video.title}
             </h4>
-            <p className="mb-1 truncate text-xs text-zinc-600 dark:text-zinc-400 sm:text-sm">
+            <p className="mb-1 truncate text-xs text-secondary-600 dark:text-secondary-400 sm:text-sm">
               {video.youtube_channel.name}
             </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+            <p className="text-xs text-secondary-500 dark:text-secondary-500">
               {video.human_duration ?? ""} • {video.published_time}
             </p>
           </div>
 
-          <div className="ml-auto hidden shrink-0 items-center gap-2 sm:flex">
+          <div className="ml-auto hidden shrink-0 items-center gap-1.5 sm:flex">
             <VideoActionButtons
               video={video}
               onHide={hideChannel}
@@ -522,62 +542,101 @@ function VideoActionButtons({
   watchedPending: boolean;
   mobile?: boolean;
 }) {
-  const sizeClass = mobile ? "w-full" : "";
+  if (mobile) {
+    return (
+      <>
+        <Button
+          size="sm"
+          variant="danger"
+          fullWidth
+          disabled={hidePending}
+          onClick={onHide}
+          leftIcon={<HiXMark className="h-4 w-4" />}
+        >
+          Hide
+        </Button>
+        <Button
+          size="sm"
+          variant={video.is_watchlist ? "primary" : "secondary"}
+          fullWidth
+          disabled={watchlistPending}
+          onClick={onToggleWatchlist}
+          leftIcon={
+            video.is_watchlist ? (
+              <HiBookmark className="h-4 w-4" />
+            ) : (
+              <HiBookmarkSlash className="h-4 w-4" />
+            )
+          }
+        >
+          {video.is_watchlist ? "Saved" : "Save"}
+        </Button>
+        <Button
+          size="sm"
+          variant={video.is_watched ? "secondary" : "info"}
+          fullWidth
+          disabled={watchedPending}
+          onClick={onToggleWatched}
+          leftIcon={
+            video.is_watched ? (
+              <HiEye className="h-4 w-4" />
+            ) : (
+              <HiEyeSlash className="h-4 w-4" />
+            )
+          }
+        >
+          {video.is_watched ? "Watched" : "Watch"}
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          fullWidth
+          onClick={onPlay}
+          leftIcon={<HiPlay className="h-4 w-4" />}
+        >
+          Play
+        </Button>
+      </>
+    );
+  }
+
   return (
     <>
-      <Button
-        size="sm"
-        variant="danger-soft"
-        isIconOnly={!mobile}
-        isDisabled={hidePending}
-        onClick={onHide}
-        className={sizeClass}
-        aria-label={`Hide videos from ${video.youtube_channel.name}`}
-      >
-        <HiXMark className="h-5 w-5" />
-      </Button>
-      <Button
-        size="sm"
-        variant={video.is_watchlist ? "primary" : "outline"}
-        isIconOnly={!mobile}
-        isDisabled={watchlistPending}
-        onClick={onToggleWatchlist}
-        className={sizeClass}
-        aria-label={
-          video.is_watchlist ? "Remove from watchlist" : "Add to watchlist"
-        }
-      >
-        {video.is_watchlist ? (
-          <HiBookmark className="h-5 w-5" />
-        ) : (
-          <HiBookmarkSlash className="h-5 w-5" />
-        )}
-      </Button>
-      <Button
-        size="sm"
-        variant={video.is_watched ? "secondary" : "outline"}
-        isIconOnly={!mobile}
-        isDisabled={watchedPending}
-        onClick={onToggleWatched}
-        className={sizeClass}
-        aria-label={video.is_watched ? "Mark as unwatched" : "Mark as watched"}
-      >
-        {video.is_watched ? (
-          <HiEye className="h-5 w-5" />
-        ) : (
-          <HiEyeSlash className="h-5 w-5" />
-        )}
-      </Button>
-      <Button
+      <IconButton
         size="sm"
         variant="danger"
-        isIconOnly={!mobile}
-        onClick={onPlay}
-        className={sizeClass}
-        aria-label="Play video"
+        label={`Hide videos from ${video.youtube_channel.name}`}
+        disabled={hidePending}
+        onClick={onHide}
       >
-        <HiPlay className="h-5 w-5" />
-      </Button>
+        <HiXMark />
+      </IconButton>
+      <IconButton
+        size="sm"
+        variant={video.is_watchlist ? "primary" : "secondary"}
+        label={video.is_watchlist ? "Remove from watchlist" : "Add to watchlist"}
+        disabled={watchlistPending}
+        onClick={onToggleWatchlist}
+      >
+        {video.is_watchlist ? <HiBookmark /> : <HiBookmarkSlash />}
+      </IconButton>
+      <IconButton
+        size="sm"
+        variant={video.is_watched ? "secondary" : "info"}
+        label={video.is_watched ? "Mark as unwatched" : "Mark as watched"}
+        disabled={watchedPending}
+        onClick={onToggleWatched}
+      >
+        {video.is_watched ? <HiEye /> : <HiEyeSlash />}
+      </IconButton>
+      <IconButton
+        size="sm"
+        variant="danger"
+        label="Play video"
+        onClick={onPlay}
+      >
+        <HiPlayCircle />
+      </IconButton>
     </>
   );
 }

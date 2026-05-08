@@ -129,7 +129,7 @@ function fmtMoney(n: number): string {
 
 function BudgetSection({ budgets }: { budgets: CalendarBudgetRow[] }) {
   if (budgets.length === 0) {
-    return <p className="text-sm text-zinc-500">No active budgets.</p>;
+    return <p className="text-sm text-secondary-500">No active budgets.</p>;
   }
   return (
     <ul className="space-y-2">
@@ -145,7 +145,7 @@ function BudgetRow({ budget }: { budget: CalendarBudgetRow }) {
   const over = budget.is_over_threshold;
   const exceeded = budget.amount_left < 0;
   const barColor = exceeded
-    ? "bg-danger"
+    ? "bg-danger-500"
     : over
       ? "bg-amber-500"
       : "bg-success-500";
@@ -155,32 +155,32 @@ function BudgetRow({ budget }: { budget: CalendarBudgetRow }) {
       className={[
         "rounded-lg border p-3 text-sm",
         exceeded
-          ? "border-danger/40 bg-danger/5"
+          ? "border-danger-500/40 bg-danger-500/5"
           : over
             ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
-            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950",
+            : "border-secondary-200 bg-white dark:border-secondary-800 dark:bg-secondary-950",
       ].join(" ")}
     >
       <div className="flex items-baseline justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-medium">{budget.name}</p>
-          <p className="text-xs uppercase tracking-wide text-zinc-500">
+          <p className="text-xs uppercase tracking-wide text-secondary-500">
             {budget.type} · {budget.payments_count} payment
             {budget.payments_count === 1 ? "" : "s"}
           </p>
         </div>
         <div className="flex flex-shrink-0 flex-col items-end">
-          <span className={exceeded ? "font-semibold text-danger" : "font-semibold"}>
+          <span className={exceeded ? "font-semibold text-danger-600" : "font-semibold"}>
             {fmtMoney(budget.total_spent)} / {fmtMoney(budget.amount)}
           </span>
           <span
             className={[
               "text-xs",
               exceeded
-                ? "text-danger"
+                ? "text-danger-600"
                 : over
                   ? "text-amber-700 dark:text-amber-400"
-                  : "text-zinc-500",
+                  : "text-secondary-500",
             ].join(" ")}
           >
             {exceeded
@@ -190,7 +190,7 @@ function BudgetRow({ budget }: { budget: CalendarBudgetRow }) {
           </span>
         </div>
       </div>
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary-200 dark:bg-secondary-800">
         <div
           className={["h-full transition-all", barColor].join(" ")}
           style={{ width: `${pct}%` }}
@@ -207,7 +207,7 @@ function EntitiesSection({ items }: { items: CalendarAnchor[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-secondary-500">
         No anchored entities. Open any entity and click the bookmark icon to
         anchor it here.
       </p>
@@ -240,11 +240,11 @@ function EntitiesSection({ items }: { items: CalendarAnchor[] }) {
         return (
           <li
             key={key}
-            className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            className="flex items-center justify-between gap-3 rounded-md border border-secondary-200 bg-white p-3 text-sm dark:border-secondary-800 dark:bg-secondary-950"
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{item.title}</p>
-              <p className="text-xs uppercase tracking-wide text-zinc-500">
+              <p className="text-xs uppercase tracking-wide text-secondary-500">
                 {item.type.replace("_", " ")}
               </p>
             </div>
@@ -255,7 +255,7 @@ function EntitiesSection({ items }: { items: CalendarAnchor[] }) {
                 disabled={busy}
                 title="Open in modal"
                 aria-label="Open in modal"
-                className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-secondary-200 bg-white p-1.5 text-secondary-600 hover:bg-secondary-50 disabled:opacity-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
               >
                 <HiPencilSquare className="h-4 w-4" />
               </button>
@@ -264,7 +264,7 @@ function EntitiesSection({ items }: { items: CalendarAnchor[] }) {
                 onClick={() => openFullPage(item)}
                 title="Open full page"
                 aria-label="Open full page"
-                className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-secondary-200 bg-white p-1.5 text-secondary-600 hover:bg-secondary-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
               >
                 <HiArrowsPointingOut className="h-4 w-4" />
               </button>
@@ -281,7 +281,7 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-secondary-500">
         Nothing to buy now. Items are listed once their planned purchase date
         is today or earlier.
       </p>
@@ -296,11 +296,11 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
         return (
           <li
             key={w.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            className="flex items-center justify-between gap-3 rounded-md border border-secondary-200 bg-white p-3 text-sm dark:border-secondary-800 dark:bg-secondary-950"
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{w.name}</p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-secondary-500">
                 {w.planned_purchase_date
                   ? formatLocaleDate(w.planned_purchase_date)
                   : "No planned date"}
@@ -309,7 +309,7 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
                   : ""}
               </p>
               {w.notes && (
-                <p className="mt-1 truncate text-xs text-zinc-500">{w.notes}</p>
+                <p className="mt-1 truncate text-xs text-secondary-500">{w.notes}</p>
               )}
             </div>
             <div className="flex flex-shrink-0 items-center gap-1.5">
@@ -320,7 +320,7 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
                   rel="noreferrer"
                   title="Open link"
                   aria-label="Open buy link"
-                  className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white p-1.5 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  className="inline-flex items-center justify-center rounded-[var(--radius-control)] border border-secondary-200 bg-white p-1.5 text-secondary-600 hover:bg-secondary-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
                 >
                   <HiArrowTopRightOnSquare className="h-4 w-4" />
                 </a>
@@ -329,7 +329,7 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
                 type="button"
                 onClick={() => togglePurchased.mutate(w.id)}
                 disabled={togglePurchased.isPending}
-                className="inline-flex items-center gap-1 rounded-md bg-green-100 px-2.5 py-1.5 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                className="inline-flex items-center gap-1 rounded-[var(--radius-control)] bg-success-100 px-2.5 py-1.5 text-xs font-medium text-success-700 hover:bg-success-200 disabled:opacity-50 dark:bg-success-900/30 dark:text-success-300 dark:hover:bg-success-900/50"
               >
                 <HiCheck className="h-4 w-4" />
                 <span className="hidden sm:inline">Mark bought</span>
@@ -344,14 +344,14 @@ function WishlistSection({ items }: { items: WishlistItem[] }) {
 
 function MediaSection({ items }: { items: MediaTask[] }) {
   if (items.length === 0) {
-    return <p className="text-sm text-zinc-500">Watchlist is empty.</p>;
+    return <p className="text-sm text-secondary-500">Watchlist is empty.</p>;
   }
   return (
     <ul className="space-y-2">
       {items.map((m) => (
         <li
           key={m.id}
-          className="rounded-lg border border-gray-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700"
+          className="rounded-lg border border-secondary-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -359,14 +359,14 @@ function MediaSection({ items }: { items: MediaTask[] }) {
                 className={[
                   "truncate font-semibold",
                   m.is_done
-                    ? "text-gray-500 line-through dark:text-gray-400"
-                    : "text-gray-900 dark:text-gray-100",
+                    ? "text-secondary-500 line-through dark:text-secondary-400"
+                    : "text-secondary-900 dark:text-secondary-100",
                 ].join(" ")}
               >
                 {m.title}
               </h4>
               {m.description && (
-                <p className="mt-1 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
+                <p className="mt-1 text-xs text-secondary-500 line-clamp-2 dark:text-secondary-400">
                   {m.description}
                 </p>
               )}
@@ -416,7 +416,7 @@ function PlanningSection({
 
   if (tasks.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">No unlinked planning tasks.</p>
+      <p className="text-sm text-secondary-500">No unlinked planning tasks.</p>
     );
   }
 
@@ -439,10 +439,10 @@ function PlanningSection({
           type="button"
           key={task.id}
           onClick={() => setOpenTask(task)}
-          className="block w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700"
+          className="block w-full rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
         >
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h4 className="flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
+            <h4 className="flex-1 truncate font-semibold text-secondary-900 dark:text-secondary-100">
               {task.content}
             </h4>
             {task.stars ? (
@@ -451,7 +451,7 @@ function PlanningSection({
               </span>
             ) : null}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-secondary-500 dark:text-secondary-400">
             {planningTypeLabel(task.planning_type)}
             {task.start_date ? ` · ${formatLocaleDate(task.start_date)}` : ""}
           </p>
@@ -561,7 +561,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 border-b border-gray-200 pb-3 dark:border-gray-700">
+      <div className="flex flex-col gap-2 border-b border-secondary-200 pb-3 dark:border-secondary-700">
         <div className="flex gap-2">
           <input
             type="text"
@@ -572,7 +572,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
             }}
             placeholder="Paste YouTube video URL here..."
             disabled={addByUrl.isPending}
-            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-200/40 disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            className="flex-1 rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm text-secondary-900 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-200/40 disabled:bg-secondary-100 dark:border-secondary-600 dark:bg-secondary-700 dark:text-secondary-100"
           />
           <button
             type="button"
@@ -593,8 +593,8 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
       </div>
 
       {videos.length === 0 ? (
-        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-          <HiVideoCamera className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+        <div className="py-8 text-center text-secondary-500 dark:text-secondary-400">
+          <HiVideoCamera className="mx-auto mb-3 h-12 w-12 text-secondary-400" />
           <p>No videos in watchlist</p>
         </div>
       ) : (
@@ -605,11 +605,11 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
             return (
               <div
                 key={video.id}
-                className="rounded-lg border border-gray-200 bg-white p-3 transition-all duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 sm:p-4"
+                className="rounded-lg border border-secondary-200 bg-white p-3 transition-all duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700 sm:p-4"
               >
                 <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-x-4 sm:space-y-0">
                   <div className="flex-shrink-0 self-start">
-                    <div className="relative h-12 w-20 overflow-hidden rounded-lg bg-gray-200 sm:h-16 sm:w-24">
+                    <div className="relative h-12 w-20 overflow-hidden rounded-lg bg-secondary-200 sm:h-16 sm:w-24">
                       {video.thumbnail_url && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -630,8 +630,8 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       className={[
                         "mb-2 line-clamp-2 text-base font-semibold",
                         video.is_watched
-                          ? "text-gray-600 dark:text-gray-400"
-                          : "text-gray-900 dark:text-gray-100",
+                          ? "text-secondary-600 dark:text-secondary-400"
+                          : "text-secondary-900 dark:text-secondary-100",
                       ].join(" ")}
                     >
                       {video.title}
@@ -641,7 +641,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                         {"★".repeat(video.stars ?? 0)}
                       </p>
                     )}
-                    <div className="flex flex-col text-sm text-gray-600 dark:text-gray-400 sm:flex-row sm:items-center">
+                    <div className="flex flex-col text-sm text-secondary-600 dark:text-secondary-400 sm:flex-row sm:items-center">
                       <div className="flex items-center">
                         {channel ? (
                           <>
@@ -655,7 +655,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                             </a>
                             <a
                               href={`/youtube?search=${encodeURIComponent(channel.name)}`}
-                              className="ml-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"
+                              className="ml-2 text-secondary-500 hover:text-red-600 dark:hover:text-red-400"
                               title="Channel details"
                             >
                               <HiHome className="h-4 w-4" />
@@ -699,7 +699,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                                       : "mm:ss"
                                   }
                                   autoFocus
-                                  className="w-24 rounded border border-red-300 bg-white px-1.5 py-0.5 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-gray-800 dark:text-gray-100"
+                                  className="w-24 rounded border border-red-300 bg-white px-1.5 py-0.5 text-sm text-secondary-900 outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-secondary-800 dark:text-secondary-100"
                                 />
                                 <span className="ml-1">/ {duration}</span>
                               </>
@@ -729,8 +729,8 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       className={[
                         "inline-flex items-center justify-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50",
                         video.is_watched
-                          ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
-                          : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600",
+                          ? "border-success-300 bg-success-50 text-success-700 hover:bg-success-100 dark:border-success-800 dark:bg-success-900/20 dark:text-success-300 dark:hover:bg-success-900/40"
+                          : "border-secondary-300 bg-secondary-50 text-secondary-700 hover:bg-secondary-100 dark:border-secondary-600 dark:bg-secondary-700 dark:text-secondary-300 dark:hover:bg-secondary-600",
                       ].join(" ")}
                     >
                       <HiCheck className="h-4 w-4" />
@@ -760,7 +760,7 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       disabled={toggleWatchlist.isPending}
                       title="Remove from watchlist"
                       aria-label="Remove from watchlist"
-                      className="inline-flex items-center justify-center gap-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                      className="inline-flex items-center justify-center gap-1 rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm font-medium text-secondary-600 hover:bg-secondary-50 disabled:opacity-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
                     >
                       <HiTrash className="h-4 w-4" />
                       <span className="truncate">Remove</span>
@@ -784,10 +784,10 @@ function formatViewerCount(count: number): string {
 function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
   if (streams.length === 0) {
     return (
-      <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-        <HiVideoCamera className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+      <div className="py-8 text-center text-secondary-500 dark:text-secondary-400">
+        <HiVideoCamera className="mx-auto mb-3 h-12 w-12 text-secondary-400" />
         <p>No streams are currently live</p>
-        <p className="mt-1 text-sm text-gray-400">Check back later!</p>
+        <p className="mt-1 text-sm text-secondary-400">Check back later!</p>
       </div>
     );
   }
@@ -796,7 +796,7 @@ function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
       {streams.map((stream) => (
         <div
           key={stream.id}
-          className="rounded-lg border border-gray-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 sm:p-4"
+          className="rounded-lg border border-secondary-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700 sm:p-4"
         >
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
             <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -812,7 +812,7 @@ function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
                   <img
                     src={stream.channel_profile_image_url}
                     alt={stream.channel_name}
-                    className="h-12 w-12 rounded-full border border-gray-200 object-cover dark:border-gray-600 sm:h-14 sm:w-14"
+                    className="h-12 w-12 rounded-full border border-secondary-200 object-cover dark:border-secondary-600 sm:h-14 sm:w-14"
                     loading="lazy"
                   />
                 ) : (
@@ -822,10 +822,10 @@ function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
                 )}
               </a>
               <div className="min-w-0 flex-1">
-                <h4 className="mb-1 break-words text-base font-semibold text-gray-900 dark:text-gray-100">
+                <h4 className="mb-1 break-words text-base font-semibold text-secondary-900 dark:text-secondary-100">
                   {stream.title}
                 </h4>
-                <div className="mb-2 flex flex-col text-sm text-gray-600 dark:text-gray-400 sm:flex-row sm:items-center">
+                <div className="mb-2 flex flex-col text-sm text-secondary-600 dark:text-secondary-400 sm:flex-row sm:items-center">
                   <div className="flex items-center">
                     <a
                       href={stream.channel_url}
@@ -843,7 +843,7 @@ function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:space-x-4">
+                <div className="flex flex-col text-xs text-secondary-500 dark:text-secondary-400 sm:flex-row sm:space-x-4">
                   <div className="flex items-center">
                     <HiEye className="mr-1 h-4 w-4" />
                     {formatViewerCount(stream.viewer_count)} viewers
@@ -880,7 +880,7 @@ function TwitchSection({ streams }: { streams: TwitchLiveStream[] }) {
 
 function RssSection({ unread }: { unread: RssNewsItem[] }) {
   return (
-    <ul className="flex flex-col divide-y divide-zinc-200 rounded-md border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+    <ul className="flex flex-col divide-y divide-secondary-200 rounded-md border border-secondary-200 dark:divide-secondary-800 dark:border-secondary-800">
       {unread.slice(0, 30).map((item) => (
         <li key={item.id} className="px-3 py-2 text-sm">
           <a
@@ -891,7 +891,7 @@ function RssSection({ unread }: { unread: RssNewsItem[] }) {
           >
             {item.title}
           </a>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-secondary-500">
             {item.rss_feed?.name ?? "—"}
             {item.published_at ? ` · ${item.published_at}` : ""}
           </p>
@@ -1036,13 +1036,13 @@ export function CalendarBottomStrip({
   return (
     <div
       ref={containerRef}
-      className="flex-shrink-0 border-t border-gray-200 bg-white relative z-20 dark:border-gray-700 dark:bg-gray-800"
+      className="flex-shrink-0 border-t border-secondary-200 bg-white relative z-20 dark:border-secondary-700 dark:bg-secondary-800"
     >
       {expanded && (
-        <div className="absolute bottom-full left-0 right-0 h-[50vh] flex flex-col bg-white border-t-2 border-primary-500 shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.25)] rounded-t-2xl overflow-hidden dark:bg-gray-800 dark:border-primary-400 dark:shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.6)]">
+        <div className="absolute bottom-full left-0 right-0 h-[50vh] flex flex-col bg-white border-t-2 border-primary-500 shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.25)] rounded-t-2xl overflow-hidden dark:bg-secondary-800 dark:border-primary-400 dark:shadow-[0_-12px_40px_-8px_rgba(0,0,0,0.6)]">
           <div
             role="tablist"
-            className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700"
+            className="flex overflow-x-auto border-b border-secondary-200 dark:border-secondary-700"
           >
             {visibleSections.map((s) => {
               const isActive = s.key === currentKey;
@@ -1058,7 +1058,7 @@ export function CalendarBottomStrip({
                     "flex-shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
                     isActive
                       ? "border-primary-600 text-primary-700 bg-primary-50/60 dark:text-primary-300 dark:bg-primary-900/20"
-                      : "border-transparent text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50",
+                      : "border-transparent text-secondary-600 hover:bg-secondary-50 dark:text-secondary-400 dark:hover:bg-secondary-700/50",
                   ].join(" ")}
                 >
                   <Icon className="w-4 h-4" />
@@ -1068,7 +1068,7 @@ export function CalendarBottomStrip({
                       "ml-0.5 px-1.5 py-0.5 text-xs font-semibold rounded-full min-w-[1.25rem] text-center",
                       isActive
                         ? "bg-primary-600 text-white dark:bg-primary-500"
-                        : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+                        : "bg-secondary-200 text-secondary-700 dark:bg-secondary-700 dark:text-secondary-300",
                     ].join(" ")}
                   >
                     {c}
@@ -1086,7 +1086,7 @@ export function CalendarBottomStrip({
       <button
         type="button"
         onClick={() => setExpanded((p) => !p)}
-        className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50"
+        className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-secondary-700 hover:bg-secondary-50 dark:text-secondary-300 dark:hover:bg-secondary-700/50"
       >
         <span>Additional task</span>
         <HiChevronDown
