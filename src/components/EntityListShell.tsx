@@ -2,6 +2,21 @@
 
 import type { ReactNode } from "react";
 
+type MaxWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
+
+const MAX_WIDTH_CLASSES: Record<MaxWidth, string> = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
+  "5xl": "max-w-5xl",
+  "6xl": "max-w-6xl",
+  "7xl": "max-w-7xl",
+};
+
 export function EntityListShell({
   title,
   description,
@@ -9,6 +24,8 @@ export function EntityListShell({
   error,
   empty,
   children,
+  maxWidth,
+  headerActions,
 }: {
   title: string;
   description?: string;
@@ -16,13 +33,22 @@ export function EntityListShell({
   error?: unknown;
   empty?: boolean;
   children: ReactNode;
+  maxWidth?: MaxWidth;
+  headerActions?: ReactNode;
 }) {
-  return (
-    <div className="flex flex-col gap-4 p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        {description ? (
-          <p className="text-sm text-zinc-500">{description}</p>
+  const inner = (
+    <>
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          {description ? (
+            <p className="text-sm text-zinc-500">{description}</p>
+          ) : null}
+        </div>
+        {headerActions ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+          </div>
         ) : null}
       </header>
       {isLoading ? (
@@ -36,8 +62,22 @@ export function EntityListShell({
       ) : (
         children
       )}
-    </div>
+    </>
   );
+
+  if (maxWidth) {
+    return (
+      <div className="p-4 sm:p-6 lg:py-10">
+        <div
+          className={`mx-auto flex w-full flex-col gap-4 ${MAX_WIDTH_CLASSES[maxWidth]}`}
+        >
+          {inner}
+        </div>
+      </div>
+    );
+  }
+
+  return <div className="flex flex-col gap-4 p-6">{inner}</div>;
 }
 
 export function Card({ children }: { children: ReactNode }) {
