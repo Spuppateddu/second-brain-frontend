@@ -625,7 +625,6 @@ function TaskModalForm({
                 {mode === "calendar" && taskDate ? ` — ${shortDateLabel(taskDate)}` : ""}
               </span>
               <input
-                autoFocus
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
