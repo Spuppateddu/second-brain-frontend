@@ -31,6 +31,7 @@ import {
 
 import ApplicationLogo from "@/components/ApplicationLogo";
 import { FastNoteModal } from "@/components/FastNoteModal";
+import Footer from "@/components/Footer";
 import { PushNotificationBell } from "@/components/PushNotificationBell";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -521,7 +522,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </nav>
 
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex flex-1 flex-col overflow-y-auto">
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </main>
 
       <SpotlightSearch
         open={searchOpen}
