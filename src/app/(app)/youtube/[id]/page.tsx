@@ -517,7 +517,7 @@ function ActionButtons({
         </Button>
         <Button
           size="sm"
-          variant={video.is_watched ? "secondary" : "info"}
+          variant={video.is_watched ? "info" : "secondary"}
           fullWidth
           disabled={watchedPending}
           onClick={onToggleWatched}
@@ -557,7 +557,7 @@ function ActionButtons({
       </IconButton>
       <IconButton
         size="sm"
-        variant={video.is_watched ? "secondary" : "info"}
+        variant={video.is_watched ? "info" : "secondary"}
         label={video.is_watched ? "Mark as unwatched" : "Mark as watched"}
         disabled={watchedPending}
         onClick={onToggleWatched}
