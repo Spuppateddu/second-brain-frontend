@@ -347,33 +347,16 @@ function MediaSection({ items }: { items: MediaTask[] }) {
     return <p className="text-sm text-secondary-500">Watchlist is empty.</p>;
   }
   return (
-    <ul className="space-y-2">
+    <ul className="grid grid-cols-[max-content_1fr] gap-y-2">
       {items.map((m) => (
         <li
           key={m.id}
-          className="rounded-lg border border-secondary-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
+          className="col-span-2 grid grid-cols-subgrid items-start gap-x-3 rounded-lg border border-secondary-200 bg-white p-3 transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h4
-                className={[
-                  "truncate font-semibold",
-                  m.is_done
-                    ? "text-secondary-500 line-through dark:text-secondary-400"
-                    : "text-secondary-900 dark:text-secondary-100",
-                ].join(" ")}
-              >
-                {m.title}
-              </h4>
-              {m.description && (
-                <p className="mt-1 text-xs text-secondary-500 line-clamp-2 dark:text-secondary-400">
-                  {m.description}
-                </p>
-              )}
-            </div>
+          <div>
             {m.review_category && (
               <span
-                className="flex-shrink-0 inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                className="inline-block rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap"
                 style={
                   m.review_category.color
                     ? {
@@ -387,6 +370,23 @@ function MediaSection({ items }: { items: MediaTask[] }) {
               </span>
             )}
           </div>
+          <div className="min-w-0">
+            <h4
+              className={[
+                "truncate font-semibold",
+                m.is_done
+                  ? "text-secondary-500 line-through dark:text-secondary-400"
+                  : "text-secondary-900 dark:text-secondary-100",
+              ].join(" ")}
+            >
+              {m.title}
+            </h4>
+            {m.description && (
+              <p className="mt-1 text-xs text-secondary-500 line-clamp-2 dark:text-secondary-400">
+                {m.description}
+              </p>
+            )}
+          </div>
         </li>
       ))}
     </ul>
@@ -396,15 +396,6 @@ function MediaSection({ items }: { items: MediaTask[] }) {
 function formatLocaleDate(date: string): string {
   const justDate = date.slice(0, 10);
   return new Date(`${justDate}T00:00:00`).toLocaleDateString("en-GB");
-}
-
-function planningTypeLabel(
-  type: { slug?: string; name: string } | null | undefined,
-): string {
-  if (!type) return "";
-  if (type.slug === "month") return "Monthly";
-  if (type.slug === "year") return "Yearly";
-  return type.name;
 }
 
 function PlanningSection({
@@ -434,29 +425,40 @@ function PlanningSection({
 
   return (
     <div className="space-y-2">
-      {tasks.map((task) => (
-        <button
-          type="button"
-          key={task.id}
-          onClick={() => setOpenTask(task)}
-          className="block w-full rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
-        >
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <h4 className="flex-1 truncate font-semibold text-secondary-900 dark:text-secondary-100">
-              {task.content}
-            </h4>
-            {task.stars ? (
-              <span className="whitespace-nowrap text-xs font-bold text-yellow-500 dark:text-yellow-400">
-                {"★".repeat(task.stars)}
-              </span>
-            ) : null}
-          </div>
-          <p className="text-xs text-secondary-500 dark:text-secondary-400">
-            {planningTypeLabel(task.planning_type)}
-            {task.start_date ? ` · ${formatLocaleDate(task.start_date)}` : ""}
-          </p>
-        </button>
-      ))}
+      {tasks.map((task) => {
+        const categories = task.taskCategories ?? task.task_categories ?? [];
+        return (
+          <button
+            type="button"
+            key={task.id}
+            onClick={() => setOpenTask(task)}
+            className="block w-full rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              {task.stars ? (
+                <span className="whitespace-nowrap text-xs font-bold text-yellow-500 dark:text-yellow-400">
+                  {"★".repeat(task.stars)}
+                </span>
+              ) : null}
+              <h4 className="min-w-0 truncate font-semibold text-secondary-900 dark:text-secondary-100">
+                {task.content}
+              </h4>
+              {categories.map((c) => (
+                <span
+                  key={c.id}
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                  style={{
+                    backgroundColor: `${c.color}20`,
+                    color: c.color,
+                  }}
+                >
+                  {c.name}
+                </span>
+              ))}
+            </div>
+          </button>
+        );
+      })}
 
       <TaskModal
         open={openTask !== null}
