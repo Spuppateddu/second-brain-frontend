@@ -1,9 +1,19 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import Link from "next/link";
 import { use, useState } from "react";
+import {
+  HiArrowLongLeft,
+  HiArrowLongDown,
+  HiArrowLongUp,
+  HiPlus,
+  HiTrash,
+} from "react-icons/hi2";
 
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
+import { Input } from "@/components/UI/Input";
 import {
   useCalendarDay,
   useCreateCalendarTask,
@@ -49,10 +59,10 @@ function TaskRow({
   }
 
   return (
-    <li className="flex items-start gap-3 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
+    <li className="flex items-start gap-3 rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700">
       <input
         type="checkbox"
-        className="mt-1 h-4 w-4"
+        className="mt-1 h-4 w-4 accent-primary-600"
         checked={task.is_done}
         onChange={(e) =>
           update.mutate({
@@ -62,33 +72,37 @@ function TaskRow({
         }
         disabled={update.isPending}
       />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/calendar/${date}/${task.id}`}
             className={[
               "truncate font-medium hover:underline",
-              task.is_done ? "text-zinc-400 line-through" : "",
+              task.is_done
+                ? "text-secondary-400 line-through dark:text-secondary-500"
+                : "text-secondary-900 dark:text-secondary-100",
             ].join(" ")}
           >
             {task.title}
           </Link>
           {task.start_time ? (
-            <span className="text-xs text-zinc-500">
+            <Badge variant="info">
               {task.start_time}
               {task.end_time ? `–${task.end_time}` : ""}
-            </span>
+            </Badge>
           ) : null}
         </div>
         {task.description ? (
-          <p className="mt-1 text-sm text-zinc-500">{task.description}</p>
+          <p className="mt-1 text-sm text-secondary-500 dark:text-secondary-400">
+            {task.description}
+          </p>
         ) : null}
         {task.taskCategories.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-1">
             {task.taskCategories.map((cat) => (
               <span
                 key={cat.id}
-                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                 style={{
                   backgroundColor: `${cat.color}20`,
                   color: cat.color,
@@ -101,35 +115,36 @@ function TaskRow({
         ) : null}
       </div>
       <div className="flex flex-col gap-1">
-        <button
-          type="button"
-          title="Move up"
+        <IconButton
+          size="xs"
+          variant="ghost"
+          label="Move up"
           disabled={!prev || update.isPending}
           onClick={() => prev && swapOrder(prev)}
-          className="rounded px-1 text-xs text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 dark:hover:bg-zinc-800"
         >
-          ↑
-        </button>
-        <button
-          type="button"
-          title="Move down"
+          <HiArrowLongUp />
+        </IconButton>
+        <IconButton
+          size="xs"
+          variant="ghost"
+          label="Move down"
           disabled={!next || update.isPending}
           onClick={() => next && swapOrder(next)}
-          className="rounded px-1 text-xs text-zinc-500 hover:bg-zinc-100 disabled:opacity-30 dark:hover:bg-zinc-800"
         >
-          ↓
-        </button>
+          <HiArrowLongDown />
+        </IconButton>
       </div>
-      <Button
-        variant="ghost"
+      <IconButton
         size="sm"
-        isDisabled={remove.isPending}
+        variant="danger"
+        label="Delete"
+        disabled={remove.isPending}
         onClick={() => {
           if (confirm("Delete this task?")) remove.mutate(task.id);
         }}
       >
-        Delete
-      </Button>
+        <HiTrash />
+      </IconButton>
     </li>
   );
 }
@@ -170,29 +185,30 @@ function CreateTaskForm({
         );
       }}
     >
-      <div className="flex-1">
-        <Input
-          type="text"
-          placeholder={`Add a ${isWork ? "work" : "personal"} task…`}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-      <div className="w-24">
-        <Input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        />
-      </div>
-      <Button
+      <Input
+        type="text"
+        placeholder={`Add a ${isWork ? "work" : "personal"} task…`}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="flex-1"
+        fullWidth
+      />
+      <Input
+        type="time"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
+        className="w-28"
+      />
+      <IconButton
         type="submit"
         variant="primary"
-        size="sm"
-        isDisabled={!title.trim() || create.isPending}
+        size="md"
+        label="Add task"
+        disabled={!title.trim() || create.isPending}
+        loading={create.isPending}
       >
-        Add
-      </Button>
+        <HiPlus />
+      </IconButton>
     </form>
   );
 }
@@ -208,20 +224,28 @@ export default function CalendarDayPage({
 
   if (!valid) {
     return (
-      <div className="p-6 text-sm text-danger">
-        Invalid date. Dates must be in <code>YYYY-MM-DD</code> format.
+      <div className="p-4 sm:p-6 lg:py-10">
+        <div className="mx-auto max-w-3xl text-sm text-danger-600 dark:text-danger-400">
+          Invalid date. Dates must be in <code>YYYY-MM-DD</code> format.
+        </div>
       </div>
     );
   }
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-zinc-500">Loading…</div>;
+    return (
+      <div className="p-4 sm:p-6 lg:py-10">
+        <p className="mx-auto max-w-3xl text-sm text-secondary-500">Loading…</p>
+      </div>
+    );
   }
 
   if (error || !data) {
     return (
-      <div className="p-6 text-sm text-danger">
-        Couldn&rsquo;t load this day.
+      <div className="p-4 sm:p-6 lg:py-10">
+        <p className="mx-auto max-w-3xl text-sm text-danger-600 dark:text-danger-400">
+          Couldn&rsquo;t load this day.
+        </p>
       </div>
     );
   }
@@ -239,68 +263,73 @@ export default function CalendarDayPage({
     workTasks.reduce((m, t) => Math.max(m, t.order), -1) + 1;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link
-            href="/calendar"
-            className="text-sm text-zinc-500 hover:underline"
-          >
-            ← Back to calendar
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <header className="flex flex-col gap-2">
+          <Link href="/calendar">
+            <Button variant="ghost" size="xs" leftIcon={<HiArrowLongLeft />}>
+              Back to calendar
+            </Button>
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold">{dateLabel}</h1>
-        </div>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            {dateLabel}
+          </h1>
+        </header>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
+            Personal ({personalTasks.length})
+          </h2>
+          {personalTasks.length === 0 ? (
+            <p className="text-sm text-secondary-500 dark:text-secondary-400">
+              No personal tasks yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {personalTasks.map((task, i) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  prev={i > 0 ? personalTasks[i - 1] : null}
+                  next={
+                    i < personalTasks.length - 1 ? personalTasks[i + 1] : null
+                  }
+                  date={date}
+                />
+              ))}
+            </ul>
+          )}
+          <CreateTaskForm
+            date={date}
+            isWork={false}
+            nextOrder={personalNextOrder}
+          />
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
+            Work ({workTasks.length})
+          </h2>
+          {workTasks.length === 0 ? (
+            <p className="text-sm text-secondary-500 dark:text-secondary-400">
+              No work tasks yet.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {workTasks.map((task, i) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  prev={i > 0 ? workTasks[i - 1] : null}
+                  next={i < workTasks.length - 1 ? workTasks[i + 1] : null}
+                  date={date}
+                />
+              ))}
+            </ul>
+          )}
+          <CreateTaskForm date={date} isWork={true} nextOrder={workNextOrder} />
+        </section>
       </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Personal ({personalTasks.length})
-        </h2>
-        {personalTasks.length === 0 ? (
-          <p className="text-sm text-zinc-500">No personal tasks yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {personalTasks.map((task, i) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                prev={i > 0 ? personalTasks[i - 1] : null}
-                next={
-                  i < personalTasks.length - 1 ? personalTasks[i + 1] : null
-                }
-                date={date}
-              />
-            ))}
-          </ul>
-        )}
-        <CreateTaskForm
-          date={date}
-          isWork={false}
-          nextOrder={personalNextOrder}
-        />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Work ({workTasks.length})
-        </h2>
-        {workTasks.length === 0 ? (
-          <p className="text-sm text-zinc-500">No work tasks yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {workTasks.map((task, i) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                prev={i > 0 ? workTasks[i - 1] : null}
-                next={i < workTasks.length - 1 ? workTasks[i + 1] : null}
-                date={date}
-              />
-            ))}
-          </ul>
-        )}
-        <CreateTaskForm date={date} isWork={true} nextOrder={workNextOrder} />
-      </section>
     </div>
   );
 }

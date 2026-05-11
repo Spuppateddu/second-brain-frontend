@@ -58,11 +58,15 @@ export default function CalendarPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-zinc-500">Loading calendar…</div>;
+    return (
+      <div className="p-6 text-sm text-secondary-500 dark:text-secondary-400">
+        Loading calendar…
+      </div>
+    );
   }
   if (error || !data) {
     return (
-      <div className="p-6 text-sm text-danger">
+      <div className="p-6 text-sm text-danger-600 dark:text-danger-400">
         Couldn&rsquo;t load the calendar. Try refreshing.
       </div>
     );
@@ -106,7 +110,7 @@ export default function CalendarPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Desktop side panel */}
-      <aside className="hidden sm:block w-60 h-full bg-primary-50 shadow-md border-r border-primary-200 overflow-y-auto dark:bg-gray-800 dark:border-gray-700">
+      <aside className="hidden sm:block w-60 h-full bg-primary-50 shadow-[var(--shadow-card)] border-r border-primary-200 overflow-y-auto dark:bg-secondary-900 dark:border-secondary-800">
         <CalendarSidePanel
           days={days}
           selectedDate={effectiveDate}
@@ -123,7 +127,7 @@ export default function CalendarPage() {
       {/* Mobile side panel */}
       <aside
         className={[
-          "sm:hidden w-full h-full bg-primary-50 shadow-md overflow-y-auto dark:bg-gray-800",
+          "sm:hidden w-full h-full bg-primary-50 shadow-[var(--shadow-card)] overflow-y-auto dark:bg-secondary-900",
           showMobileSide ? "block" : "hidden",
         ].join(" ")}
       >
@@ -142,13 +146,13 @@ export default function CalendarPage() {
       {/* Task panel(s) + bottom strip */}
       <div
         className={[
-          "flex-1 min-w-0 bg-secondary-50 dark:bg-gray-900 overflow-hidden flex-col",
+          "flex-1 min-w-0 bg-secondary-50 dark:bg-secondary-950 overflow-hidden flex-col",
           showMobileSide ? "hidden sm:flex" : "flex",
         ].join(" ")}
       >
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="flex h-full min-h-0">
-            <div className="flex-1 min-w-0 border-r border-zinc-200 dark:border-zinc-800 last:border-r-0">
+            <div className="flex-1 min-w-0 border-r border-secondary-200 dark:border-secondary-800 last:border-r-0">
               <CalendarTaskPanel
                 date={effectiveDate}
                 onToggleMobileSide={() => setShowMobileSide((s) => !s)}
@@ -162,13 +166,14 @@ export default function CalendarPage() {
             {splitDates.map((date) => (
               <div
                 key={date}
-                className="flex-1 min-w-0 border-r border-zinc-200 dark:border-zinc-800 last:border-r-0 relative"
+                className="flex-1 min-w-0 border-r border-secondary-200 dark:border-secondary-800 last:border-r-0 relative"
               >
                 <button
                   type="button"
                   onClick={() => handleCloseSplit(date)}
                   title={`Close ${shortDateLabel(date)}`}
-                  className="absolute right-2 top-2 z-10 rounded-full bg-white/80 p-1 text-zinc-600 shadow hover:bg-white dark:bg-zinc-900/80 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                  aria-label={`Close ${shortDateLabel(date)}`}
+                  className="absolute right-2 top-2 z-10 rounded-full bg-white/80 p-1 text-secondary-600 shadow-[var(--shadow-card)] hover:bg-white dark:bg-secondary-900/80 dark:text-secondary-300 dark:hover:bg-secondary-900"
                 >
                   <HiXMark className="h-4 w-4" />
                 </button>

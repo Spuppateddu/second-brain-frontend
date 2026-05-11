@@ -1,9 +1,11 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
 
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
+import { Textarea } from "@/components/UI/Textarea";
 import type { MegaFileInput } from "@/lib/queries/entities";
 import type { MegaFile } from "@/types/entities";
 
@@ -34,8 +36,7 @@ export function MegaFileForm({
     initial?.tags?.map((t) => t.id) ?? [],
   );
 
-  const valid =
-    title.trim().length > 0 && megaLink.trim().length > 0;
+  const valid = title.trim().length > 0 && megaLink.trim().length > 0;
 
   return (
     <form
@@ -54,83 +55,72 @@ export function MegaFileForm({
         });
       }}
     >
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Title <span className="text-danger">*</span>
-        </span>
-        <Input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          autoFocus
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          MEGA link <span className="text-danger">*</span>
-        </span>
-        <Input
-          type="url"
-          placeholder="https://mega.nz/…"
-          value={megaLink}
-          onChange={(e) => setMegaLink(e.target.value)}
-        />
-      </label>
+      <Input
+        label="Title *"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        isFocused
+        fullWidth
+      />
+      <Input
+        label="MEGA link *"
+        type="url"
+        placeholder="https://mega.nz/…"
+        value={megaLink}
+        onChange={(e) => setMegaLink(e.target.value)}
+        fullWidth
+      />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            File type
-          </span>
-          <Input
-            type="text"
-            placeholder="zip, pdf, mp4 …"
-            value={fileType ?? ""}
-            onChange={(e) => setFileType(e.target.value)}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            File size
-          </span>
-          <Input
-            type="text"
-            placeholder="120 MB"
-            value={fileSize ?? ""}
-            onChange={(e) => setFileSize(e.target.value)}
-          />
-        </label>
+        <Input
+          label="File type"
+          type="text"
+          placeholder="zip, pdf, mp4 …"
+          value={fileType ?? ""}
+          onChange={(e) => setFileType(e.target.value)}
+          fullWidth
+        />
+        <Input
+          label="File size"
+          type="text"
+          placeholder="120 MB"
+          value={fileSize ?? ""}
+          onChange={(e) => setFileSize(e.target.value)}
+          fullWidth
+        />
       </div>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
         <input
           type="checkbox"
           checked={isFolder}
           onChange={(e) => setIsFolder(e.target.checked)}
+          className="h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
         />
         <span>This link points to a folder</span>
       </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Description
-        </span>
-        <textarea
-          className="min-h-[100px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-          value={description ?? ""}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </label>
+      <Textarea
+        label="Description"
+        value={description ?? ""}
+        onChange={(e) => setDescription(e.target.value)}
+        className="min-h-[100px]"
+        fullWidth
+      />
       <TagPicker value={tagIds} onChange={setTagIds} />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
       <div className="flex items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           type="submit"
           variant="primary"
           size="sm"
-          isDisabled={!valid || isPending}
+          disabled={!valid || isPending}
+          loading={isPending}
         >
-          {isPending ? "Saving…" : submitLabel}
+          {submitLabel}
         </Button>
       </div>
     </form>

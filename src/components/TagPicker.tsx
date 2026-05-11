@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useMemo, useState } from "react";
 
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 import { useCreateTag, useTags } from "@/lib/queries/entities";
 import type { Tag } from "@/types/entities";
 
@@ -76,7 +77,7 @@ export function TagPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-xs uppercase tracking-wide text-zinc-500">
+      <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
         Tags
       </span>
       {selected.length > 0 ? (
@@ -86,15 +87,16 @@ export function TagPicker({
               key={tag.id}
               type="button"
               onClick={() => toggle(tag)}
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
               style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+              aria-label={`Remove tag ${tag.name}`}
             >
               <span
                 className="h-1.5 w-1.5 rounded-full"
                 style={{ backgroundColor: tag.color }}
               />
               {tag.name}
-              <span className="ml-1 text-zinc-500">×</span>
+              <span className="ml-1 opacity-70">×</span>
             </button>
           ))}
         </div>
@@ -105,6 +107,7 @@ export function TagPicker({
           placeholder="Search or create a tag…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          fullWidth
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -123,9 +126,10 @@ export function TagPicker({
         {search.trim() && !exactMatch ? (
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             size="sm"
-            isDisabled={creating}
+            disabled={creating}
+            loading={creating}
             onClick={createAndSelect}
           >
             + Create
@@ -142,7 +146,7 @@ export function TagPicker({
                 type="button"
                 onClick={() => toggle(tag)}
                 className={[
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-opacity",
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-opacity",
                   active ? "" : "opacity-60 hover:opacity-100",
                 ].join(" ")}
                 style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
@@ -152,7 +156,7 @@ export function TagPicker({
                   style={{ backgroundColor: tag.color }}
                 />
                 {tag.name}
-                {active ? <span className="ml-1 text-zinc-500">✓</span> : null}
+                {active ? <span className="ml-1 opacity-70">✓</span> : null}
               </button>
             );
           })}

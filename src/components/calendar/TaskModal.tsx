@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { Button } from "@/components/UI/Button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HiBriefcase,
@@ -590,14 +590,14 @@ function TaskModalForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/40 p-4 backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-2xl max-h-[92vh] flex flex-col rounded-[var(--radius-card)] bg-white shadow-2xl dark:bg-secondary-950"
       >
         {/* Header */}
         <div
@@ -610,7 +610,7 @@ function TaskModalForm({
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <span className="block text-xs font-medium text-zinc-600">
+              <span className="block text-xs font-medium text-secondary-600">
                 {editing
                   ? isPlanning
                     ? "Edit Planning Task"
@@ -625,13 +625,12 @@ function TaskModalForm({
                 {mode === "calendar" && taskDate ? ` — ${shortDateLabel(taskDate)}` : ""}
               </span>
               <input
-                autoFocus
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={formLocked}
                 placeholder="Task title…"
-                className="mt-1 w-full bg-transparent text-xl font-semibold text-zinc-900 placeholder:text-zinc-400 outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-1 w-full bg-transparent text-xl font-semibold text-secondary-900 placeholder:text-secondary-400 outline-none disabled:cursor-not-allowed disabled:opacity-70"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -644,7 +643,7 @@ function TaskModalForm({
                   "rounded-full p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   isWork
                     ? "bg-orange-200 text-orange-700 hover:bg-orange-300"
-                    : "bg-white text-sky-700 hover:bg-zinc-100",
+                    : "bg-white text-sky-700 hover:bg-secondary-100",
                 ].join(" ")}
               >
                 {isWork ? (
@@ -656,7 +655,7 @@ function TaskModalForm({
               {isCalendarLinkedToPlanning && (
                 <span
                   title={`Linked to planning task: ${linkedPlanningSub?.content ?? linkedPlanning?.content ?? ""}`}
-                  className="rounded-full p-2 text-blue-600 dark:text-blue-400"
+                  className="rounded-full p-2 text-info-600 dark:text-info-400"
                 >
                   <HiLink className="h-5 w-5" />
                 </span>
@@ -665,7 +664,7 @@ function TaskModalForm({
                 type="button"
                 onClick={onClose}
                 title="Close"
-                className="rounded-full p-2 text-zinc-500 hover:bg-white/60"
+                className="rounded-full p-2 text-secondary-500 hover:bg-white/60"
               >
                 <HiXMark className="h-5 w-5" />
               </button>
@@ -680,7 +679,7 @@ function TaskModalForm({
               className={[
                 "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
                 isBlocked
-                  ? "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                  ? "border-secondary-300 bg-secondary-50 text-secondary-700 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-200"
                   : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200",
               ].join(" ")}
             >
@@ -715,8 +714,8 @@ function TaskModalForm({
                 className={[
                   "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
                   isDone
-                    ? "border-green-400 bg-green-50 text-green-700"
-                    : "border-zinc-300 bg-zinc-50 text-zinc-600",
+                    ? "border-success-400 bg-success-50 text-success-700"
+                    : "border-secondary-300 bg-secondary-50 text-secondary-600",
                 ].join(" ")}
               >
                 <HiCheck className="h-4 w-4" />
@@ -729,8 +728,8 @@ function TaskModalForm({
                 className={[
                   "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   isCancelled
-                    ? "border-red-400 bg-red-50 text-red-700"
-                    : "border-zinc-300 bg-zinc-50 text-zinc-600",
+                    ? "border-danger-400 bg-danger-50 text-danger-700"
+                    : "border-secondary-300 bg-secondary-50 text-secondary-600",
                 ].join(" ")}
               >
                 <HiNoSymbol className="h-4 w-4" />
@@ -769,17 +768,17 @@ function TaskModalForm({
                   onClick={() => setShowCategoryPicker((p) => !p)}
                   disabled={formLocked}
                   title="Add category"
-                  className="rounded-full border border-zinc-300 p-1 text-zinc-500 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-secondary-300 p-1 text-secondary-500 hover:bg-secondary-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <HiPlus className="h-4 w-4" />
                 </button>
               </div>
               {showCategoryPicker && (
-                <div className="absolute right-0 z-10 mt-2 w-56 rounded-md border border-zinc-200 bg-white p-2 shadow-lg">
+                <div className="absolute right-0 z-10 mt-2 w-56 rounded-md border border-secondary-200 bg-white p-2 shadow-lg">
                   {allCategoriesQuery.isLoading ? (
-                    <p className="px-2 py-1 text-xs text-zinc-500">Loading…</p>
+                    <p className="px-2 py-1 text-xs text-secondary-500">Loading…</p>
                   ) : allCategories.length === 0 ? (
-                    <p className="px-2 py-1 text-xs text-zinc-500">
+                    <p className="px-2 py-1 text-xs text-secondary-500">
                       No categories yet.
                     </p>
                   ) : (
@@ -794,8 +793,8 @@ function TaskModalForm({
                               className={[
                                 "flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-sm",
                                 selected
-                                  ? "bg-zinc-100"
-                                  : "hover:bg-zinc-50",
+                                  ? "bg-secondary-100"
+                                  : "hover:bg-secondary-50",
                               ].join(" ")}
                             >
                               <span className="flex items-center gap-2">
@@ -819,7 +818,7 @@ function TaskModalForm({
 
           {/* Description */}
           <section>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
               Description
             </label>
             <textarea
@@ -828,7 +827,7 @@ function TaskModalForm({
               disabled={formLocked}
               placeholder="Add a description…"
               rows={3}
-              className="w-full resize-y rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full resize-y rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
             />
           </section>
 
@@ -874,7 +873,7 @@ function TaskModalForm({
           {/* Date & time (calendar) or Stars (planning / outofplan) */}
           {usesStars ? (
             <section>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
                 Priority
               </label>
               <div className="flex items-center gap-2">
@@ -895,7 +894,7 @@ function TaskModalForm({
                             "h-6 w-6",
                             active
                               ? "text-yellow-400"
-                              : "text-zinc-300 dark:text-zinc-600",
+                              : "text-secondary-300 dark:text-secondary-600",
                           ].join(" ")}
                         />
                       </button>
@@ -907,7 +906,7 @@ function TaskModalForm({
                     type="button"
                     onClick={() => setStars(null)}
                     disabled={formLocked}
-                    className="text-xs text-zinc-500 hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-xs text-secondary-500 hover:text-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Clear
                   </button>
@@ -916,29 +915,29 @@ function TaskModalForm({
             </section>
           ) : (
             <section>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
                 Date &amp; time
               </label>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div>
-                  <p className="mb-1 text-xs text-zinc-500">Date</p>
+                  <p className="mb-1 text-xs text-secondary-500">Date</p>
                   <input
                     type="date"
                     value={taskDate}
                     onChange={(e) => setTaskDate(e.target.value)}
                     disabled={formLocked}
                     required
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="text-xs text-zinc-500">Start time</p>
+                    <p className="text-xs text-secondary-500">Start time</p>
                     {startTime && !formLocked && (
                       <button
                         type="button"
                         onClick={() => setStartTime("")}
-                        className="text-xs text-zinc-400 hover:text-danger"
+                        className="text-xs text-secondary-400 hover:text-danger"
                       >
                         Clear
                       </button>
@@ -949,17 +948,17 @@ function TaskModalForm({
                     value={startTime ?? ""}
                     onChange={(e) => setStartTime(e.target.value)}
                     disabled={formLocked}
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="text-xs text-zinc-500">End time</p>
+                    <p className="text-xs text-secondary-500">End time</p>
                     {endTime && !formLocked && (
                       <button
                         type="button"
                         onClick={() => setEndTime("")}
-                        className="text-xs text-zinc-400 hover:text-danger"
+                        className="text-xs text-secondary-400 hover:text-danger"
                       >
                         Clear
                       </button>
@@ -970,7 +969,7 @@ function TaskModalForm({
                     value={endTime ?? ""}
                     onChange={(e) => setEndTime(e.target.value)}
                     disabled={formLocked}
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </div>
               </div>
@@ -979,16 +978,16 @@ function TaskModalForm({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2 border-t border-zinc-200 px-5 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between gap-2 border-t border-secondary-200 px-5 py-4 flex-shrink-0">
           <div className="flex items-center gap-2">
             {editing && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                isDisabled={submitting}
+                disabled={submitting}
                 onClick={handleDelete}
-                className="text-danger"
+                className="text-danger-600"
               >
                 Delete
               </Button>
@@ -1001,9 +1000,9 @@ function TaskModalForm({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  isDisabled={submitting}
+                  disabled={submitting}
                   onClick={handleSkipRegen}
-                  className="text-danger"
+                  className="text-danger-600"
                 >
                   Skip regen
                 </Button>
@@ -1015,7 +1014,7 @@ function TaskModalForm({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              isDisabled={submitting}
+              disabled={submitting}
             >
               Cancel
             </Button>
@@ -1023,7 +1022,7 @@ function TaskModalForm({
               type="submit"
               variant="primary"
               size="sm"
-              isDisabled={
+              disabled={
                 !title.trim() ||
                 (mode === "calendar" && !taskDate) ||
                 (mode === "planning" && !planningPeriod) ||
@@ -1065,7 +1064,7 @@ function LinkedPlanningConfirm({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-950/50 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-secondary-950/50 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="link-confirm-title"
@@ -1073,9 +1072,9 @@ function LinkedPlanningConfirm({
         if (e.target === e.currentTarget && !submitting) onCancel();
       }}
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-zinc-950">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl dark:bg-secondary-950">
         <div className="mb-3 flex items-start gap-2">
-          <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400">
+          <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-100 text-success-600 dark:bg-success-900/40 dark:text-success-400">
             <HiCheck className="h-4 w-4" />
           </span>
           <h3 id="link-confirm-title" className="text-base font-semibold">
@@ -1084,36 +1083,38 @@ function LinkedPlanningConfirm({
               : "Mark planning task as done?"}
           </h3>
         </div>
-        <p className="text-sm text-blue-600 dark:text-blue-400">
+        <p className="text-sm text-info-600 dark:text-info-400">
           This calendar task is linked to a planning{" "}
           {kind === "subtask" ? "sub-task" : "task"}:
         </p>
-        <div className="mt-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
+        <div className="mt-2 rounded-[var(--radius-control)] border border-secondary-200 bg-secondary-50 px-3 py-2 text-sm text-secondary-800 dark:border-secondary-800 dark:bg-secondary-900 dark:text-secondary-100">
           {content || "(no title)"}
         </div>
-        <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
+        <p className="mt-3 text-sm text-secondary-700 dark:text-secondary-300">
           Do you also want to mark the planning{" "}
           {kind === "subtask" ? "sub-task" : "task"} as done?
         </p>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <button
+          <Button
             type="button"
+            variant="success"
+            size="md"
             onClick={() => onChoose(true)}
             disabled={submitting}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            leftIcon={<HiCheck className="h-4 w-4" />}
           >
-            <HiCheck className="h-4 w-4" />
             Yes, mark done
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={() => onChoose(false)}
             disabled={submitting}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-zinc-200 px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-600"
+            leftIcon={<HiNoSymbol className="h-4 w-4" />}
           >
-            <HiNoSymbol className="h-4 w-4" />
             No, keep pending
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1148,7 +1149,7 @@ function SubtasksSection({
 
   return (
     <section>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
         Subtasks
       </label>
       <div className="space-y-1.5">
@@ -1172,13 +1173,13 @@ function SubtasksSection({
             }
           }}
           placeholder="Add subtask…"
-          className="flex-1 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+          className="flex-1 rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm"
         />
         <Button
           type="button"
           variant="primary"
           size="sm"
-          isDisabled={!content.trim() || create.isPending}
+          disabled={!content.trim() || create.isPending}
           onClick={() => {
             if (!content.trim()) return;
             create.mutate(
@@ -1220,8 +1221,8 @@ function SubtaskRow({
       className={[
         "group flex items-center gap-2 rounded-lg px-3 py-2 ring-1 transition-colors",
         subTask.is_done
-          ? "bg-green-50 ring-green-200"
-          : "bg-zinc-50 ring-zinc-200 hover:ring-zinc-300",
+          ? "bg-success-50 ring-success-200"
+          : "bg-secondary-50 ring-secondary-200 hover:ring-secondary-300",
       ].join(" ")}
     >
       <button
@@ -1236,8 +1237,8 @@ function SubtaskRow({
         className={[
           "flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full border-2",
           subTask.is_done
-            ? "border-green-500 bg-green-500 text-white"
-            : "border-zinc-300 hover:border-green-400 hover:bg-green-50",
+            ? "border-success-500 bg-success-500 text-white"
+            : "border-secondary-300 hover:border-success-400 hover:bg-success-50",
         ].join(" ")}
       >
         {subTask.is_done && <HiCheck className="h-2.5 w-2.5" />}
@@ -1257,7 +1258,7 @@ function SubtaskRow({
                 setEditing(false);
               }
             }}
-            className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         ) : (
           <p
@@ -1267,7 +1268,7 @@ function SubtaskRow({
             }}
             className={[
               "cursor-pointer text-sm break-words",
-              subTask.is_done ? "line-through opacity-50" : "text-zinc-800",
+              subTask.is_done ? "line-through opacity-50" : "text-secondary-800",
             ].join(" ")}
           >
             {subTask.content}
@@ -1279,7 +1280,7 @@ function SubtaskRow({
         onClick={() => remove.mutate(subTask.id)}
         disabled={remove.isPending}
         title="Delete"
-        className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+        className="rounded p-1 text-danger-400 hover:bg-danger-50 hover:text-danger-600 disabled:opacity-30"
       >
         <HiTrash className="h-3.5 w-3.5" />
       </button>
@@ -1335,7 +1336,7 @@ function PlanningSubtasksSection({ taskId }: { taskId: number }) {
 
   return (
     <section>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
         Subtasks
       </label>
       <div className="space-y-1.5">
@@ -1359,13 +1360,13 @@ function PlanningSubtasksSection({ taskId }: { taskId: number }) {
             }
           }}
           placeholder="Add subtask…"
-          className="flex-1 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+          className="flex-1 rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm"
         />
         <Button
           type="button"
           variant="primary"
           size="sm"
-          isDisabled={!content.trim() || create.isPending}
+          disabled={!content.trim() || create.isPending}
           onClick={() => {
             if (!content.trim()) return;
             create.mutate(
@@ -1406,8 +1407,8 @@ function PlanningSubtaskRow({ subTask }: { subTask: PlanningSubTaskLite }) {
       className={[
         "group flex items-center gap-2 rounded-lg px-3 py-2 ring-1 transition-colors",
         subTask.is_done
-          ? "bg-green-50 ring-green-200"
-          : "bg-zinc-50 ring-zinc-200 hover:ring-zinc-300",
+          ? "bg-success-50 ring-success-200"
+          : "bg-secondary-50 ring-secondary-200 hover:ring-secondary-300",
       ].join(" ")}
     >
       <button
@@ -1422,8 +1423,8 @@ function PlanningSubtaskRow({ subTask }: { subTask: PlanningSubTaskLite }) {
         className={[
           "flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full border-2",
           subTask.is_done
-            ? "border-green-500 bg-green-500 text-white"
-            : "border-zinc-300 hover:border-green-400 hover:bg-green-50",
+            ? "border-success-500 bg-success-500 text-white"
+            : "border-secondary-300 hover:border-success-400 hover:bg-success-50",
         ].join(" ")}
       >
         {subTask.is_done && <HiCheck className="h-2.5 w-2.5" />}
@@ -1443,7 +1444,7 @@ function PlanningSubtaskRow({ subTask }: { subTask: PlanningSubTaskLite }) {
                 setEditing(false);
               }
             }}
-            className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         ) : (
           <p
@@ -1454,8 +1455,8 @@ function PlanningSubtaskRow({ subTask }: { subTask: PlanningSubTaskLite }) {
             }}
             className={[
               "cursor-pointer text-sm break-words",
-              subTask.is_done ? "line-through opacity-50" : "text-zinc-800",
-              blocked ? "italic text-zinc-400" : "",
+              subTask.is_done ? "line-through opacity-50" : "text-secondary-800",
+              blocked ? "italic text-secondary-400" : "",
             ].join(" ")}
           >
             {subTask.content}
@@ -1468,7 +1469,7 @@ function PlanningSubtaskRow({ subTask }: { subTask: PlanningSubTaskLite }) {
           onClick={() => remove.mutate(subTask.id)}
           disabled={remove.isPending}
           title="Delete"
-          className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+          className="rounded p-1 text-danger-400 hover:bg-danger-50 hover:text-danger-600 disabled:opacity-30"
         >
           <HiTrash className="h-3.5 w-3.5" />
         </button>
@@ -1496,7 +1497,7 @@ function OutOfPlanSubnotesSection({ noteId }: { noteId: number }) {
 
   return (
     <section>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
         Subnotes
       </label>
       <div className="space-y-1.5">
@@ -1520,13 +1521,13 @@ function OutOfPlanSubnotesSection({ noteId }: { noteId: number }) {
             }
           }}
           placeholder="Add subnote…"
-          className="flex-1 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+          className="flex-1 rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm"
         />
         <Button
           type="button"
           variant="primary"
           size="sm"
-          isDisabled={!content.trim() || create.isPending}
+          disabled={!content.trim() || create.isPending}
           onClick={() => {
             if (!content.trim()) return;
             create.mutate(
@@ -1565,8 +1566,8 @@ function OutOfPlanSubnoteRow({ subNote }: { subNote: OutOfPlanSubNote }) {
       className={[
         "group flex items-center gap-2 rounded-lg px-3 py-2 ring-1 transition-colors",
         subNote.is_done
-          ? "bg-green-50 ring-green-200"
-          : "bg-zinc-50 ring-zinc-200 hover:ring-zinc-300",
+          ? "bg-success-50 ring-success-200"
+          : "bg-secondary-50 ring-secondary-200 hover:ring-secondary-300",
       ].join(" ")}
     >
       <button
@@ -1581,8 +1582,8 @@ function OutOfPlanSubnoteRow({ subNote }: { subNote: OutOfPlanSubNote }) {
         className={[
           "flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full border-2",
           subNote.is_done
-            ? "border-green-500 bg-green-500 text-white"
-            : "border-zinc-300 hover:border-green-400 hover:bg-green-50",
+            ? "border-success-500 bg-success-500 text-white"
+            : "border-secondary-300 hover:border-success-400 hover:bg-success-50",
         ].join(" ")}
       >
         {subNote.is_done && <HiCheck className="h-2.5 w-2.5" />}
@@ -1602,7 +1603,7 @@ function OutOfPlanSubnoteRow({ subNote }: { subNote: OutOfPlanSubNote }) {
                 setEditing(false);
               }
             }}
-            className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-md border border-secondary-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
         ) : (
           <p
@@ -1612,7 +1613,7 @@ function OutOfPlanSubnoteRow({ subNote }: { subNote: OutOfPlanSubNote }) {
             }}
             className={[
               "cursor-pointer text-sm break-words",
-              subNote.is_done ? "line-through opacity-50" : "text-zinc-800",
+              subNote.is_done ? "line-through opacity-50" : "text-secondary-800",
             ].join(" ")}
           >
             {subNote.content}
@@ -1624,7 +1625,7 @@ function OutOfPlanSubnoteRow({ subNote }: { subNote: OutOfPlanSubNote }) {
         onClick={() => remove.mutate(subNote.id)}
         disabled={remove.isPending}
         title="Delete"
-        className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+        className="rounded p-1 text-danger-400 hover:bg-danger-50 hover:text-danger-600 disabled:opacity-30"
       >
         <HiTrash className="h-3.5 w-3.5" />
       </button>
@@ -1670,7 +1671,7 @@ function LinkedItemsSection({
 
   return (
     <section>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
         Link items
       </label>
 
@@ -1683,7 +1684,7 @@ function LinkedItemsSection({
             return (
               <span
                 key={key}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
+                className="inline-flex items-center gap-1 rounded-full bg-info-50 px-2 py-1 text-xs font-medium text-info-700 ring-1 ring-info-200"
               >
                 <HiLink className="h-3 w-3" />
                 <button
@@ -1699,7 +1700,7 @@ function LinkedItemsSection({
                     opening ? "opacity-60" : "",
                   ].join(" ")}
                 >
-                  <span className="text-[10px] uppercase tracking-wide text-blue-500">
+                  <span className="text-[10px] uppercase tracking-wide text-info-500">
                     {TYPE_LABEL[c.type] ?? c.type}
                   </span>
                   <span>{c.label}</span>
@@ -1708,7 +1709,7 @@ function LinkedItemsSection({
                   type="button"
                   onClick={() => onRemove(c)}
                   title="Unlink"
-                  className="rounded-full p-0.5 hover:bg-blue-100"
+                  className="rounded-full p-0.5 hover:bg-info-100"
                 >
                   <HiXMark className="h-3 w-3" />
                 </button>
@@ -1719,20 +1720,20 @@ function LinkedItemsSection({
       )}
 
       <div className="relative">
-        <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+        <HiMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search bookmarks, notes, people…"
-          className="w-full rounded-md border border-zinc-200 bg-white pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-md border border-secondary-200 bg-white pl-9 pr-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
         {showResults && (
-          <div className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-zinc-200 bg-white shadow-lg">
+          <div className="absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-secondary-200 bg-white shadow-lg">
             {search.isLoading ? (
-              <p className="px-3 py-2 text-xs text-zinc-500">Searching…</p>
+              <p className="px-3 py-2 text-xs text-secondary-500">Searching…</p>
             ) : !search.data || search.data.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-zinc-500">No matches.</p>
+              <p className="px-3 py-2 text-xs text-secondary-500">No matches.</p>
             ) : (
               <ul>
                 {search.data.map((r) => {
@@ -1757,7 +1758,7 @@ function LinkedItemsSection({
                           "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm",
                           already || !supported
                             ? "cursor-not-allowed opacity-50"
-                            : "hover:bg-zinc-50",
+                            : "hover:bg-secondary-50",
                         ].join(" ")}
                       >
                         <span className="flex flex-col min-w-0">
@@ -1765,12 +1766,12 @@ function LinkedItemsSection({
                             {r.title}
                           </span>
                           {r.subtitle && (
-                            <span className="truncate text-xs text-zinc-500">
+                            <span className="truncate text-xs text-secondary-500">
                               {r.subtitle}
                             </span>
                           )}
                         </span>
-                        <span className="flex-shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] uppercase text-zinc-600">
+                        <span className="flex-shrink-0 rounded bg-secondary-100 px-1.5 py-0.5 text-[10px] uppercase text-secondary-600">
                           {r.type_label || TYPE_LABEL[r.type] || r.type}
                         </span>
                       </button>
@@ -1830,16 +1831,16 @@ function CopyPlanningToCalendarSection({
   }
 
   return (
-    <section className="rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+    <section className="rounded-md border border-secondary-200 bg-secondary-50 p-3 dark:border-secondary-800 dark:bg-secondary-900">
       <div className="mb-2 flex items-center gap-2">
-        <HiCalendarDays className="h-4 w-4 text-zinc-500" />
+        <HiCalendarDays className="h-4 w-4 text-secondary-500" />
         <h3 className="text-sm font-semibold">Copy to Calendar</h3>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex flex-col gap-1">
           <label
             htmlFor="copy-cal-date"
-            className="text-xs font-medium text-zinc-500"
+            className="text-xs font-medium text-secondary-500"
           >
             Date
           </label>
@@ -1848,27 +1849,27 @@ function CopyPlanningToCalendarSection({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-950"
+            className="rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-950"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-zinc-500">
-            Time <span className="text-zinc-400">(optional)</span>
+          <span className="text-xs font-medium text-secondary-500">
+            Time <span className="text-secondary-400">(optional)</span>
           </span>
           <div className="flex items-center gap-1">
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-950"
+              className="w-28 rounded-md border border-secondary-300 bg-white px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-950"
               aria-label="Start time"
             />
-            <span className="text-zinc-400">–</span>
+            <span className="text-secondary-400">–</span>
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-950"
+              className="w-28 rounded-md border border-secondary-300 bg-white px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-950"
               aria-label="End time"
             />
           </div>
@@ -1876,7 +1877,7 @@ function CopyPlanningToCalendarSection({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         {error ? (
-          <p className="text-xs text-danger">{error}</p>
+          <p className="text-xs text-danger-600">{error}</p>
         ) : (
           <span />
         )}

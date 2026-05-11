@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactFlowInstance } from "@xyflow/react";
 import {
@@ -10,9 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { HiArrowPath, HiPlus } from "react-icons/hi2";
+import { HiArrowPath, HiPlus, HiXMark } from "react-icons/hi2";
 
 import ConfirmDialog from "@/components/SecondBrain/ConfirmDialog";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
 import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
 import GraphSearchOverlay, {
   type EntitySearchResult,
@@ -507,7 +508,7 @@ function SecondBrainPageInner() {
   if (error) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-danger">
+        <p className="text-sm text-danger-600 dark:text-danger-400">
           Couldn&rsquo;t load the Second Brain. Try refreshing.
         </p>
       </div>
@@ -517,21 +518,24 @@ function SecondBrainPageInner() {
   if (isLoading || !data) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900">
+    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden bg-secondary-50 dark:bg-secondary-900">
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
+          leftIcon={<HiArrowPath className="h-4 w-4" />}
           onClick={handleResetLayout}
-          isDisabled={resetPositions.isPending}
+          disabled={resetPositions.isPending}
+          loading={resetPositions.isPending}
         >
-          <HiArrowPath className="h-4 w-4" />
           Reset layout
         </Button>
 
@@ -539,11 +543,11 @@ function SecondBrainPageInner() {
           <Button
             size="sm"
             variant="primary"
+            leftIcon={<HiPlus className="h-4 w-4" />}
             onClick={() => setShowCreateMenu((v) => !v)}
             aria-haspopup="menu"
             aria-expanded={showCreateMenu}
           >
-            <HiPlus className="h-4 w-4" />
             New
           </Button>
           {showCreateMenu && (
@@ -554,12 +558,12 @@ function SecondBrainPageInner() {
               />
               <div
                 role="menu"
-                className="absolute right-0 z-40 mt-2 max-h-[70vh] w-56 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-800"
+                className="absolute right-0 z-40 mt-2 max-h-[70vh] w-56 overflow-y-auto rounded-[var(--radius-card)] border border-secondary-200 bg-white py-1 shadow-xl dark:border-secondary-700 dark:bg-secondary-900"
               >
                 <button
                   type="button"
                   onClick={handleNewTag}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-secondary-700 hover:bg-secondary-100 dark:text-secondary-200 dark:hover:bg-secondary-800"
                 >
                   <span
                     className="inline-block h-3 w-3 rounded-full"
@@ -567,7 +571,7 @@ function SecondBrainPageInner() {
                   />
                   New tag
                 </button>
-                <div className="my-1 border-t border-zinc-100 dark:border-zinc-700" />
+                <div className="my-1 border-t border-secondary-100 dark:border-secondary-700" />
                 {CREATABLE_ENTITY_TYPES.map((kind) => {
                   const Icon = ENTITY_ICONS[kind];
                   return (
@@ -578,9 +582,9 @@ function SecondBrainPageInner() {
                         setShowCreateMenu(false);
                         modals.openCreate(kind);
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-secondary-700 hover:bg-secondary-100 dark:text-secondary-200 dark:hover:bg-secondary-800"
                     >
-                      <Icon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+                      <Icon className="h-4 w-4 text-secondary-500 dark:text-secondary-400" />
                       New {ENTITY_LABELS[kind].toLowerCase()}
                     </button>
                   );
@@ -668,17 +672,18 @@ function SecondBrainPageInner() {
       {connectError && (
         <div
           role="alert"
-          className="fixed bottom-6 left-1/2 z-50 flex max-w-md -translate-x-1/2 items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-lg dark:border-red-700 dark:bg-red-900/40 dark:text-red-200"
+          className="fixed bottom-6 left-1/2 z-50 flex max-w-md -translate-x-1/2 items-start gap-3 rounded-[var(--radius-card)] border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-800 shadow-lg dark:border-danger-700 dark:bg-danger-900/40 dark:text-danger-200"
         >
           <span className="flex-1">{connectError}</span>
-          <button
-            type="button"
+          <IconButton
+            size="xs"
+            variant="ghost"
+            label="Dismiss"
             onClick={() => setConnectError(null)}
-            className="shrink-0 text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-100"
-            aria-label="Dismiss"
+            className="shrink-0 text-danger-600 hover:text-danger-800 dark:text-danger-300 dark:hover:text-danger-100"
           >
-            ✕
-          </button>
+            <HiXMark />
+          </IconButton>
         </div>
       )}
     </div>

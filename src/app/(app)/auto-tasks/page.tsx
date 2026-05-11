@@ -1,9 +1,17 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import {
+  HiPauseCircle,
+  HiPencilSquare,
+  HiPlayCircle,
+  HiPlus,
+  HiTrash,
+} from "react-icons/hi2";
 
+import { Badge, type BadgeVariant } from "@/components/UI/Badge";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
 import {
   useAutoTasks,
@@ -85,34 +93,19 @@ function getDateRangeText(rule: AutoTaskRule): string {
 
 function getRuleStatus(rule: AutoTaskRule): {
   label: string;
-  classes: string;
+  variant: BadgeVariant;
 } {
   if (!rule.is_active) {
-    return {
-      label: "Inactive",
-      classes: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    };
+    return { label: "Inactive", variant: "neutral" };
   }
   const today = new Date().toISOString().split("T")[0];
   if (rule.start_date && today < rule.start_date) {
-    return {
-      label: "Scheduled",
-      classes:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    };
+    return { label: "Scheduled", variant: "info" };
   }
   if (rule.end_date && today > rule.end_date) {
-    return {
-      label: "Expired",
-      classes:
-        "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-    };
+    return { label: "Expired", variant: "danger" };
   }
-  return {
-    label: "Active",
-    classes:
-      "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300",
-  };
+  return { label: "Active", variant: "success" };
 }
 
 function getContrastColor(hexColor: string): string {
@@ -157,63 +150,71 @@ export default function AutoTasksPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Auto Tasks</h1>
-        <Link href="/auto-tasks/new">
-          <Button variant="primary" size="sm">
-            Add New Rule
-          </Button>
-        </Link>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+        <header className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Auto Tasks
+          </h1>
+          <Link href="/auto-tasks/new" aria-label="New rule">
+            <IconButton variant="primary" size="sm" label="New rule">
+              <HiPlus />
+            </IconButton>
+          </Link>
+        </header>
 
-      {error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the auto tasks. Try refreshing.
-        </p>
-      ) : (
-        <div className="mx-auto w-full max-w-7xl space-y-6">
-          {rules.length > 0 ? (
-            <Input
-              type="text"
-              placeholder="Search rules by name or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              fullWidth
-            />
-          ) : null}
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the auto tasks. Try refreshing.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {rules.length > 0 ? (
+              <Input
+                type="text"
+                placeholder="Search rules by name or content…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                fullWidth
+              />
+            ) : null}
 
-          {isLoading ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Loading…</p>
-          ) : rules.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="mb-4 text-lg text-zinc-500 dark:text-zinc-400">
-                No auto task rules configured yet.
+            {isLoading ? (
+              <p className="py-12 text-center text-sm text-secondary-500">
+                Loading…
               </p>
-              <Link href="/auto-tasks/new">
-                <Button variant="primary">Create Your First Rule</Button>
-              </Link>
-            </div>
-          ) : filteredRules.length === 0 ? (
-            <p className="py-12 text-center text-zinc-500">
-              No rules found for &ldquo;{searchQuery}&rdquo;
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {filteredRules.map((rule) => (
-                <RuleCard
-                  key={rule.id}
-                  rule={rule}
-                  onToggleActive={() => toggleActive.mutate(rule.id)}
-                  onDelete={() => handleDelete(rule)}
-                  isToggling={toggleActive.isPending}
-                  isDeleting={remove.isPending}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+            ) : rules.length === 0 ? (
+              <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-12 text-center shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
+                <p className="mb-4 text-base text-secondary-600 dark:text-secondary-400">
+                  No auto task rules configured yet.
+                </p>
+                <Link href="/auto-tasks/new" aria-label="Create your first rule">
+                  <IconButton variant="primary" size="lg" label="Create your first rule">
+                    <HiPlus />
+                  </IconButton>
+                </Link>
+              </div>
+            ) : filteredRules.length === 0 ? (
+              <p className="py-12 text-center text-secondary-500">
+                No rules found for &ldquo;{searchQuery}&rdquo;
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {filteredRules.map((rule) => (
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    onToggleActive={() => toggleActive.mutate(rule.id)}
+                    onDelete={() => handleDelete(rule)}
+                    isToggling={toggleActive.isPending}
+                    isDeleting={remove.isPending}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -232,35 +233,20 @@ function RuleCard({
   isDeleting: boolean;
 }) {
   const status = getRuleStatus(rule);
-  const borderClass = rule.is_active
-    ? rule.is_work
-      ? "border-l-warning-500"
-      : "border-l-success-500"
-    : "border-l-zinc-300 dark:border-l-zinc-700";
 
   return (
-    <div
-      className={`rounded-lg border-l-4 border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-5 ${borderClass}`}
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+    <article className="rounded-[var(--radius-card)] border border-secondary-200 bg-white p-4 shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="text-base font-semibold sm:text-lg">{rule.name}</h3>
-            <div className="flex shrink-0 gap-1">
-              {rule.is_work ? (
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                  Work
-                </span>
-              ) : null}
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.classes}`}
-              >
-                {status.label}
-              </span>
-            </div>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-secondary-900 dark:text-secondary-100 sm:text-lg">
+              {rule.name}
+            </h3>
+            <Badge variant={status.variant}>{status.label}</Badge>
+            {rule.is_work ? <Badge variant="accent">Work</Badge> : null}
           </div>
 
-          <p className="mb-2 line-clamp-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <p className="mb-2 line-clamp-2 text-sm text-secondary-700 dark:text-secondary-300">
             {rule.content}
           </p>
 
@@ -281,14 +267,14 @@ function RuleCard({
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-secondary-600 dark:text-secondary-400">
             <div>
-              <span className="font-medium">
+              <span className="font-medium text-secondary-700 dark:text-secondary-300">
                 {RULE_TYPE_LABELS[rule.rule_type]}:
               </span>{" "}
               {getRuleDescription(rule)}
               {rule.start_time ? (
-                <span className="text-zinc-500">
+                <span className="text-secondary-500">
                   {" "}
                   {rule.start_time}
                   {rule.end_time ? ` – ${rule.end_time}` : null}
@@ -296,40 +282,46 @@ function RuleCard({
               ) : null}
             </div>
             <div>
-              <span className="font-medium">Period:</span>{" "}
+              <span className="font-medium text-secondary-700 dark:text-secondary-300">
+                Period:
+              </span>{" "}
               {getDateRangeText(rule)}
             </div>
             <div>
-              <span className="font-medium">Last executed:</span>{" "}
+              <span className="font-medium text-secondary-700 dark:text-secondary-300">
+                Last executed:
+              </span>{" "}
               {rule.last_execution ? formatDate(rule.last_execution) : "Never"}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:shrink-0 sm:items-center">
-          <Link href={`/auto-tasks/${rule.id}`}>
-            <Button size="sm" variant="secondary">
-              Edit
-            </Button>
+        <div className="flex flex-wrap gap-1.5 sm:shrink-0">
+          <Link href={`/auto-tasks/${rule.id}`} aria-label="Edit">
+            <IconButton size="sm" variant="secondary" label="Edit">
+              <HiPencilSquare />
+            </IconButton>
           </Link>
-          <Button
+          <IconButton
             size="sm"
             variant="secondary"
-            isDisabled={isToggling}
+            disabled={isToggling}
             onClick={onToggleActive}
+            label={rule.is_active ? "Deactivate" : "Activate"}
           >
-            {rule.is_active ? "Deactivate" : "Activate"}
-          </Button>
-          <Button
+            {rule.is_active ? <HiPauseCircle /> : <HiPlayCircle />}
+          </IconButton>
+          <IconButton
             size="sm"
             variant="danger"
-            isDisabled={isDeleting}
+            disabled={isDeleting}
             onClick={onDelete}
+            label="Delete"
           >
-            Delete
-          </Button>
+            <HiTrash />
+          </IconButton>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

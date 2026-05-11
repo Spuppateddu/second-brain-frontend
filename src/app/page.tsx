@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import ApplicationLogo from "@/components/ApplicationLogo";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/UI";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -56,16 +57,7 @@ export default function Welcome() {
         </div>
       </div>
 
-      <footer className="bg-slate-700 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="border-t border-slate-600 mt-8 pt-8 text-center">
-            <p className="text-slate-300">
-              © 2024 SecondBrain. Your digital companion for organized
-              thinking.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

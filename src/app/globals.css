@@ -26,18 +26,31 @@
   --color-primary-900: #08102a;
   --color-primary-950: #040811;
 
-  /* Secondary Violet - #938BA1 */
-  --color-secondary-50: #f5f4f7;
-  --color-secondary-100: #e8e5ed;
-  --color-secondary-200: #d4cfe0;
-  --color-secondary-300: #bfb8d3;
-  --color-secondary-400: #a9a2c6;
-  --color-secondary-500: #938ba1;
-  --color-secondary-600: #7a7288;
-  --color-secondary-700: #625a6e;
-  --color-secondary-800: #494154;
-  --color-secondary-900: #31293a;
-  --color-secondary-950: #18101f;
+  /* Secondary - now slate (neutral) */
+  --color-secondary-50: #f8fafc;
+  --color-secondary-100: #f1f5f9;
+  --color-secondary-200: #e2e8f0;
+  --color-secondary-300: #cbd5e1;
+  --color-secondary-400: #94a3b8;
+  --color-secondary-500: #64748b;
+  --color-secondary-600: #475569;
+  --color-secondary-700: #334155;
+  --color-secondary-800: #1e293b;
+  --color-secondary-900: #0f172a;
+  --color-secondary-950: #020617;
+
+  /* Accent Teal - #0E7C7B (blue-green) */
+  --color-accent-50: #ecfdf7;
+  --color-accent-100: #d0faeb;
+  --color-accent-200: #99f0d2;
+  --color-accent-300: #5bdfb7;
+  --color-accent-400: #2ec59b;
+  --color-accent-500: #14a684;
+  --color-accent-600: #0e7c7b;
+  --color-accent-700: #0b6566;
+  --color-accent-800: #0a4f50;
+  --color-accent-900: #08393a;
+  --color-accent-950: #052224;
 
   /* Success Green */
   --color-success-50: #ecfdf5;
@@ -75,7 +88,7 @@
   --color-warning-800: #92400e;
   --color-warning-900: #78350f;
 
-  /* Danger Red */
+  /* Danger Red (base shifted to 600 = #dc2626) */
   --color-danger-50: #fef2f2;
   --color-danger-100: #fee2e2;
   --color-danger-200: #fecaca;
@@ -86,6 +99,11 @@
   --color-danger-700: #b91c1c;
   --color-danger-800: #991b1b;
   --color-danger-900: #7f1d1d;
+
+  /* UI tokens */
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.03);
 
   --animate-shake: shake 0.5s ease-in-out infinite;
   --animate-water-pulse: water-pulse 1.5s ease-in-out infinite;

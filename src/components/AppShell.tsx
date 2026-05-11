@@ -31,6 +31,7 @@ import {
 
 import ApplicationLogo from "@/components/ApplicationLogo";
 import { FastNoteModal } from "@/components/FastNoteModal";
+import Footer from "@/components/Footer";
 import { PushNotificationBell } from "@/components/PushNotificationBell";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +43,7 @@ type NavLink = {
   href: string;
   label: string;
   icon?: Icon;
+  iconColor?: string;
   privilege?: string;
 };
 
@@ -51,51 +53,90 @@ type NavEntry =
       href: string;
       label: string;
       icon?: Icon;
+      iconColor?: string;
       privilege?: string;
     }
   | {
       type: "group";
       label: string;
       icon?: Icon;
+      iconColor?: string;
       privilege?: string;
       items: NavLink[];
     };
 
 const NAV: NavEntry[] = [
-  { type: "link", href: "/calendar", label: "Calendar", icon: HiCalendarDays },
+  {
+    type: "link",
+    href: "/calendar",
+    label: "Calendar",
+    icon: HiCalendarDays,
+    iconColor: "text-sky-500 dark:text-sky-400",
+  },
   {
     type: "group",
     label: "Planning",
     icon: HiCalendarDays,
+    iconColor: "text-violet-500 dark:text-violet-400",
     items: [
-      { href: "/planning", label: "Plannings", icon: HiCalendarDays },
-      { href: "/out-of-plan", label: "Out of Plan", icon: HiFunnel },
-      { href: "/reviews", label: "Reviews", icon: HiChatBubbleLeftRight },
+      {
+        href: "/planning",
+        label: "Plannings",
+        icon: HiCalendarDays,
+        iconColor: "text-violet-500 dark:text-violet-400",
+      },
+      {
+        href: "/out-of-plan",
+        label: "Out of Plan",
+        icon: HiFunnel,
+        iconColor: "text-orange-500 dark:text-orange-400",
+      },
+      {
+        href: "/reviews",
+        label: "Reviews",
+        icon: HiChatBubbleLeftRight,
+        iconColor: "text-pink-500 dark:text-pink-400",
+      },
     ],
   },
-  { type: "link", href: "/second-brain", label: "Second Brain", icon: HiHome },
+  {
+    type: "link",
+    href: "/second-brain",
+    label: "Second Brain",
+    icon: HiHome,
+    iconColor: "text-fuchsia-500 dark:text-fuchsia-400",
+  },
   {
     type: "group",
     label: "Media",
     icon: HiPlayCircle,
+    iconColor: "text-rose-500 dark:text-rose-400",
     items: [
-      { href: "/media", label: "Media Tasks", icon: HiPlayCircle },
+      {
+        href: "/media",
+        label: "Media Tasks",
+        icon: HiPlayCircle,
+        iconColor: "text-rose-500 dark:text-rose-400",
+      },
       {
         href: "/youtube",
         label: "YouTube",
         icon: HiPlayCircle,
+        iconColor: "text-red-500 dark:text-red-400",
         privilege: "youtube_track",
       },
       {
         href: "/twitch",
         label: "Twitch",
         icon: HiVideoCamera,
+        iconColor: "text-purple-500 dark:text-purple-400",
         privilege: "twitch_track",
       },
       {
         href: "/news",
         label: "News",
         icon: HiNewspaper,
+        iconColor: "text-blue-500 dark:text-blue-400",
         privilege: "rss_news",
       },
     ],
@@ -104,30 +145,64 @@ const NAV: NavEntry[] = [
     type: "group",
     label: "Task",
     icon: HiDocumentText,
+    iconColor: "text-emerald-500 dark:text-emerald-400",
     items: [
-      { href: "/auto-tasks", label: "Auto Tasks", icon: HiFunnel },
-      { href: "/event-tasks", label: "Event Tasks", icon: HiCalendarDays },
-      { href: "/pills", label: "Pills", icon: HiBeaker },
-      { href: "/task-categories", label: "Categorie Task", icon: HiTag },
+      {
+        href: "/auto-tasks",
+        label: "Auto Tasks",
+        icon: HiFunnel,
+        iconColor: "text-emerald-500 dark:text-emerald-400",
+      },
+      {
+        href: "/event-tasks",
+        label: "Event Tasks",
+        icon: HiCalendarDays,
+        iconColor: "text-teal-500 dark:text-teal-400",
+      },
+      {
+        href: "/pills",
+        label: "Pills",
+        icon: HiBeaker,
+        iconColor: "text-green-500 dark:text-green-400",
+      },
+      {
+        href: "/task-categories",
+        label: "Categorie Task",
+        icon: HiTag,
+        iconColor: "text-lime-500 dark:text-lime-400",
+      },
     ],
   },
   {
     type: "group",
     label: "Cashflow",
     icon: HiCurrencyDollar,
+    iconColor: "text-amber-500 dark:text-amber-400",
     privilege: "cashflow_track",
     items: [
-      { href: "/cashflow", label: "Cashflow", icon: HiCurrencyDollar },
+      {
+        href: "/cashflow",
+        label: "Cashflow",
+        icon: HiCurrencyDollar,
+        iconColor: "text-amber-500 dark:text-amber-400",
+      },
       {
         href: "/cashflow-options",
         label: "Cashflow Options",
         icon: HiTag,
+        iconColor: "text-yellow-600 dark:text-yellow-400",
       },
-      { href: "/budgets", label: "Budgets", icon: HiCurrencyDollar },
+      {
+        href: "/budgets",
+        label: "Budgets",
+        icon: HiCurrencyDollar,
+        iconColor: "text-orange-500 dark:text-orange-400",
+      },
       {
         href: "/subscriptions",
         label: "Subscriptions",
         icon: HiCurrencyDollar,
+        iconColor: "text-amber-600 dark:text-amber-300",
       },
     ],
   },
@@ -238,7 +313,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       href={entry.href}
                       className={linkClasses(active)}
                     >
-                      {Icon && <Icon className="me-2 h-4 w-4" />}
+                      {Icon && (
+                        <Icon
+                          className={`me-2 h-4 w-4 ${entry.iconColor ?? ""}`}
+                        />
+                      )}
                       {entry.label}
                     </Link>
                   );
@@ -252,7 +331,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <DropdownTrigger
                       className={`${linkClasses(active)} group cursor-pointer`}
                     >
-                      {Icon && <Icon className="me-2 h-4 w-4" />}
+                      {Icon && (
+                        <Icon
+                          className={`me-2 h-4 w-4 ${entry.iconColor ?? ""}`}
+                        />
+                      )}
                       <span>{entry.label}</span>
                       <HiChevronDown className="ms-1 h-4 w-4 transition-transform duration-200 group-data-[expanded=true]:rotate-180" />
                     </DropdownTrigger>
@@ -267,7 +350,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               className={dropdownItemClasses}
                             >
                               {ItemIcon && (
-                                <ItemIcon className="h-4 w-4 text-zinc-400" />
+                                <ItemIcon
+                                  className={`h-4 w-4 ${item.iconColor ?? "text-zinc-400"}`}
+                                />
                               )}
                               <span>{item.label}</span>
                             </DropdownItem>
@@ -284,7 +369,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setSearchOpen(true)}
                 className={linkClasses(false)}
               >
-                <HiMagnifyingGlass className="me-2 h-4 w-4" />
+                <HiMagnifyingGlass className="me-2 h-4 w-4 text-cyan-500 dark:text-cyan-400" />
                 Search
               </button>
             </div>
@@ -297,7 +382,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-label="Open search"
               className="inline-flex items-center justify-center rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 lg:hidden dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
             >
-              <HiMagnifyingGlass className="h-5 w-5" />
+              <HiMagnifyingGlass className="h-5 w-5 text-cyan-500 dark:text-cyan-400" />
             </button>
             <PushNotificationBell />
             <div className="hidden lg:block">
@@ -351,7 +436,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 }}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
               >
-                <HiMagnifyingGlass className="h-4 w-4" />
+                <HiMagnifyingGlass className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
                 Search
               </button>
               {allowed.map((entry) => {
@@ -370,7 +455,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                           : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
                       ].join(" ")}
                     >
-                      {Icon && <Icon className="h-4 w-4" />}
+                      {Icon && (
+                        <Icon
+                          className={`h-4 w-4 ${entry.iconColor ?? ""}`}
+                        />
+                      )}
                       {entry.label}
                     </Link>
                   );
@@ -395,7 +484,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
                           ].join(" ")}
                         >
-                          {Icon && <Icon className="h-4 w-4 text-zinc-400" />}
+                          {Icon && (
+                            <Icon
+                              className={`h-4 w-4 ${item.iconColor ?? "text-zinc-400"}`}
+                            />
+                          )}
                           {item.label}
                         </Link>
                       );
@@ -429,7 +522,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </nav>
 
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex flex-1 flex-col overflow-y-auto">
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </main>
 
       <SpotlightSearch
         open={searchOpen}

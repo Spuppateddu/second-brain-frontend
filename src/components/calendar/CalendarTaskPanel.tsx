@@ -21,6 +21,7 @@ import {
 
 import { TaskModal } from "@/components/calendar/TaskModal";
 import { WaterTracker } from "@/components/calendar/WaterTracker";
+import { IconButton } from "@/components/UI/IconButton";
 import { useCalendarDay } from "@/lib/queries/calendar";
 import {
   usePillsForDate,
@@ -65,32 +66,32 @@ function PillCard({ pill }: { pill: PillForDate }) {
   const taken = pill.today_log?.status === "taken";
   const dismissed = pill.today_log?.status === "dismissed";
   const titleStyle = dismissed
-    ? "line-through text-gray-400"
+    ? "line-through text-secondary-400"
     : taken
-      ? "text-gray-400 dark:text-gray-500"
-      : "text-gray-800 dark:text-gray-100";
+      ? "text-secondary-400 dark:text-secondary-500"
+      : "text-secondary-800 dark:text-secondary-100";
 
   return (
-    <div className="group relative w-full text-left p-3 rounded-lg border-l-4 bg-purple-500/20 dark:bg-purple-500/10 border-l-purple-500">
+    <div className="group relative w-full text-left p-3 rounded-[var(--radius-card)] border-l-4 bg-purple-500/20 dark:bg-purple-500/10 border-l-purple-500">
       <div className="relative flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className={["font-medium truncate", titleStyle].join(" ")}>
             {pill.name}
           </p>
-          <p className="mt-1 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 flex items-center gap-1 text-xs text-secondary-500 dark:text-secondary-400">
             <HiClock className="w-3 h-3" />
             {pill.taking_time.slice(0, 5)}
           </p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {taken && (
-            <span className="p-1 rounded-full bg-green-100 dark:bg-green-900/30">
-              <HiCheck className="w-3 h-3 text-green-600 dark:text-green-400" />
+            <span className="p-1 rounded-full bg-success-100 dark:bg-success-900/30">
+              <HiCheck className="w-3 h-3 text-success-600 dark:text-success-400" />
             </span>
           )}
           {dismissed && (
-            <span className="p-1 rounded-full bg-red-100 dark:bg-red-900/30">
-              <HiNoSymbol className="w-3 h-3 text-red-600 dark:text-red-400" />
+            <span className="p-1 rounded-full bg-danger-100 dark:bg-danger-900/30">
+              <HiNoSymbol className="w-3 h-3 text-danger-600 dark:text-danger-400" />
             </span>
           )}
           <HiBeaker className="w-4 h-4 text-purple-600 dark:text-purple-300" />
@@ -137,10 +138,10 @@ function TaskCard({
   }
 
   const titleStyle = isCancelled
-    ? "line-through text-gray-400"
+    ? "line-through text-secondary-400"
     : isDone
-      ? "text-gray-400 dark:text-gray-500"
-      : "text-gray-800 dark:text-gray-100";
+      ? "text-secondary-400 dark:text-secondary-500"
+      : "text-secondary-800 dark:text-secondary-100";
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
     e.dataTransfer.effectAllowed = "move";
@@ -158,7 +159,7 @@ function TaskCard({
       onDragEnd={onDragEnd}
       onClick={() => onOpen(task)}
       className={[
-        "group relative w-full text-left p-3 rounded-lg border-l-4 hover:opacity-90 transition-opacity cursor-pointer",
+        "group relative w-full text-left p-3 rounded-[var(--radius-card)] border-l-4 hover:opacity-90 transition-opacity cursor-pointer",
         bg,
       ].join(" ")}
     >
@@ -168,7 +169,7 @@ function TaskCard({
             {task.title || task.content || ""}
           </p>
           {task.start_time && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 flex items-center gap-1 text-xs text-secondary-500 dark:text-secondary-400">
               <HiClock className="w-3 h-3" />
               {task.start_time}
               {task.end_time ? ` - ${task.end_time}` : ""}
@@ -180,13 +181,13 @@ function TaskCard({
           className="flex items-center gap-1 flex-shrink-0"
         >
           {isDone && (
-            <span className="p-1 rounded-full bg-green-100 dark:bg-green-900/30">
-              <HiCheck className="w-3 h-3 text-green-600 dark:text-green-400" />
+            <span className="p-1 rounded-full bg-success-100 dark:bg-success-900/30">
+              <HiCheck className="w-3 h-3 text-success-600 dark:text-success-400" />
             </span>
           )}
           {isCancelled && (
-            <span className="p-1 rounded-full bg-red-100 dark:bg-red-900/30">
-              <HiNoSymbol className="w-3 h-3 text-red-600 dark:text-red-400" />
+            <span className="p-1 rounded-full bg-danger-100 dark:bg-danger-900/30">
+              <HiNoSymbol className="w-3 h-3 text-danger-600 dark:text-danger-400" />
             </span>
           )}
           {isWork ? (
@@ -201,7 +202,7 @@ function TaskCard({
             <HiUser className="w-4 h-4 text-sky-600 dark:text-sky-400" />
           )}
           {linked && (
-            <HiLink className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <HiLink className="w-4 h-4 text-info-600 dark:text-info-400" />
           )}
         </div>
       </div>
@@ -232,13 +233,13 @@ function StatusFilterGroup({
   onChange: (v: StatusFilter) => void;
 }) {
   const items: { key: StatusFilter; icon: typeof HiViewColumns; title: string; activeBg: string }[] = [
-    { key: "all", icon: HiViewColumns, title: "All", activeBg: "bg-blue-500 text-white" },
-    { key: "not_completed", icon: HiQueueList, title: "Not completed", activeBg: "bg-blue-500 text-white" },
-    { key: "completed", icon: HiCheck, title: "Completed", activeBg: "bg-green-500 text-white" },
-    { key: "cancelled", icon: HiNoSymbol, title: "Cancelled", activeBg: "bg-red-500 text-white" },
+    { key: "all", icon: HiViewColumns, title: "All", activeBg: "bg-primary-600 text-white" },
+    { key: "not_completed", icon: HiQueueList, title: "Not completed", activeBg: "bg-primary-600 text-white" },
+    { key: "completed", icon: HiCheck, title: "Completed", activeBg: "bg-success-500 text-white" },
+    { key: "cancelled", icon: HiNoSymbol, title: "Cancelled", activeBg: "bg-danger-500 text-white" },
   ];
   return (
-    <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+    <div className="flex items-center rounded-[var(--radius-control)] border border-secondary-200 dark:border-secondary-700 overflow-hidden">
       {items.map(({ key, icon: Icon, title, activeBg }, i) => {
         const active = value === key;
         return (
@@ -246,13 +247,15 @@ function StatusFilterGroup({
             key={key}
             type="button"
             title={title}
+            aria-label={title}
+            aria-pressed={active}
             onClick={() => onChange(key)}
             className={[
               "p-1.5 transition-colors",
-              i > 0 ? "border-l border-gray-200 dark:border-gray-600" : "",
+              i > 0 ? "border-l border-secondary-200 dark:border-secondary-700" : "",
               active
                 ? activeBg
-                : "bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600",
+                : "bg-white dark:bg-secondary-800 text-secondary-500 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-700",
             ].join(" ")}
           >
             <Icon className="w-4 h-4" />
@@ -271,12 +274,12 @@ function TypeFilterGroup({
   onChange: (v: TypeFilter) => void;
 }) {
   const items: { key: TypeFilter; icon: typeof HiUsers; title: string; activeBg: string }[] = [
-    { key: "all", icon: HiUsers, title: "All types", activeBg: "bg-blue-500 text-white" },
+    { key: "all", icon: HiUsers, title: "All types", activeBg: "bg-primary-600 text-white" },
     { key: "work", icon: HiBriefcase, title: "Work", activeBg: "bg-orange-500 text-white" },
     { key: "personal", icon: HiUser, title: "Personal", activeBg: "bg-sky-500 text-white" },
   ];
   return (
-    <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+    <div className="flex items-center rounded-[var(--radius-control)] border border-secondary-200 dark:border-secondary-700 overflow-hidden">
       {items.map(({ key, icon: Icon, title, activeBg }, i) => {
         const active = value === key;
         return (
@@ -284,13 +287,15 @@ function TypeFilterGroup({
             key={key}
             type="button"
             title={title}
+            aria-label={title}
+            aria-pressed={active}
             onClick={() => onChange(key)}
             className={[
               "p-1.5 transition-colors",
-              i > 0 ? "border-l border-gray-200 dark:border-gray-600" : "",
+              i > 0 ? "border-l border-secondary-200 dark:border-secondary-700" : "",
               active
                 ? activeBg
-                : "bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600",
+                : "bg-white dark:bg-secondary-800 text-secondary-500 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-700",
             ].join(" ")}
           >
             <Icon className="w-4 h-4" />
@@ -393,33 +398,34 @@ export function CalendarTaskPanel({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-gray-800">
+    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-secondary-900">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+      <div className="flex-shrink-0 border-b border-secondary-200 dark:border-secondary-800 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
+            <IconButton
+              size="sm"
+              variant="ghost"
+              label="Toggle day list"
               onClick={onToggleMobileSide}
-              className="sm:hidden rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              aria-label="Toggle day list"
+              className="sm:hidden"
             >
-              <HiBars3 className="h-5 w-5" />
-            </button>
-            <h2 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-gray-100 capitalize truncate">
+              <HiBars3 />
+            </IconButton>
+            <h2 className="text-sm sm:text-lg font-bold text-secondary-900 dark:text-secondary-100 capitalize truncate">
               {fullDateLabel(date)}
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <WaterTracker date={date} />
-            <button
-              type="button"
+            <IconButton
+              variant="primary"
+              size="sm"
+              label="Add task"
               onClick={openCreate}
-              title="Add task"
-              className="p-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 shadow-md active:scale-95 transition-all"
             >
-              <HiPlus className="w-5 h-5" />
-            </button>
+              <HiPlus />
+            </IconButton>
           </div>
         </div>
 
@@ -432,18 +438,22 @@ export function CalendarTaskPanel({
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
         {isLoading ? (
-          <div className="text-sm text-zinc-500">Loading day…</div>
+          <div className="text-sm text-secondary-500 dark:text-secondary-400">
+            Loading day…
+          </div>
         ) : error || !data ? (
-          <div className="text-sm text-danger">
+          <div className="text-sm text-danger-600 dark:text-danger-400">
             Couldn&rsquo;t load this day.
           </div>
         ) : filtered.length === 0 && timedItems.length === 0 ? (
-          <div className="text-sm text-zinc-500">No tasks match the filters.</div>
+          <div className="text-sm text-secondary-500 dark:text-secondary-400">
+            No tasks match the filters.
+          </div>
         ) : (
           <>
             {timedItems.length > 0 && (
               <section>
-                <h3 className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <h3 className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
                   <HiClock className="w-3.5 h-3.5" />
                   With time ({timedItems.length})
                 </h3>
@@ -467,7 +477,7 @@ export function CalendarTaskPanel({
             )}
             {withoutTime.length > 0 && (
               <section>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
                   Without time ({withoutTime.length})
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

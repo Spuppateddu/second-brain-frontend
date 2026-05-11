@@ -1,6 +1,8 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
+import { Select } from "@/components/UI/Select";
 import { useEffect, useRef, useState } from "react";
 import {
   HiChartBar,
@@ -10,11 +12,16 @@ import {
   HiMagnifyingGlass,
   HiPencilSquare,
   HiPlus,
+  HiXMark,
 } from "react-icons/hi2";
 
 import { CashflowBreakdownChart } from "@/components/CashflowBreakdownChart";
 import { CashflowTrendsChart } from "@/components/cashflow/CashflowTrendsChart";
 import { Input } from "@/components/UI/Input";
+import {
+  SearchableMultiSelect,
+  SearchableSelect,
+} from "@/components/UI/SearchableSelect";
 import {
   type PaymentInput,
   useCashflow,
@@ -22,6 +29,9 @@ import {
   useCashflowFiltered,
   useCashflowTrends,
   useCreatePayment,
+  useCreatePaymentMethod,
+  useCreatePaymentPlatform,
+  useCreatePaymentType,
   useUpdatePayment,
 } from "@/lib/queries/heavy";
 import type {
@@ -86,18 +96,20 @@ export default function CashflowPage() {
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Cashflow Management</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Cashflow management
+          </h1>
+        </header>
 
-      {baseQuery.error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the cashflow data. Try refreshing.
-        </p>
-      ) : null}
+        {baseQuery.error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the cashflow data. Try refreshing.
+          </p>
+        ) : null}
 
-      <div className="mx-auto w-full max-w-7xl space-y-6">
         <AddPaymentAccordion
           paymentMethods={paymentMethods}
           paymentPlatforms={paymentPlatforms}
@@ -106,12 +118,20 @@ export default function CashflowPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <SummaryCard
-            tone={summary.net >= 0 ? "blue" : "orange"}
-            label="Net Cashflow"
+            tone={summary.net >= 0 ? "info" : "warning"}
+            label="Net cashflow"
             value={summary.net}
           />
-          <SummaryCard tone="red" label="Total Expenses" value={summary.negative} />
-          <SummaryCard tone="green" label="Total Income" value={summary.positive} />
+          <SummaryCard
+            tone="danger"
+            label="Total expenses"
+            value={summary.negative}
+          />
+          <SummaryCard
+            tone="success"
+            label="Total income"
+            value={summary.positive}
+          />
         </div>
 
         <FilterAccordion
@@ -137,14 +157,14 @@ export default function CashflowPage() {
 
         <ChartAccordion
           title="Expense Distribution (Filtered)"
-          icon={<HiChartPie className="h-4 w-4 text-zinc-500" />}
+          icon={<HiChartPie className="h-4 w-4 text-secondary-500" />}
         >
           <ExpenseDistribution filters={appliedFilters} />
         </ChartAccordion>
 
         <ChartAccordion
           title="Cashflow Trends"
-          icon={<HiChartBar className="h-4 w-4 text-zinc-500" />}
+          icon={<HiChartBar className="h-4 w-4 text-secondary-500" />}
           lazy
         >
           <CashflowTrends />
@@ -169,41 +189,48 @@ function SummaryCard({
   label,
   value,
 }: {
-  tone: "blue" | "orange" | "red" | "green";
+  tone: "info" | "warning" | "danger" | "success";
   label: string;
   value: number;
 }) {
-  const map: Record<typeof tone, { bg: string; border: string; title: string; value: string }> = {
-    blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/30",
-      border: "border-blue-200 dark:border-blue-700",
-      title: "text-blue-800 dark:text-blue-300",
-      value: "text-blue-900 dark:text-blue-100",
+  const map: Record<
+    typeof tone,
+    { bg: string; border: string; title: string; value: string }
+  > = {
+    info: {
+      bg: "bg-info-50 dark:bg-info-900/30",
+      border: "border-info-200 dark:border-info-700",
+      title: "text-info-800 dark:text-info-300",
+      value: "text-info-900 dark:text-info-100",
     },
-    orange: {
-      bg: "bg-orange-50 dark:bg-orange-900/30",
-      border: "border-orange-200 dark:border-orange-700",
-      title: "text-orange-800 dark:text-orange-300",
-      value: "text-orange-900 dark:text-orange-100",
+    warning: {
+      bg: "bg-warning-50 dark:bg-warning-900/30",
+      border: "border-warning-200 dark:border-warning-700",
+      title: "text-warning-800 dark:text-warning-300",
+      value: "text-warning-900 dark:text-warning-100",
     },
-    red: {
-      bg: "bg-red-50 dark:bg-red-900/30",
-      border: "border-red-200 dark:border-red-700",
-      title: "text-red-800 dark:text-red-300",
-      value: "text-red-900 dark:text-red-100",
+    danger: {
+      bg: "bg-danger-50 dark:bg-danger-900/30",
+      border: "border-danger-200 dark:border-danger-700",
+      title: "text-danger-800 dark:text-danger-300",
+      value: "text-danger-900 dark:text-danger-100",
     },
-    green: {
-      bg: "bg-green-50 dark:bg-green-900/30",
-      border: "border-green-200 dark:border-green-700",
-      title: "text-green-800 dark:text-green-300",
-      value: "text-green-900 dark:text-green-100",
+    success: {
+      bg: "bg-success-50 dark:bg-success-900/30",
+      border: "border-success-200 dark:border-success-700",
+      title: "text-success-800 dark:text-success-300",
+      value: "text-success-900 dark:text-success-100",
     },
   };
   const c = map[tone];
   return (
-    <div className={`rounded-lg border p-4 ${c.bg} ${c.border}`}>
+    <div
+      className={`rounded-[var(--radius-card)] border p-4 ${c.bg} ${c.border}`}
+    >
       <h3 className={`text-sm font-medium ${c.title}`}>{label}</h3>
-      <p className={`text-2xl font-bold ${c.value}`}>{CURRENCY.format(value)}</p>
+      <p className={`text-2xl font-bold ${c.value}`}>
+        {CURRENCY.format(value)}
+      </p>
     </div>
   );
 }
@@ -232,11 +259,11 @@ function Accordion({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="overflow-hidden rounded-lg border border-secondary-200 bg-white dark:border-secondary-800 dark:bg-secondary-950">
       <button
         type="button"
         onClick={toggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-900"
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-secondary-50 dark:hover:bg-secondary-900"
       >
         <div className="flex items-center gap-2">
           {icon}
@@ -244,11 +271,11 @@ function Accordion({
           {badge}
         </div>
         <HiChevronDown
-          className={`h-5 w-5 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-5 w-5 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
+        <div className="border-t border-secondary-200 p-4 dark:border-secondary-800">
           {children}
         </div>
       ) : null}
@@ -285,6 +312,9 @@ function AddPaymentAccordion({
   paymentTypes: PaymentLookup[];
 }) {
   const create = useCreatePayment();
+  const createMethod = useCreatePaymentMethod();
+  const createPlatform = useCreatePaymentPlatform();
+  const createType = useCreatePaymentType();
   const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -337,7 +367,7 @@ function AddPaymentAccordion({
   return (
     <Accordion title="Add Payment" icon={<HiPlus className="h-4 w-4" />}>
       <div className="space-y-4">
-        <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm italic text-secondary-500 dark:text-secondary-400">
           Only add payments over 1 euro.
         </p>
 
@@ -351,7 +381,7 @@ function AddPaymentAccordion({
         </FormField>
 
         <div>
-          <span className="mb-1 block text-xs uppercase tracking-wide text-zinc-500">
+          <span className="mb-1 block text-xs uppercase tracking-wide text-secondary-500">
             Transaction Type
           </span>
           <div className="flex gap-4 text-sm">
@@ -396,29 +426,37 @@ function AddPaymentAccordion({
             />
           </FormField>
           <FormField label="Payment Method">
-            <SelectLookup
+            <SearchableSelect
               options={paymentMethods}
               value={methodId}
               onChange={setMethodId}
               placeholder="Select payment method"
+              createNoun="method"
+              onCreate={(n) => createMethod.mutateAsync({ name: n })}
             />
           </FormField>
           <FormField label="Payment Platform">
-            <SelectLookup
+            <SearchableSelect
               options={paymentPlatforms}
               value={platformId}
               onChange={setPlatformId}
               placeholder="Select payment platform"
+              createNoun="platform"
+              onCreate={(n) =>
+                createPlatform.mutateAsync({ name: n, is_digital: false })
+              }
             />
           </FormField>
         </div>
 
         <FormField label="Payment Types">
-          <MultiSelectDropdown
+          <SearchableMultiSelect
             options={paymentTypes}
             value={typeIds}
             onChange={setTypeIds}
             placeholder="Select payment types"
+            createNoun="type"
+            onCreate={(n) => createType.mutateAsync({ name: n })}
           />
         </FormField>
 
@@ -431,21 +469,28 @@ function AddPaymentAccordion({
           This is a subscription payment
         </label>
 
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            {error}
+          </p>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button
             variant="secondary"
+            size="sm"
             onClick={reset}
-            isDisabled={create.isPending}
+            disabled={create.isPending}
           >
             Reset
           </Button>
           <Button
             variant="primary"
+            size="sm"
             onClick={submit}
-            isDisabled={create.isPending}
+            disabled={create.isPending}
+            loading={create.isPending}
           >
-            {create.isPending ? "Saving…" : "Add Payment"}
+            Add payment
           </Button>
         </div>
       </div>
@@ -487,7 +532,7 @@ function FilterAccordion({
       icon={<HiFunnel className="h-4 w-4" />}
       badge={
         active ? (
-          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+          <span className="rounded-full bg-info-100 px-2 py-0.5 text-xs font-medium text-info-700 dark:bg-info-900/40 dark:text-info-300">
             Active
           </span>
         ) : null
@@ -526,7 +571,7 @@ function FilterAccordion({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="Amount Comparison">
-            <select
+            <Select
               value={filters.amount_operator ?? "="}
               onChange={(e) =>
                 patch(
@@ -534,14 +579,14 @@ function FilterAccordion({
                   e.target.value as CashflowFilters["amount_operator"],
                 )
               }
-              className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              fullWidth
             >
               <option value="=">Equals</option>
               <option value=">">Greater than</option>
               <option value="<">Less than</option>
               <option value=">=">Greater than or equal</option>
               <option value="<=">Less than or equal</option>
-            </select>
+            </Select>
           </FormField>
           <FormField label="Amount Value">
             <Input
@@ -583,7 +628,7 @@ function FilterAccordion({
         </div>
 
         <FormField label="Subscription Filter">
-          <select
+          <Select
             value={filters.subscription_filter ?? "any"}
             onChange={(e) =>
               patch(
@@ -591,20 +636,31 @@ function FilterAccordion({
                 e.target.value as CashflowFilters["subscription_filter"],
               )
             }
-            className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            fullWidth
           >
             <option value="any">Any</option>
             <option value="yes">Recurring only</option>
             <option value="no">Non-recurring only</option>
-          </select>
+          </Select>
         </FormField>
 
-        <div className="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <Button variant="secondary" onClick={onClear} isDisabled={isApplying}>
-            Clear Filters
+        <div className="flex justify-end gap-2 border-t border-secondary-200 pt-4 dark:border-secondary-800">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onClear}
+            disabled={isApplying}
+          >
+            Clear filters
           </Button>
-          <Button variant="primary" onClick={onApply} isDisabled={isApplying}>
-            {isApplying ? "Filtering…" : "Apply Filters"}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onApply}
+            disabled={isApplying}
+            loading={isApplying}
+          >
+            Apply filters
           </Button>
         </div>
       </div>
@@ -622,22 +678,24 @@ function PaymentsTable({
   onEdit: (p: Payment) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <h3 className="text-lg font-medium">
-          Recent Payments{" "}
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
+      <div className="border-b border-secondary-200 px-6 py-4 dark:border-secondary-800">
+        <h3 className="text-lg font-medium text-secondary-900 dark:text-secondary-100">
+          Recent payments{" "}
           {isLoading ? (
-            <span className="text-sm text-zinc-500">(Loading…)</span>
+            <span className="text-sm text-secondary-500 dark:text-secondary-400">
+              (Loading…)
+            </span>
           ) : (
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-secondary-500 dark:text-secondary-400">
               ({payments.length} payments)
             </span>
           )}
         </h3>
       </div>
       <div className="max-h-96 overflow-x-auto overflow-y-auto">
-        <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-          <thead className="sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-800">
+        <table className="min-w-full divide-y divide-secondary-200 text-sm dark:divide-secondary-800">
+          <thead className="sticky top-0 z-10 bg-secondary-50 dark:bg-secondary-800">
             <tr>
               <Th>Name</Th>
               <Th>Amount</Th>
@@ -649,47 +707,49 @@ function PaymentsTable({
               <Th>Actions</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <tbody className="divide-y divide-secondary-200 dark:divide-secondary-800">
             {payments.map((payment) => (
               <tr
                 key={payment.id}
-                className="hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                className="hover:bg-secondary-50 dark:hover:bg-secondary-900"
               >
-                <td className="whitespace-nowrap px-6 py-3">{payment.name}</td>
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-900 dark:text-secondary-100">
+                  {payment.name}
+                </td>
                 <td
                   className={`whitespace-nowrap px-6 py-3 font-medium ${
                     payment.is_positive_cashflow
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
+                      ? "text-success-600 dark:text-success-400"
+                      : "text-danger-600 dark:text-danger-400"
                   }`}
                 >
                   {payment.is_positive_cashflow ? "+" : ""}
                   {CURRENCY.format(Number(payment.amount))}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-500">
                   {payment.date.split("T")[0]}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-500">
                   {payment.payment_method?.name ?? "—"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-500">
                   {payment.payment_platform?.name ?? "—"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-500">
                   {payment.payment_types?.map((t) => t.name).join(", ") ?? ""}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
+                <td className="whitespace-nowrap px-6 py-3 text-secondary-500">
                   {payment.is_subscription ? "Yes" : "No"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-3 text-zinc-500">
-                  <button
-                    type="button"
+                <td className="whitespace-nowrap px-6 py-3">
+                  <IconButton
+                    size="xs"
+                    variant="secondary"
+                    label="Edit payment"
                     onClick={() => onEdit(payment)}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                    title="Edit payment"
                   >
-                    <HiPencilSquare className="h-4 w-4" />
-                  </button>
+                    <HiPencilSquare />
+                  </IconButton>
                 </td>
               </tr>
             ))}
@@ -702,7 +762,7 @@ function PaymentsTable({
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="bg-zinc-50 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:bg-zinc-800 dark:text-zinc-300">
+    <th className="bg-secondary-50 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary-500 dark:bg-secondary-800 dark:text-secondary-300">
       {children}
     </th>
   );
@@ -711,9 +771,9 @@ function Th({ children }: { children: React.ReactNode }) {
 function ExpenseDistribution({ filters }: { filters: CashflowFilters }) {
   const { data, isLoading, error } = useCashflowChartData(filters);
   if (isLoading)
-    return <p className="text-sm text-zinc-500">Loading chart data…</p>;
+    return <p className="text-sm text-secondary-500">Loading chart data…</p>;
   if (error)
-    return <p className="text-sm text-danger">Couldn&rsquo;t load charts.</p>;
+    return <p className="text-sm text-danger-600">Couldn&rsquo;t load charts.</p>;
   if (!data) return null;
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -727,11 +787,11 @@ function ExpenseDistribution({ filters }: { filters: CashflowFilters }) {
 function CashflowTrends() {
   const { data, isLoading, error } = useCashflowTrends();
   if (isLoading)
-    return <p className="text-sm text-zinc-500">Loading trends data…</p>;
+    return <p className="text-sm text-secondary-500">Loading trends data…</p>;
   if (error)
-    return <p className="text-sm text-danger">Couldn&rsquo;t load trends.</p>;
+    return <p className="text-sm text-danger-600">Couldn&rsquo;t load trends.</p>;
   if (!data || data.length === 0)
-    return <p className="text-sm text-zinc-500">No trend data yet.</p>;
+    return <p className="text-sm text-secondary-500">No trend data yet.</p>;
   return <CashflowTrendsChart data={data} />;
 }
 
@@ -744,40 +804,11 @@ function FormField({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs uppercase tracking-wide text-zinc-500">
+      <span className="text-xs uppercase tracking-wide text-secondary-500">
         {label}
       </span>
       {children}
     </label>
-  );
-}
-
-function SelectLookup({
-  options,
-  value,
-  onChange,
-  placeholder = "Select…",
-}: {
-  options: PaymentLookup[];
-  value: number | null;
-  onChange: (id: number | null) => void;
-  placeholder?: string;
-}) {
-  return (
-    <select
-      value={value === null ? "" : String(value)}
-      onChange={(e) =>
-        onChange(e.target.value === "" ? null : Number(e.target.value))
-      }
-      className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt.id} value={opt.id}>
-          {opt.name}
-        </option>
-      ))}
-    </select>
   );
 }
 
@@ -825,30 +856,30 @@ function MultiSelectDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-md border border-zinc-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="flex w-full items-center justify-between rounded-md border border-secondary-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-100"
       >
         <span
           className={
             value.length === 0
-              ? "text-zinc-400 dark:text-zinc-500"
+              ? "text-secondary-400 dark:text-secondary-500"
               : "truncate"
           }
         >
           {label}
         </span>
         <HiChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`ml-2 h-4 w-4 shrink-0 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-secondary-200 bg-white py-1 shadow-lg dark:border-secondary-700 dark:bg-secondary-900">
           {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-zinc-500">No options.</p>
+            <p className="px-3 py-2 text-xs text-secondary-500">No options.</p>
           ) : (
             options.map((opt) => (
               <label
                 key={opt.id}
-                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800"
               >
                 <input
                   type="checkbox"
@@ -879,6 +910,9 @@ function EditPaymentModal({
   onClose: () => void;
 }) {
   const update = useUpdatePayment();
+  const createMethod = useCreatePaymentMethod();
+  const createPlatform = useCreatePaymentPlatform();
+  const createType = useCreatePaymentType();
   const [name, setName] = useState(payment.name);
   const [amount, setAmount] = useState(String(payment.amount));
   const [date, setDate] = useState(payment.date.split("T")[0]);
@@ -924,23 +958,25 @@ function EditPaymentModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-zinc-950/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-secondary-950/40 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="mt-12 flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="mt-12 flex w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
-          <h2 className="text-base font-semibold">Edit payment</h2>
-          <button
-            type="button"
+        <div className="flex items-center justify-between border-b border-secondary-200 px-5 py-3 dark:border-secondary-800">
+          <h2 className="text-base font-semibold text-secondary-900 dark:text-secondary-100">
+            Edit payment
+          </h2>
+          <IconButton
+            size="xs"
+            variant="ghost"
+            label="Close"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-            aria-label="Close"
           >
-            ✕
-          </button>
+            <HiXMark />
+          </IconButton>
         </div>
         <div className="space-y-4 p-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -971,25 +1007,35 @@ function EditPaymentModal({
               />
             </FormField>
             <FormField label="Method *">
-              <SelectLookup
+              <SearchableSelect
                 options={paymentMethods}
                 value={methodId}
                 onChange={setMethodId}
+                placeholder="Select payment method"
+                createNoun="method"
+                onCreate={(n) => createMethod.mutateAsync({ name: n })}
               />
             </FormField>
             <FormField label="Platform *">
-              <SelectLookup
+              <SearchableSelect
                 options={paymentPlatforms}
                 value={platformId}
                 onChange={setPlatformId}
+                placeholder="Select payment platform"
+                createNoun="platform"
+                onCreate={(n) =>
+                  createPlatform.mutateAsync({ name: n, is_digital: false })
+                }
               />
             </FormField>
             <FormField label="Types">
-              <MultiSelectDropdown
+              <SearchableMultiSelect
                 options={paymentTypes}
                 value={typeIds}
                 onChange={setTypeIds}
                 placeholder="Select payment types"
+                createNoun="type"
+                onCreate={(n) => createType.mutateAsync({ name: n })}
               />
             </FormField>
           </div>
@@ -1011,21 +1057,28 @@ function EditPaymentModal({
               Recurring subscription
             </label>
           </div>
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-danger-600 dark:text-danger-400">
+              {error}
+            </p>
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button
               variant="secondary"
+              size="sm"
               onClick={onClose}
-              isDisabled={update.isPending}
+              disabled={update.isPending}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
+              size="sm"
               onClick={submit}
-              isDisabled={update.isPending}
+              disabled={update.isPending}
+              loading={update.isPending}
             >
-              {update.isPending ? "Saving…" : "Save"}
+              Save
             </Button>
           </div>
         </div>

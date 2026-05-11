@@ -1,16 +1,22 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HiChartBar,
   HiChevronDown,
-  HiPencil,
+  HiPauseCircle,
+  HiPencilSquare,
+  HiPlayCircle,
   HiPlus,
   HiTrash,
 } from "react-icons/hi2";
 
+import { Badge } from "@/components/UI/Badge";
+import { Button } from "@/components/UI/Button";
+import { IconButton } from "@/components/UI/IconButton";
 import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
+import { Textarea } from "@/components/UI/Textarea";
 import {
   type Budget,
   type BudgetInput,
@@ -94,18 +100,20 @@ export default function BudgetsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Budget Management</h1>
-      </header>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Budget management
+          </h1>
+        </header>
 
-      {error ? (
-        <p className="text-sm text-danger">
-          Couldn&rsquo;t load the budgets. Try refreshing.
-        </p>
-      ) : null}
+        {error ? (
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Couldn&rsquo;t load the budgets. Try refreshing.
+          </p>
+        ) : null}
 
-      <div className="mx-auto w-full max-w-5xl space-y-6">
         <CreateBudgetAccordion
           open={formOpen}
           onToggle={() => {
@@ -130,25 +138,29 @@ export default function BudgetsPage() {
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <StatCard label="Active budgets" value={activeCount} tone="success" />
           <StatCard
-            label="Active Budgets"
-            value={activeCount}
-            tone="green"
+            label="Total budgets"
+            value={budgets.length}
+            tone="neutral"
           />
-          <StatCard label="Total Budgets" value={budgets.length} tone="zinc" />
         </div>
 
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-zinc-500">Loading…</p>
+          <p className="py-12 text-center text-sm text-secondary-500 dark:text-secondary-400">
+            Loading…
+          </p>
         ) : budgets.length === 0 ? (
-          <div className="py-12 text-center">
-            <HiChartBar className="mx-auto h-12 w-12 text-zinc-400" />
-            <h3 className="mt-2 text-base font-semibold">No budgets yet</h3>
-            <p className="mt-1 text-sm text-zinc-500">
+          <div className="rounded-[var(--radius-card)] border border-secondary-200 bg-white py-12 text-center shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
+            <HiChartBar className="mx-auto h-12 w-12 text-secondary-400" />
+            <h3 className="mt-2 text-base font-semibold text-secondary-900 dark:text-secondary-100">
+              No budgets yet
+            </h3>
+            <p className="mt-1 text-sm text-secondary-500 dark:text-secondary-400">
               Create your first budget to start tracking your spending goals.
             </p>
             <p className="mt-3 text-sm text-primary-600 dark:text-primary-400">
-              Use the &ldquo;Create Budget&rdquo; section above to get started.
+              Use the &ldquo;Create budget&rdquo; section above to get started.
             </p>
           </div>
         ) : (
@@ -178,25 +190,27 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  tone: "green" | "zinc";
+  tone: "success" | "neutral";
 }) {
   const map = {
-    green: {
-      bg: "bg-green-50 dark:bg-green-900/30",
-      border: "border-green-200 dark:border-green-700",
-      title: "text-green-800 dark:text-green-300",
-      value: "text-green-900 dark:text-green-100",
+    success: {
+      bg: "bg-success-50 dark:bg-success-900/30",
+      border: "border-success-200 dark:border-success-700",
+      title: "text-success-800 dark:text-success-300",
+      value: "text-success-900 dark:text-success-100",
     },
-    zinc: {
-      bg: "bg-zinc-50 dark:bg-zinc-900",
-      border: "border-zinc-200 dark:border-zinc-700",
-      title: "text-zinc-700 dark:text-zinc-300",
-      value: "text-zinc-900 dark:text-zinc-100",
+    neutral: {
+      bg: "bg-secondary-50 dark:bg-secondary-900",
+      border: "border-secondary-200 dark:border-secondary-700",
+      title: "text-secondary-700 dark:text-secondary-300",
+      value: "text-secondary-900 dark:text-secondary-100",
     },
   } as const;
   const c = map[tone];
   return (
-    <div className={`rounded-lg border p-4 ${c.bg} ${c.border}`}>
+    <div
+      className={`rounded-[var(--radius-card)] border p-4 ${c.bg} ${c.border}`}
+    >
       <p className={`text-sm font-medium ${c.title}`}>{label}</p>
       <p className={`mt-1 text-3xl font-bold ${c.value}`}>{value}</p>
     </div>
@@ -226,24 +240,26 @@ function CreateBudgetAccordion({
   onSubmit: (payload: BudgetInput) => Promise<void>;
   isPending: boolean;
 }) {
-  const title = editingBudget ? "Edit Budget" : "Create Budget";
+  const title = editingBudget ? "Edit budget" : "Create budget";
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-900"
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-secondary-50 dark:hover:bg-secondary-900"
       >
         <div className="flex items-center gap-2">
-          <HiPlus className="h-4 w-4 text-zinc-500" />
-          <span className="text-sm font-medium">{title}</span>
+          <HiPlus className="h-4 w-4 text-secondary-500" />
+          <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">
+            {title}
+          </span>
         </div>
         <HiChevronDown
-          className={`h-5 w-5 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-5 w-5 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="border-t border-zinc-200 p-5 dark:border-zinc-800">
+        <div className="border-t border-secondary-200 p-5 dark:border-secondary-800">
           <BudgetForm
             key={editingBudget?.id ?? "new"}
             initial={editingBudget}
@@ -363,111 +379,90 @@ function BudgetForm({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="mb-1 block text-sm font-medium">Budget Name</label>
+      <Input
+        label="Budget name"
+        type="text"
+        placeholder="e.g., Monthly Grocery Budget"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        fullWidth
+      />
+
+      <Textarea
+        label="Description (optional)"
+        placeholder="Brief description of this budget…"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={2}
+        fullWidth
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Select
+          label="Budget type"
+          value={type}
+          onChange={(e) => setType(e.target.value as BudgetType | "")}
+          fullWidth
+        >
+          <option value="">Select budget type</option>
+          {budgetTypes.map((t) => (
+            <option key={t} value={t}>
+              {BUDGET_TYPE_LABELS[t]}
+            </option>
+          ))}
+        </Select>
         <Input
-          type="text"
-          placeholder="e.g., Monthly Grocery Budget"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          label="Budget amount"
+          type="number"
+          step="0.01"
+          min={0}
+          placeholder="0.00"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
           fullWidth
         />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">
-          Description (Optional)
-        </label>
-        <textarea
-          placeholder="Brief description of this budget..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={2}
-          className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Input
+          label="Start date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          fullWidth
+        />
+        <Input
+          label="End date (optional)"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          helperText="If left empty, the end date will be set to 20 years from the start date"
+          fullWidth
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Budget Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as BudgetType | "")}
-            className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          >
-            <option value="">Select budget type</option>
-            {budgetTypes.map((t) => (
-              <option key={t} value={t}>
-                {BUDGET_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">Budget Amount</label>
-          <Input
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            fullWidth
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Start Date</label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            fullWidth
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            End Date (Optional)
-          </label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            fullWidth
-          />
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            If left empty, the end date will be set to 20 years from the start
-            date
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={includeSubs}
-            onChange={(e) => setIncludeSubs(e.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            Include subscription payments in budget calculations
-            <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">
-              When checked, recurring subscription payments will count towards
-              this budget limit. Uncheck to exclude subscriptions from budget
-              tracking.
-            </span>
+      <label className="flex items-start gap-2 text-sm text-secondary-700 dark:text-secondary-300">
+        <input
+          type="checkbox"
+          checked={includeSubs}
+          onChange={(e) => setIncludeSubs(e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
+        />
+        <span>
+          Include subscription payments in budget calculations
+          <span className="mt-1 block text-xs text-secondary-500 dark:text-secondary-400">
+            When checked, recurring subscription payments will count towards
+            this budget limit. Uncheck to exclude subscriptions from budget
+            tracking.
           </span>
-        </label>
-      </div>
+        </span>
+      </label>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">
-          Payment Methods (Optional)
+        <label className="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-300">
+          Payment methods (optional)
         </label>
-        <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mb-1 text-xs text-secondary-500 dark:text-secondary-400">
           Select payment methods this budget applies to. Leave empty to apply
           to all methods.
         </p>
@@ -479,10 +474,10 @@ function BudgetForm({
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">
-          Payment Platforms (Optional)
+        <label className="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-300">
+          Payment platforms (optional)
         </label>
-        <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mb-1 text-xs text-secondary-500 dark:text-secondary-400">
           Select payment platforms this budget applies to. Leave empty to
           apply to all platforms.
         </p>
@@ -494,10 +489,10 @@ function BudgetForm({
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">
-          Payment Types (Optional)
+        <label className="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-300">
+          Payment types (optional)
         </label>
-        <p className="mb-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mb-1 text-xs text-secondary-500 dark:text-secondary-400">
           Select payment types this budget applies to. Leave empty to apply to
           all types.
         </p>
@@ -509,22 +504,27 @@ function BudgetForm({
         />
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
 
-      <div className="flex justify-end gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+      <div className="flex justify-end gap-2 border-t border-secondary-200 pt-4 dark:border-secondary-800">
         <Button
           variant="secondary"
+          size="sm"
           onClick={onCancel}
-          isDisabled={isPending}
+          disabled={isPending}
         >
           Cancel
         </Button>
-        <Button variant="primary" onClick={submit} isDisabled={isPending}>
-          {isPending
-            ? "Saving…"
-            : editing
-              ? "Update Budget"
-              : "Create Budget"}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={submit}
+          disabled={isPending}
+          loading={isPending}
+        >
+          {editing ? "Update budget" : "Create budget"}
         </Button>
       </div>
     </div>
@@ -575,30 +575,30 @@ function BudgetMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-md border border-zinc-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="flex w-full items-center justify-between rounded-md border border-secondary-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-100"
       >
         <span
           className={
             value.length === 0
-              ? "text-zinc-400 dark:text-zinc-500"
+              ? "text-secondary-400 dark:text-secondary-500"
               : "truncate"
           }
         >
           {label}
         </span>
         <HiChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`ml-2 h-4 w-4 shrink-0 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? (
-        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-secondary-200 bg-white py-1 shadow-lg dark:border-secondary-700 dark:bg-secondary-900">
           {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-zinc-500">No options.</p>
+            <p className="px-3 py-2 text-xs text-secondary-500">No options.</p>
           ) : (
             options.map((opt) => (
               <label
                 key={opt.id}
-                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800"
               >
                 <input
                   type="checkbox"
@@ -632,32 +632,28 @@ function BudgetRow({
 }) {
   const borderClass = budget.is_active
     ? "border-l-success-500"
-    : "border-l-zinc-300 dark:border-l-zinc-700";
+    : "border-l-secondary-300 dark:border-l-secondary-700";
 
   return (
-    <div
-      className={`rounded-lg border-l-4 border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:p-5 ${borderClass}`}
+    <article
+      className={`rounded-[var(--radius-card)] border border-secondary-200 border-l-4 bg-white p-4 shadow-[var(--shadow-card)] transition-colors hover:border-secondary-300 dark:border-secondary-800 dark:bg-secondary-950 dark:hover:border-secondary-700 sm:p-5 ${borderClass}`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <h3 className="text-base font-semibold sm:text-lg">{budget.name}</h3>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                budget.is_active
-                  ? "bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-300"
-                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-              }`}
-            >
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-secondary-900 dark:text-secondary-100 sm:text-lg">
+              {budget.name}
+            </h3>
+            <Badge variant={budget.is_active ? "success" : "neutral"}>
               {budget.is_active ? "Active" : "Inactive"}
-            </span>
+            </Badge>
           </div>
           {budget.description ? (
-            <p className="mb-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mb-2 line-clamp-2 text-sm text-secondary-600 dark:text-secondary-400">
               {budget.description}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-secondary-600 dark:text-secondary-400">
             <span>
               <span className="font-medium">Type:</span>{" "}
               {BUDGET_TYPE_LABELS[budget.type]}
@@ -676,30 +672,35 @@ function BudgetRow({
             </span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 sm:shrink-0 sm:items-center">
-          <Button size="sm" variant="secondary" onClick={onEdit}>
-            <HiPencil className="mr-1 h-4 w-4" />
-            Edit
-          </Button>
-          <Button
+        <div className="flex flex-wrap gap-1.5 sm:shrink-0 sm:items-center">
+          <IconButton
             size="sm"
             variant="secondary"
-            isDisabled={isToggling}
+            label="Edit budget"
+            onClick={onEdit}
+          >
+            <HiPencilSquare />
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="secondary"
+            label={budget.is_active ? "Deactivate" : "Activate"}
+            disabled={isToggling}
             onClick={onToggleActive}
           >
-            {budget.is_active ? "Deactivate" : "Activate"}
-          </Button>
-          <Button
+            {budget.is_active ? <HiPauseCircle /> : <HiPlayCircle />}
+          </IconButton>
+          <IconButton
             size="sm"
             variant="danger"
-            isDisabled={isDeleting}
+            label="Delete"
+            disabled={isDeleting}
             onClick={onDelete}
           >
-            <HiTrash className="mr-1 h-4 w-4" />
-            Delete
-          </Button>
+            <HiTrash />
+          </IconButton>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

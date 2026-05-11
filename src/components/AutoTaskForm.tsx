@@ -1,7 +1,13 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
+import {
+  HiCheck,
+  HiChevronDown,
+  HiChevronUp,
+  HiPlus,
+  HiXMark,
+} from "react-icons/hi2";
 
 import {
   TaskLinksPanel,
@@ -9,6 +15,11 @@ import {
   collectTaskLinks,
   type LinkedRef,
 } from "@/components/TaskLinksPanel";
+import { FormSection } from "@/components/UI/FormSection";
+import { IconButton } from "@/components/UI/IconButton";
+import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
+import { Textarea } from "@/components/UI/Textarea";
 import {
   useTaskCategories,
   type AutoTaskRuleInput,
@@ -65,6 +76,7 @@ export function AutoTaskForm({
   error,
   onCancel,
   onSubmit,
+  extraActions,
 }: {
   initial?: AutoTaskRule;
   submitLabel: string;
@@ -72,6 +84,7 @@ export function AutoTaskForm({
   error: string | null;
   onCancel: () => void;
   onSubmit: (input: AutoTaskRuleInput) => Promise<void>;
+  extraActions?: React.ReactNode;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
@@ -137,7 +150,7 @@ export function AutoTaskForm({
 
   return (
     <form
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!valid) return;
@@ -171,315 +184,315 @@ export function AutoTaskForm({
         await onSubmit(payload);
       }}
     >
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Name <span className="text-danger">*</span>
-        </span>
+      <FormSection
+        title="Basics"
+        description="What this rule is and what task it generates."
+      >
         <Input
+          label="Name *"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
+          fullWidth
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Content <span className="text-danger">*</span>
-        </span>
-        <textarea
-          className="min-h-[80px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+        <Textarea
+          label="Content *"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          rows={4}
+          fullWidth
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">
-          Schedule
-        </span>
-        <select
-          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        <label className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500/30 dark:border-secondary-700 dark:bg-secondary-950"
+            checked={isWork}
+            onChange={(e) => setIsWork(e.target.checked)}
+          />
+          <span>Mark generated tasks as work</span>
+        </label>
+      </FormSection>
+
+      <FormSection
+        title="Schedule"
+        description="When the task should be generated."
+      >
+        <Select
+          label="Type"
           value={ruleType}
           onChange={(e) =>
             setRuleType(e.target.value as AutoTaskRule["rule_type"])
           }
+          fullWidth
         >
           {RULE_TYPES.map((r) => (
             <option key={r.value} value={r.value}>
               {r.label}
             </option>
           ))}
-        </select>
-      </label>
-      {ruleType === "weekly" ? (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Day of week
-          </span>
-          <select
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        </Select>
+
+        {ruleType === "weekly" ? (
+          <Select
+            label="Day of week"
             value={dayOfWeek}
             onChange={(e) => setDayOfWeek(Number(e.target.value))}
+            fullWidth
           >
             {DAYS_OF_WEEK.map((label, i) => (
               <option key={i} value={i}>
                 {label}
               </option>
             ))}
-          </select>
-        </label>
-      ) : null}
-      {ruleType === "monthly_date" ? (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Day of month
-          </span>
+          </Select>
+        ) : null}
+        {ruleType === "monthly_date" ? (
           <Input
+            label="Day of month"
             type="number"
             min={1}
             max={31}
             value={String(dayOfMonth)}
             onChange={(e) => setDayOfMonth(Number(e.target.value))}
+            fullWidth
           />
-        </label>
-      ) : null}
-      {ruleType === "monthly_interval" ? (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Every N months
-          </span>
+        ) : null}
+        {ruleType === "monthly_interval" ? (
           <Input
+            label="Every N months"
             type="number"
             min={1}
             value={intervalMonths}
             onChange={(e) => setIntervalMonths(e.target.value)}
+            fullWidth
           />
-        </label>
-      ) : null}
-      {ruleType === "daily_interval" ? (
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Every N days
-          </span>
+        ) : null}
+        {ruleType === "daily_interval" ? (
           <Input
+            label="Every N days"
             type="number"
             min={1}
             value={intervalDays}
             onChange={(e) => setIntervalDays(e.target.value)}
+            fullWidth
           />
-        </label>
-      ) : null}
-      {ruleType === "yearly" ? (
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
-              Month
-            </span>
-            <select
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        ) : null}
+        {ruleType === "yearly" ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Month"
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
+              fullWidth
             >
               {MONTHS.map((label, i) => (
                 <option key={i + 1} value={i + 1}>
                   {label}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
-              Day
-            </span>
+            </Select>
             <Input
+              label="Day"
               type="number"
               min={1}
               max={31}
               value={String(dayOfMonth)}
               onChange={(e) => setDayOfMonth(Number(e.target.value))}
+              fullWidth
             />
-          </label>
-        </div>
-      ) : null}
-      <div className="grid grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            Start time
-          </span>
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-3">
           <Input
+            label="Start time"
             type="time"
             value={startTime ?? ""}
             onChange={(e) => setStartTime(e.target.value)}
+            fullWidth
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">
-            End time
-          </span>
           <Input
+            label="End time"
             type="time"
             value={endTime ?? ""}
             onChange={(e) => setEndTime(e.target.value)}
+            fullWidth
           />
-        </label>
-      </div>
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs uppercase tracking-wide text-zinc-500">
-          Subtasks (each generated task starts with these)
-        </legend>
-        {subTasks.map((sub, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <span className="mt-2 w-6 text-right text-xs text-zinc-500">
-              {i + 1}.
-            </span>
-            <Input
-              type="text"
-              placeholder="Subtask…"
-              value={sub}
-              onChange={(e) =>
-                setSubTasks((s) =>
-                  s.map((v, idx) => (idx === i ? e.target.value : v)),
-                )
-              }
-            />
-            <div className="flex flex-col gap-1">
-              <button
-                type="button"
-                className="rounded px-2 py-1 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30"
-                disabled={i === 0}
-                onClick={() => moveSub(i, -1)}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="rounded px-2 py-1 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30"
-                disabled={i === subTasks.length - 1}
-                onClick={() => moveSub(i, 1)}
-              >
-                ↓
-              </button>
-            </div>
-            <button
-              type="button"
-              className="rounded px-2 py-1 text-xs text-zinc-500 hover:text-danger"
-              onClick={() =>
-                setSubTasks((s) => s.filter((_, idx) => idx !== i))
-              }
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setSubTasks((s) => [...s, ""])}
-        >
-          + Add subtask
-        </Button>
-      </fieldset>
-      <TaskLinksPanel
-        links={linkedRefs}
-        isPending={isPending}
-        onSave={async (next) => setLinkedRefs(next)}
-      />
-      {taskCategories.length > 0 ? (
-        <fieldset className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <legend className="mb-2 text-sm font-medium">
-            Categorie (Opzionale)
-          </legend>
-          <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-            Seleziona le categorie da associare ai task generati da questa
-            regola.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {taskCategories.map((category) => {
-              const selected = selectedCategoryIds.includes(category.id);
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => toggleCategory(category.id)}
-                  className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
-                    selected
-                      ? "ring-2 ring-offset-2 ring-primary-500"
-                      : "opacity-60 hover:opacity-100"
-                  }`}
-                  style={{
-                    backgroundColor: category.color,
-                    color: getContrastColor(category.color),
-                  }}
-                >
-                  {category.name}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-      ) : null}
-      <fieldset className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-        <legend className="mb-2 text-sm font-medium">
-          Date Range (Optional)
-        </legend>
-        <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
-          Leave empty for permanent rule. Set dates to limit when this rule is
-          active.
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
-              Start Date
-            </span>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-zinc-500">
-              End Date
-            </span>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </label>
         </div>
-      </fieldset>
-      <div className="flex flex-wrap gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={isWork}
-            onChange={(e) => setIsWork(e.target.checked)}
+      </FormSection>
+
+      <FormSection
+        title="Subtasks"
+        description="Each generated task starts with these."
+        actions={
+          <IconButton
+            type="button"
+            size="sm"
+            variant="secondary"
+            label="Add subtask"
+            onClick={() => setSubTasks((s) => [...s, ""])}
+          >
+            <HiPlus />
+          </IconButton>
+        }
+      >
+        {subTasks.length === 0 ? (
+          <p className="text-sm text-secondary-500">No subtasks yet.</p>
+        ) : (
+          subTasks.map((sub, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-2 w-6 shrink-0 text-right text-xs text-secondary-500">
+                {i + 1}.
+              </span>
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder="Subtask…"
+                  value={sub}
+                  onChange={(e) =>
+                    setSubTasks((s) =>
+                      s.map((v, idx) => (idx === i ? e.target.value : v)),
+                    )
+                  }
+                  fullWidth
+                />
+              </div>
+              <div className="flex shrink-0 flex-col">
+                <IconButton
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  disabled={i === 0}
+                  onClick={() => moveSub(i, -1)}
+                  label="Move up"
+                >
+                  <HiChevronUp />
+                </IconButton>
+                <IconButton
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  disabled={i === subTasks.length - 1}
+                  onClick={() => moveSub(i, 1)}
+                  label="Move down"
+                >
+                  <HiChevronDown />
+                </IconButton>
+              </div>
+              <IconButton
+                type="button"
+                size="xs"
+                variant="ghost"
+                onClick={() =>
+                  setSubTasks((s) => s.filter((_, idx) => idx !== i))
+                }
+                label="Remove subtask"
+              >
+                <HiXMark />
+              </IconButton>
+            </div>
+          ))
+        )}
+      </FormSection>
+
+      <FormSection
+        title="Categories & links"
+        description="Optional tagging and references to other entities."
+      >
+        {taskCategories.length > 0 ? (
+          <div>
+            <p className="mb-2 text-sm font-medium text-secondary-700 dark:text-secondary-300">
+              Categories
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {taskCategories.map((category) => {
+                const selected = selectedCategoryIds.includes(category.id);
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+                      selected
+                        ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-secondary-950"
+                        : "opacity-60 hover:opacity-100"
+                    }`}
+                    style={{
+                      backgroundColor: category.color,
+                      color: getContrastColor(category.color),
+                    }}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        <TaskLinksPanel
+          links={linkedRefs}
+          isPending={isPending}
+          onSave={async (next) => setLinkedRefs(next)}
+        />
+      </FormSection>
+
+      <FormSection
+        title="Advanced"
+        description="Date range and active state. Leave dates empty for a permanent rule."
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Input
+            label="Start date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            fullWidth
           />
-          <span>Mark generated tasks as work</span>
-        </label>
-        <label className="flex items-center gap-2">
+          <Input
+            label="End date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            fullWidth
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300">
           <input
             type="checkbox"
+            className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500/30 dark:border-secondary-700 dark:bg-secondary-950"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
           <span>Active</span>
         </label>
-      </div>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
+      </FormSection>
+
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {extraActions}
+        <IconButton
+          type="button"
+          variant="secondary"
+          size="sm"
+          label="Cancel"
+          onClick={onCancel}
+        >
+          <HiXMark />
+        </IconButton>
+        <IconButton
           type="submit"
           variant="primary"
           size="sm"
-          isDisabled={!valid || isPending}
+          loading={isPending}
+          disabled={!valid || isPending}
+          label={submitLabel}
         >
-          {isPending ? "Saving…" : submitLabel}
-        </Button>
+          <HiCheck />
+        </IconButton>
       </div>
     </form>
   );

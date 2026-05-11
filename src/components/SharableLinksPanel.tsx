@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useState } from "react";
 
+import { Button } from "@/components/UI/Button";
+import { FormSection } from "@/components/UI/FormSection";
 import {
   useCreateSharableLink,
   useDeleteSharableLink,
@@ -47,26 +48,25 @@ export function SharableLinksPanel({
   const list = links.data ?? [];
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Public share links</h3>
-        {links.isLoading ? (
-          <span className="text-xs text-zinc-500">Loading…</span>
-        ) : (
-          <span className="text-xs text-zinc-500">
-            {list.length} active
-          </span>
-        )}
-      </div>
+    <FormSection
+      title="Public share links"
+      actions={
+        <span className="text-xs text-secondary-500 dark:text-secondary-400">
+          {links.isLoading ? "Loading…" : `${list.length} active`}
+        </span>
+      }
+    >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-zinc-500">New link expires in</span>
+        <span className="text-xs text-secondary-500 dark:text-secondary-400">
+          New link expires in
+        </span>
         {PRESETS.map((preset) => (
           <Button
             key={preset.hours}
             type="button"
-            variant="outline"
+            variant="secondary"
             size="sm"
-            isDisabled={create.isPending}
+            disabled={create.isPending}
             onClick={() => create.mutate(preset.hours)}
           >
             {preset.label}
@@ -74,7 +74,9 @@ export function SharableLinksPanel({
         ))}
       </div>
       {list.length === 0 ? (
-        <p className="text-sm text-zinc-500">No active share links.</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          No active share links.
+        </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {list.map((link) => {
@@ -82,16 +84,16 @@ export function SharableLinksPanel({
             return (
               <li
                 key={link.token}
-                className="flex flex-col gap-1 rounded-md border border-zinc-100 bg-zinc-50 p-2 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+                className="flex flex-col gap-1 rounded-[var(--radius-control)] border border-secondary-100 bg-secondary-50 p-2 text-sm dark:border-secondary-800 dark:bg-secondary-900"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-secondary-500 dark:text-secondary-400">
                     Expires {DATETIME.format(new Date(link.expires_at))}
                   </span>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
                       onClick={async () => {
                         await navigator.clipboard.writeText(url);
                         setCopied(link.token);
@@ -108,7 +110,7 @@ export function SharableLinksPanel({
                     </button>
                     <button
                       type="button"
-                      className="text-xs text-zinc-500 hover:text-danger"
+                      className="text-xs text-secondary-500 hover:text-danger-600 dark:text-secondary-400 dark:hover:text-danger-400"
                       disabled={remove.isPending}
                       onClick={() => remove.mutate(link.token)}
                     >
@@ -116,12 +118,14 @@ export function SharableLinksPanel({
                     </button>
                   </div>
                 </div>
-                <code className="truncate text-xs">{url}</code>
+                <code className="truncate text-xs text-secondary-700 dark:text-secondary-300">
+                  {url}
+                </code>
               </li>
             );
           })}
         </ul>
       )}
-    </div>
+    </FormSection>
   );
 }

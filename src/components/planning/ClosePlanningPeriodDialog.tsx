@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
 import { api } from "@/lib/api";
 import { heavyKeys } from "@/lib/queries/heavy";
 import type { PlanningPeriod } from "@/types/heavy";
@@ -86,56 +87,47 @@ export function ClosePlanningPeriodDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/40 p-4 backdrop-blur-sm"
       onClick={() => !submitting && onClose()}
     >
       <div
-        className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="w-full max-w-md rounded-[var(--radius-card)] border border-secondary-200 bg-white p-5 shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-semibold">{title}</h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h2 className="text-base font-semibold text-secondary-900 dark:text-secondary-100">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm text-secondary-600 dark:text-secondary-400">
           {incompleteCount === 0
             ? "No incomplete tasks to carry forward. Closing will mark this period as closed."
             : `${incompleteCount} incomplete ${incompleteCount === 1 ? "task" : "tasks"} will be blocked here and copied forward. Completed and cancelled tasks stay put.`}
         </p>
 
-        <div className="mt-4 flex flex-col gap-1">
-          <label
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-200"
-            htmlFor="close-destination"
-          >
-            {destLabel}
-          </label>
-          {mode === "month" ? (
-            <input
-              id="close-destination"
-              type="month"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:border-zinc-800 dark:bg-zinc-950"
-            />
-          ) : (
-            <input
-              id="close-destination"
-              type="number"
-              min={1900}
-              max={2100}
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:border-zinc-800 dark:bg-zinc-950"
-            />
-          )}
+        <div className="mt-4">
+          <Input
+            id="close-destination"
+            label={destLabel}
+            type={mode === "month" ? "month" : "number"}
+            min={mode === "year" ? 1900 : undefined}
+            max={mode === "year" ? 2100 : undefined}
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            fullWidth
+          />
         </div>
 
-        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+        {error && (
+          <p className="mt-3 text-sm text-danger-600 dark:text-danger-400">
+            {error}
+          </p>
+        )}
 
         <div className="mt-5 flex justify-end gap-2">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onClose}
-            isDisabled={submitting}
+            disabled={submitting}
           >
             Cancel
           </Button>
@@ -143,9 +135,10 @@ export function ClosePlanningPeriodDialog({
             variant="primary"
             size="sm"
             onClick={submit}
-            isDisabled={submitting || !destination}
+            loading={submitting}
+            disabled={submitting || !destination}
           >
-            {submitting ? "Closing…" : "Close & carry forward"}
+            Close & carry forward
           </Button>
         </div>
       </div>

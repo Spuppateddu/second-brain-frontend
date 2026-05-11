@@ -1,9 +1,11 @@
 "use client";
 
-import { Button, Input } from "@heroui/react";
 import { useState } from "react";
 
 import { TagPicker } from "@/components/TagPicker";
+import { Button } from "@/components/UI/Button";
+import { Input } from "@/components/UI/Input";
+import { Textarea } from "@/components/UI/Textarea";
 import type { BookmarkInput } from "@/lib/queries/entities";
 import type { Bookmark } from "@/types/entities";
 
@@ -47,37 +49,46 @@ export function BookmarkForm({
   return (
     <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
       <Input
+        label="Title *"
         type="text"
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        autoFocus
+        isFocused
+        fullWidth
       />
       <Input
+        label="URL *"
         type="url"
         placeholder="https://…"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
+        fullWidth
       />
-      <textarea
-        className="min-h-[100px] rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+      <Textarea
+        label="Description"
         placeholder="Description (optional)"
         value={description ?? ""}
         onChange={(e) => setDescription(e.target.value)}
+        className="min-h-[100px]"
+        fullWidth
       />
       <TagPicker value={tagIds} onChange={setTagIds} />
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+      ) : null}
       <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onCancel} type="button">
+        <Button variant="secondary" size="sm" onClick={onCancel} type="button">
           Cancel
         </Button>
         <Button
           variant="primary"
           size="sm"
           type="submit"
-          isDisabled={!valid || isPending}
+          disabled={!valid || isPending}
+          loading={isPending}
         >
-          {isPending ? "Saving…" : submitLabel}
+          {submitLabel}
         </Button>
       </div>
     </form>

@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { HiTrash } from "react-icons/hi2";
 
 import { EntityListShell } from "@/components/EntityListShell";
 import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
@@ -11,6 +11,8 @@ import {
   type FieldDef,
   type FormValues,
 } from "@/components/SimpleEntityForm";
+import { FormSection } from "@/components/UI/FormSection";
+import { IconButton } from "@/components/UI/IconButton";
 import type { EditableEntityType } from "@/lib/entity-fetch";
 
 type ApiError = { response?: { data?: { message?: string } } };
@@ -44,29 +46,31 @@ export function CreateEntityPage<T extends { id: number }, TInput>({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <EntityListShell title={title}>
-      <SimpleEntityForm
-        fields={fields}
-        withTags={withTags}
-        submitLabel="Create"
-        isPending={create.isPending}
-        error={error}
-        onCancel={() => router.push(listHref)}
-        onSubmit={async (values, tagIds) => {
-          setError(null);
-          try {
-            const payload = withTags
-              ? { ...values, tag_ids: tagIds }
-              : values;
-            const created = await create.mutateAsync(
-              payload as unknown as TInput,
-            );
-            router.push(detailHref(created.id));
-          } catch (err) {
-            setError(readError(err, "Failed to save."));
-          }
-        }}
-      />
+    <EntityListShell title={`New ${title}`}>
+      <FormSection title="Details">
+        <SimpleEntityForm
+          fields={fields}
+          withTags={withTags}
+          submitLabel="Create"
+          isPending={create.isPending}
+          error={error}
+          onCancel={() => router.push(listHref)}
+          onSubmit={async (values, tagIds) => {
+            setError(null);
+            try {
+              const payload = withTags
+                ? { ...values, tag_ids: tagIds }
+                : values;
+              const created = await create.mutateAsync(
+                payload as unknown as TInput,
+              );
+              router.push(detailHref(created.id));
+            } catch (err) {
+              setError(readError(err, "Failed to save."));
+            }
+          }}
+        />
+      </FormSection>
     </EntityListShell>
   );
 }
@@ -105,8 +109,10 @@ export function GenericEditPage<T extends { id: number }, TInput>({
 
   if (Number.isNaN(id)) {
     return (
-      <main className="p-6">
-        <p className="text-sm text-danger">Invalid id.</p>
+      <main className="p-4 sm:p-6 lg:py-10">
+        <p className="text-sm text-danger-600 dark:text-danger-400">
+          Invalid id.
+        </p>
       </main>
     );
   }
@@ -116,14 +122,14 @@ export function GenericEditPage<T extends { id: number }, TInput>({
       title={data ? `${title} · ${pickDisplay(data, fields)}` : title}
       isLoading={isLoading}
       error={error}
+      headerActions={
+        data && anchorEntityType ? (
+          <AnchorToggleButton type={anchorEntityType} id={data.id} />
+        ) : undefined
+      }
     >
       {data ? (
         <div className="flex flex-col gap-4">
-          {anchorEntityType ? (
-            <div className="flex items-center justify-end">
-              <AnchorToggleButton type={anchorEntityType} id={data.id} />
-            </div>
-          ) : null}
           <EditCard<T, TInput>
             item={data}
             fields={fields}
@@ -174,7 +180,28 @@ function EditCard<T extends { id: number }, TInput>({
     (item as unknown as WithTags).tags?.map((t) => t.id) ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <FormSection
+      title="Details"
+      actions={
+        <IconButton
+          size="sm"
+          variant="danger"
+          label="Delete"
+          disabled={remove.isPending}
+          onClick={async () => {
+            if (!confirm("Delete this item?")) return;
+            try {
+              await remove.mutateAsync(item.id);
+              onDone();
+            } catch (err) {
+              setError(readError(err, "Failed to delete."));
+            }
+          }}
+        >
+          <HiTrash />
+        </IconButton>
+      }
+    >
       <SimpleEntityForm
         fields={fields}
         initial={toFormValues(item)}
@@ -197,24 +224,6 @@ function EditCard<T extends { id: number }, TInput>({
           }
         }}
       />
-      <div className="flex items-center justify-end">
-        <Button
-          variant="danger-soft"
-          size="sm"
-          isDisabled={remove.isPending}
-          onClick={async () => {
-            if (!confirm("Delete this item?")) return;
-            try {
-              await remove.mutateAsync(item.id);
-              onDone();
-            } catch (err) {
-              setError(readError(err, "Failed to delete."));
-            }
-          }}
-        >
-          Delete
-        </Button>
-      </div>
-    </div>
+    </FormSection>
   );
 }

@@ -27,8 +27,10 @@ export default function EditTwitchChannelPage({
 
   if (!isValidId) {
     return (
-      <main className="p-6">
-        <p className="text-sm text-danger">Invalid channel id.</p>
+      <main className="p-4 sm:p-6 lg:py-10">
+        <p className="mx-auto max-w-2xl text-sm text-danger-600 dark:text-danger-400">
+          Invalid channel id.
+        </p>
       </main>
     );
   }
@@ -36,11 +38,13 @@ export default function EditTwitchChannelPage({
   if (isLoading || error || !data) {
     return (
       <EntityListShell
-        title="Edit Twitch Channel"
+        title="Edit Twitch channel"
         isLoading={isLoading}
         error={error}
       >
-        <p className="text-sm text-zinc-500">Loading…</p>
+        <p className="text-sm text-secondary-500 dark:text-secondary-400">
+          Loading…
+        </p>
       </EntityListShell>
     );
   }

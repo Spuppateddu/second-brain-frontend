@@ -1,35 +1,19 @@
 "use client";
 
-import { Button, Card, Input } from "@heroui/react";
 import { useState } from "react";
 
 import { PushNotificationPanel } from "@/components/PushNotificationPanel";
+import { Button } from "@/components/UI/Button";
+import { FormSection } from "@/components/UI/FormSection";
+import { Input } from "@/components/UI/Input";
+import { Select } from "@/components/UI/Select";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 
-type Status = { kind: "idle" } | { kind: "ok"; msg: string } | { kind: "err"; msg: string };
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className="w-full">
-      <Card.Header className="flex flex-col items-start gap-1">
-        <Card.Title>{title}</Card.Title>
-        {description ? (
-          <Card.Description>{description}</Card.Description>
-        ) : null}
-      </Card.Header>
-      <Card.Content>{children}</Card.Content>
-    </Card>
-  );
-}
+type Status =
+  | { kind: "idle" }
+  | { kind: "ok"; msg: string }
+  | { kind: "err"; msg: string };
 
 function Banner({ status }: { status: Status }) {
   if (status.kind === "idle") return null;
@@ -37,7 +21,9 @@ function Banner({ status }: { status: Status }) {
     <p
       className={[
         "text-sm",
-        status.kind === "ok" ? "text-success" : "text-danger",
+        status.kind === "ok"
+          ? "text-success-600 dark:text-success-400"
+          : "text-danger-600 dark:text-danger-400",
       ].join(" ")}
     >
       {status.msg}
@@ -80,33 +66,38 @@ function ProfileInfoForm() {
   }
 
   return (
-    <Section title="Profile" description="Your name and email.">
+    <FormSection title="Profile" description="Your name and email.">
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
         <Input
+          label="Name"
           type="text"
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          fullWidth
         />
         <Input
+          label="Email"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          fullWidth
         />
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Banner status={status} />
           <Button
             type="submit"
             variant="primary"
             size="sm"
-            isDisabled={pending}
+            disabled={pending}
+            loading={pending}
           >
             Save
           </Button>
         </div>
       </form>
-    </Section>
+    </FormSection>
   );
 }
 
@@ -142,45 +133,52 @@ function PasswordForm() {
   }
 
   return (
-    <Section
+    <FormSection
       title="Password"
       description="Use a long, random password. We hash it server-side."
     >
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
         <Input
+          label="Current password"
           type="password"
           placeholder="Current password"
           autoComplete="current-password"
           value={current}
           onChange={(e) => setCurrent(e.target.value)}
+          fullWidth
         />
         <Input
+          label="New password"
           type="password"
           placeholder="New password"
           autoComplete="new-password"
           value={next}
           onChange={(e) => setNext(e.target.value)}
+          fullWidth
         />
         <Input
+          label="Confirm new password"
           type="password"
           placeholder="Confirm new password"
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
+          fullWidth
         />
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Banner status={status} />
           <Button
             type="submit"
             variant="primary"
             size="sm"
-            isDisabled={pending}
+            disabled={pending}
+            loading={pending}
           >
             Update password
           </Button>
         </div>
       </form>
-    </Section>
+    </FormSection>
   );
 }
 
@@ -219,46 +217,43 @@ function InactivityForm() {
   }
 
   return (
-    <Section
+    <FormSection
       title="Inactivity lock"
       description="Lock the app after a period of inactivity. Unlock with this code or by signing in again."
     >
       <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Timeout (minutes)</span>
-          <Input
-            type="number"
-            min={1}
-            value={String(timeoutMin)}
-            onChange={(e) => setTimeoutMin(Number(e.target.value))}
-            className="w-32"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">
-            New unlock code (leave blank to keep the current one)
-          </span>
-          <Input
-            type="password"
-            placeholder="At least 4 characters"
-            autoComplete="new-password"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
-        </label>
-        <div className="flex items-center justify-between">
+        <Input
+          label="Timeout (minutes)"
+          type="number"
+          min={1}
+          value={String(timeoutMin)}
+          onChange={(e) => setTimeoutMin(Number(e.target.value))}
+          className="w-32"
+        />
+        <Input
+          label="New unlock code"
+          type="password"
+          placeholder="At least 4 characters"
+          autoComplete="new-password"
+          helperText="Leave blank to keep the current one."
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          fullWidth
+        />
+        <div className="flex items-center justify-between gap-3">
           <Banner status={status} />
           <Button
             type="submit"
             variant="primary"
             size="sm"
-            isDisabled={pending}
+            disabled={pending}
+            loading={pending}
           >
             Save
           </Button>
         </div>
       </form>
-    </Section>
+    </FormSection>
   );
 }
 
@@ -284,24 +279,22 @@ function ThemeForm() {
   }
 
   return (
-    <Section title="Theme">
+    <FormSection title="Theme">
       <div className="flex gap-2">
         {(["light", "dark", "system"] as const).map((value) => (
           <Button
             key={value}
             size="sm"
-            variant={theme === value ? "primary" : "outline"}
-            isDisabled={pending}
+            variant={theme === value ? "primary" : "secondary"}
+            disabled={pending}
             onClick={() => save(value)}
           >
             {value}
           </Button>
         ))}
       </div>
-      <div className="mt-2">
-        <Banner status={status} />
-      </div>
-    </Section>
+      <Banner status={status} />
+    </FormSection>
   );
 }
 
@@ -333,32 +326,34 @@ function TimezoneForm() {
   }
 
   return (
-    <Section title="Timezone">
-      <form className="flex items-center gap-3" onSubmit={onSubmit}>
-        <select
-          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+    <FormSection title="Timezone">
+      <form
+        className="flex flex-col gap-3 sm:flex-row sm:items-end"
+        onSubmit={onSubmit}
+      >
+        <Select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
+          className="sm:w-72"
         >
           {zones.map((tz) => (
             <option key={tz} value={tz}>
               {tz}
             </option>
           ))}
-        </select>
+        </Select>
         <Button
           type="submit"
           variant="primary"
           size="sm"
-          isDisabled={pending}
+          disabled={pending}
+          loading={pending}
         >
           Save
         </Button>
       </form>
-      <div className="mt-2">
-        <Banner status={status} />
-      </div>
-    </Section>
+      <Banner status={status} />
+    </FormSection>
   );
 }
 
@@ -389,57 +384,50 @@ function CalendarPrefsForm() {
   }
 
   return (
-    <Section title="Calendar preferences">
-      <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Slot duration (minutes)</span>
-          <select
-            className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            value={slot}
-            onChange={(e) => setSlot(Number(e.target.value))}
-          >
-            {[15, 30, 60].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Default view</span>
-          <select
-            className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            value={view}
-            onChange={(e) => setView(e.target.value)}
-          >
-            <option value="calendar">calendar</option>
-            <option value="task">task</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Water target (glasses/day)</span>
-          <Input
-            type="number"
-            min={1}
-            max={20}
-            value={String(water)}
-            onChange={(e) => setWater(Number(e.target.value))}
-            className="w-32"
-          />
-        </label>
-        <div className="flex items-center justify-between">
-          <Banner status={status} />
-          <Button
-            variant="primary"
-            size="sm"
-            isDisabled={pending}
-            onClick={saveAll}
-          >
-            Save
-          </Button>
-        </div>
+    <FormSection title="Calendar preferences">
+      <Select
+        label="Slot duration (minutes)"
+        value={slot}
+        onChange={(e) => setSlot(Number(e.target.value))}
+        className="w-32"
+      >
+        {[15, 30, 60].map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </Select>
+      <Select
+        label="Default view"
+        value={view}
+        onChange={(e) => setView(e.target.value)}
+        className="w-32"
+      >
+        <option value="calendar">calendar</option>
+        <option value="task">task</option>
+      </Select>
+      <Input
+        label="Water target (glasses/day)"
+        type="number"
+        min={1}
+        max={20}
+        value={String(water)}
+        onChange={(e) => setWater(Number(e.target.value))}
+        className="w-32"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <Banner status={status} />
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={pending}
+          loading={pending}
+          onClick={saveAll}
+        >
+          Save
+        </Button>
       </div>
-    </Section>
+    </FormSection>
   );
 }
 
@@ -478,33 +466,38 @@ function NotificationsForm() {
   };
 
   return (
-    <Section title="Notifications">
+    <FormSection title="Notifications">
       <div className="flex flex-col gap-2">
         {(Object.keys(prefs) as Array<keyof typeof prefs>).map((key) => (
-          <label key={key} className="flex items-center gap-2 text-sm">
+          <label
+            key={key}
+            className="flex items-center gap-2 text-sm text-secondary-700 dark:text-secondary-300"
+          >
             <input
               type="checkbox"
               checked={prefs[key]}
               onChange={(e) =>
                 setPrefs((p) => ({ ...p, [key]: e.target.checked }))
               }
+              className="h-4 w-4 rounded border-secondary-300 accent-primary-600 dark:border-secondary-700"
             />
             <span>{labels[key]}</span>
           </label>
         ))}
-        <div className="flex items-center justify-between">
-          <Banner status={status} />
-          <Button
-            variant="primary"
-            size="sm"
-            isDisabled={pending}
-            onClick={save}
-          >
-            Save
-          </Button>
-        </div>
       </div>
-    </Section>
+      <div className="flex items-center justify-between gap-3">
+        <Banner status={status} />
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={pending}
+          loading={pending}
+          onClick={save}
+        >
+          Save
+        </Button>
+      </div>
+    </FormSection>
   );
 }
 
@@ -535,7 +528,7 @@ function DangerZone() {
   }
 
   return (
-    <Section
+    <FormSection
       title="Delete account"
       description="Confirm with your password. All data will be removed."
     >
@@ -546,41 +539,45 @@ function DangerZone() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          fullWidth
         />
         <Button
           type="submit"
           variant="danger"
           size="sm"
-          isDisabled={pending || !password}
+          disabled={pending || !password}
+          loading={pending}
         >
           Delete
         </Button>
       </form>
-      <div className="mt-2">
-        <Banner status={status} />
-      </div>
-    </Section>
+      <Banner status={status} />
+    </FormSection>
   );
 }
 
 export default function ProfilePage() {
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <p className="text-sm text-zinc-500">
-          Update your account information and preferences.
-        </p>
+    <div className="p-4 sm:p-6 lg:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+        <header>
+          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-100">
+            Profile
+          </h1>
+          <p className="text-sm text-secondary-500 dark:text-secondary-400">
+            Update your account information and preferences.
+          </p>
+        </header>
+        <ProfileInfoForm />
+        <PasswordForm />
+        <InactivityForm />
+        <ThemeForm />
+        <TimezoneForm />
+        <CalendarPrefsForm />
+        <NotificationsForm />
+        <PushNotificationPanel />
+        <DangerZone />
       </div>
-      <ProfileInfoForm />
-      <PasswordForm />
-      <InactivityForm />
-      <ThemeForm />
-      <TimezoneForm />
-      <CalendarPrefsForm />
-      <NotificationsForm />
-      <PushNotificationPanel />
-      <DangerZone />
     </div>
   );
 }
