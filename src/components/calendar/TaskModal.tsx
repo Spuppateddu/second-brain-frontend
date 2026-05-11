@@ -932,7 +932,18 @@ function TaskModalForm({
                   />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs text-zinc-500">Start time</p>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-xs text-zinc-500">Start time</p>
+                    {startTime && !formLocked && (
+                      <button
+                        type="button"
+                        onClick={() => setStartTime("")}
+                        className="text-xs text-zinc-400 hover:text-danger"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="time"
                     value={startTime ?? ""}
@@ -942,7 +953,18 @@ function TaskModalForm({
                   />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs text-zinc-500">End time</p>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-xs text-zinc-500">End time</p>
+                    {endTime && !formLocked && (
+                      <button
+                        type="button"
+                        onClick={() => setEndTime("")}
+                        className="text-xs text-zinc-400 hover:text-danger"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="time"
                     value={endTime ?? ""}
