@@ -473,7 +473,7 @@ function VideoRow({ video }: { video: YoutubeDateVideo }) {
           <div className="min-w-0 flex-1">
             <h4
               className={[
-                "mb-1 line-clamp-2 text-sm font-semibold sm:text-base",
+                "mb-1 text-sm font-semibold break-words sm:line-clamp-2 sm:text-base",
                 video.is_watched
                   ? "text-secondary-600 dark:text-secondary-400"
                   : "text-secondary-900 dark:text-secondary-100",
@@ -549,52 +549,48 @@ function VideoActionButtons({
           size="sm"
           variant="danger"
           fullWidth
+          iconOnly
+          aria-label={`Hide videos from ${video.youtube_channel.name}`}
           disabled={hidePending}
           onClick={onHide}
-          leftIcon={<HiXMark className="h-4 w-4" />}
         >
-          Hide
+          <HiXMark />
         </Button>
         <Button
           size="sm"
           variant={video.is_watchlist ? "primary" : "secondary"}
           fullWidth
+          iconOnly
+          aria-label={
+            video.is_watchlist ? "Remove from watchlist" : "Add to watchlist"
+          }
           disabled={watchlistPending}
           onClick={onToggleWatchlist}
-          leftIcon={
-            video.is_watchlist ? (
-              <HiBookmark className="h-4 w-4" />
-            ) : (
-              <HiBookmarkSlash className="h-4 w-4" />
-            )
-          }
         >
-          {video.is_watchlist ? "Saved" : "Save"}
+          {video.is_watchlist ? <HiBookmark /> : <HiBookmarkSlash />}
         </Button>
         <Button
           size="sm"
           variant={video.is_watched ? "info" : "secondary"}
           fullWidth
+          iconOnly
+          aria-label={
+            video.is_watched ? "Mark as unwatched" : "Mark as watched"
+          }
           disabled={watchedPending}
           onClick={onToggleWatched}
-          leftIcon={
-            video.is_watched ? (
-              <HiEye className="h-4 w-4" />
-            ) : (
-              <HiEyeSlash className="h-4 w-4" />
-            )
-          }
         >
-          {video.is_watched ? "Watched" : "Watch"}
+          {video.is_watched ? <HiEye /> : <HiEyeSlash />}
         </Button>
         <Button
           size="sm"
           variant="danger"
           fullWidth
+          iconOnly
+          aria-label="Play video"
           onClick={onPlay}
-          leftIcon={<HiPlay className="h-4 w-4" />}
         >
-          Play
+          <HiPlay />
         </Button>
       </>
     );

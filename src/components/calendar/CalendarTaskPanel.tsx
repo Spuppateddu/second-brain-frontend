@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type DragEvent } from "react";
+import { Fragment, useMemo, useState, type DragEvent } from "react";
 import {
   HiBars3,
   HiBeaker,
@@ -38,6 +38,20 @@ function fullDateLabel(date: string): string {
     month: "long",
     day: "numeric",
   });
+}
+
+function parseTimeToMinutes(t: string): number {
+  const [h = 0, m = 0] = t.split(":").map((s) => Number(s) || 0);
+  return h * 60 + m;
+}
+
+function formatGap(minutes: number): string {
+  if (minutes <= 0) return "";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 function isAutoTask(t: CalendarTask) {
@@ -361,13 +375,18 @@ export function CalendarTaskPanel({
   }, [allTasks, statusFilter, typeFilter]);
 
   type TimedItem =
-    | { kind: "task"; time: string; task: CalendarTask }
-    | { kind: "pill"; time: string; pill: PillForDate };
+    | { kind: "task"; time: string; endTime: string; task: CalendarTask }
+    | { kind: "pill"; time: string; endTime: string; pill: PillForDate };
 
   const timedItems = useMemo<TimedItem[]>(() => {
     const taskItems: TimedItem[] = filtered
       .filter((t) => !!t.start_time)
-      .map((t) => ({ kind: "task", time: t.start_time ?? "", task: t }));
+      .map((t) => ({
+        kind: "task",
+        time: t.start_time ?? "",
+        endTime: t.end_time ?? t.start_time ?? "",
+        task: t,
+      }));
     const pillItems: TimedItem[] =
       // Pill type filter respects the toolbar: hide under "work".
       typeFilter === "work"
@@ -384,6 +403,7 @@ export function CalendarTaskPanel({
             .map((p) => ({
               kind: "pill",
               time: p.taking_time.slice(0, 5),
+              endTime: p.taking_time.slice(0, 5),
               pill: p,
             }));
     return [...taskItems, ...pillItems].sort((a, b) =>
@@ -458,20 +478,40 @@ export function CalendarTaskPanel({
                   With time ({timedItems.length})
                 </h3>
                 <div className="space-y-2">
-                  {timedItems.map((item) =>
-                    item.kind === "pill" ? (
-                      <PillCard key={`pill-${item.pill.id}`} pill={item.pill} />
-                    ) : (
-                      <TaskCard
-                        key={`task-${item.task.id}`}
-                        task={item.task}
-                        date={date}
-                        onDragStart={onDragStartTask}
-                        onDragEnd={onDragEndTask}
-                        onOpen={openEdit}
-                      />
-                    ),
-                  )}
+                  {timedItems.map((item, idx) => {
+                    const prev = idx > 0 ? timedItems[idx - 1] : null;
+                    const gapLabel = prev
+                      ? formatGap(
+                          parseTimeToMinutes(item.time) -
+                            parseTimeToMinutes(prev.endTime),
+                        )
+                      : "";
+                    const key =
+                      item.kind === "pill"
+                        ? `pill-${item.pill.id}`
+                        : `task-${item.task.id}`;
+                    return (
+                      <Fragment key={key}>
+                        {gapLabel && (
+                          <div className="flex items-center gap-1 pl-2 text-[10px] text-secondary-400 dark:text-secondary-500">
+                            <HiClock className="w-3 h-3" />
+                            {gapLabel}
+                          </div>
+                        )}
+                        {item.kind === "pill" ? (
+                          <PillCard pill={item.pill} />
+                        ) : (
+                          <TaskCard
+                            task={item.task}
+                            date={date}
+                            onDragStart={onDragStartTask}
+                            onDragEnd={onDragEndTask}
+                            onOpen={openEdit}
+                          />
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </div>
               </section>
             )}

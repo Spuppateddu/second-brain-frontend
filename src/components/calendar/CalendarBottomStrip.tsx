@@ -726,17 +726,18 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       type="button"
                       onClick={() => toggleWatched.mutate(video.id)}
                       disabled={toggleWatched.isPending}
+                      title={video.is_watched ? "Watched" : "Mark Watched"}
+                      aria-label={
+                        video.is_watched ? "Watched" : "Mark Watched"
+                      }
                       className={[
-                        "inline-flex items-center justify-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50",
+                        "inline-flex items-center justify-center rounded-md border p-1.5 text-sm font-medium disabled:opacity-50",
                         video.is_watched
                           ? "border-success-300 bg-success-50 text-success-700 hover:bg-success-100 dark:border-success-800 dark:bg-success-900/20 dark:text-success-300 dark:hover:bg-success-900/40"
                           : "border-secondary-300 bg-secondary-50 text-secondary-700 hover:bg-secondary-100 dark:border-secondary-600 dark:bg-secondary-700 dark:text-secondary-300 dark:hover:bg-secondary-600",
                       ].join(" ")}
                     >
                       <HiCheck className="h-4 w-4" />
-                      <span className="truncate">
-                        {video.is_watched ? "Watched" : "Mark Watched"}
-                      </span>
                     </button>
                     <button
                       type="button"
@@ -749,10 +750,11 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                           : video.video_url;
                         window.open(target, "_blank", "noopener,noreferrer");
                       }}
-                      className="inline-flex items-center justify-center gap-1 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                      title="Watch"
+                      aria-label="Watch"
+                      className="inline-flex items-center justify-center rounded-md border border-red-300 bg-red-50 p-1.5 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                     >
                       <HiArrowTopRightOnSquare className="h-4 w-4" />
-                      <span className="truncate">Watch</span>
                     </button>
                     <button
                       type="button"
@@ -760,10 +762,9 @@ function YouTubeSection({ videos }: { videos: YoutubeVideo[] }) {
                       disabled={toggleWatchlist.isPending}
                       title="Remove from watchlist"
                       aria-label="Remove from watchlist"
-                      className="inline-flex items-center justify-center gap-1 rounded-md border border-secondary-300 bg-white px-3 py-1.5 text-sm font-medium text-secondary-600 hover:bg-secondary-50 disabled:opacity-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
+                      className="inline-flex items-center justify-center rounded-md border border-secondary-300 bg-white p-1.5 text-sm font-medium text-secondary-600 hover:bg-secondary-50 disabled:opacity-50 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-300 dark:hover:bg-secondary-800"
                     >
                       <HiTrash className="h-4 w-4" />
-                      <span className="truncate">Remove</span>
                     </button>
                   </div>
                 </div>
