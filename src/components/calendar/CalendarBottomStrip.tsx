@@ -424,7 +424,7 @@ function PlanningSection({
       : undefined;
 
   return (
-    <div className="space-y-2">
+    <div className="grid grid-cols-[max-content_1fr] gap-y-2">
       {tasks.map((task) => {
         const categories = task.taskCategories ?? task.task_categories ?? [];
         return (
@@ -432,14 +432,12 @@ function PlanningSection({
             type="button"
             key={task.id}
             onClick={() => setOpenTask(task)}
-            className="block w-full rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
+            className="col-span-2 grid grid-cols-subgrid items-center gap-x-3 rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
           >
-            <div className="flex flex-wrap items-center gap-2">
-              {task.stars ? (
-                <span className="whitespace-nowrap text-xs font-bold text-yellow-500 dark:text-yellow-400">
-                  {"★".repeat(task.stars)}
-                </span>
-              ) : null}
+            <div className="whitespace-nowrap text-xs font-bold text-yellow-500 dark:text-yellow-400">
+              {task.stars ? "★".repeat(task.stars) : ""}
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h4 className="min-w-0 truncate font-semibold text-secondary-900 dark:text-secondary-100">
                 {task.content}
               </h4>
