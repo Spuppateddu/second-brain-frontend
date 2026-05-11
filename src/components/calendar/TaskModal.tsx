@@ -1321,10 +1321,16 @@ function PlanningSubtasksSection({ taskId }: { taskId: number }) {
       const summary = data as {
         monthlyPlanning?: { tasks?: PlanningTaskLite[] } | null;
         yearlyPlanning?: { tasks?: PlanningTaskLite[] } | null;
+        tasks?: PlanningTaskLite[];
       };
-      for (const period of [summary.monthlyPlanning, summary.yearlyPlanning]) {
-        if (!period?.tasks) continue;
-        const match = period.tasks.find((t) => t.id === taskId);
+      const taskLists: (PlanningTaskLite[] | undefined)[] = [
+        summary.monthlyPlanning?.tasks,
+        summary.yearlyPlanning?.tasks,
+        summary.tasks,
+      ];
+      for (const tasks of taskLists) {
+        if (!tasks) continue;
+        const match = tasks.find((t) => t.id === taskId);
         const subs = match?.sub_tasks ?? match?.subTasks;
         if (subs) return subs;
       }
