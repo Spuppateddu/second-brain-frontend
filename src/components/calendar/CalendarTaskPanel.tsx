@@ -24,6 +24,8 @@ import { WaterTracker } from "@/components/calendar/WaterTracker";
 import { IconButton } from "@/components/UI/IconButton";
 import { useCalendarDay } from "@/lib/queries/calendar";
 import {
+  useDismissPill,
+  useMarkPillTaken,
   usePillsForDate,
   type PillForDate,
 } from "@/lib/queries/entities";
@@ -76,9 +78,13 @@ function isLinkedToPlanning(t: CalendarTask): boolean {
 
 // ── Pill card ───────────────────────────────────────────────────────────────
 
-function PillCard({ pill }: { pill: PillForDate }) {
+function PillCard({ pill, date }: { pill: PillForDate; date: string }) {
+  const markTaken = useMarkPillTaken();
+  const dismiss = useDismissPill();
   const taken = pill.today_log?.status === "taken";
   const dismissed = pill.today_log?.status === "dismissed";
+  const pending = !taken && !dismissed;
+  const busy = markTaken.isPending || dismiss.isPending;
   const titleStyle = dismissed
     ? "line-through text-secondary-400"
     : taken
@@ -98,17 +104,32 @@ function PillCard({ pill }: { pill: PillForDate }) {
           </p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          {taken && (
-            <span className="p-1 rounded-full bg-success-100 dark:bg-success-900/30">
-              <HiCheck className="w-3 h-3 text-success-600 dark:text-success-400" />
-            </span>
-          )}
-          {dismissed && (
-            <span className="p-1 rounded-full bg-danger-100 dark:bg-danger-900/30">
-              <HiNoSymbol className="w-3 h-3 text-danger-600 dark:text-danger-400" />
-            </span>
-          )}
-          <HiBeaker className="w-4 h-4 text-purple-600 dark:text-purple-300" />
+          <IconButton
+            size="xs"
+            variant={taken ? "success" : "ghost"}
+            label={taken ? "Taken" : "Mark as taken"}
+            disabled={busy || taken}
+            loading={markTaken.isPending}
+            onClick={() => markTaken.mutate({ id: pill.id, date })}
+          >
+            <HiCheck />
+          </IconButton>
+          <IconButton
+            size="xs"
+            variant={dismissed ? "danger" : "ghost"}
+            label={dismissed ? "Dismissed" : "Dismiss"}
+            disabled={busy || dismissed}
+            loading={dismiss.isPending}
+            onClick={() => dismiss.mutate({ id: pill.id, date })}
+          >
+            <HiNoSymbol />
+          </IconButton>
+          <HiBeaker
+            className={[
+              "w-4 h-4 text-purple-600 dark:text-purple-300",
+              pending ? "" : "opacity-60",
+            ].join(" ")}
+          />
         </div>
       </div>
     </div>
@@ -499,7 +520,7 @@ export function CalendarTaskPanel({
                           </div>
                         )}
                         {item.kind === "pill" ? (
-                          <PillCard pill={item.pill} />
+                          <PillCard pill={item.pill} date={date} />
                         ) : (
                           <TaskCard
                             task={item.task}
