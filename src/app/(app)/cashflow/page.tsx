@@ -4,6 +4,7 @@ import { Button } from "@/components/UI/Button";
 import { IconButton } from "@/components/UI/IconButton";
 import { Select } from "@/components/UI/Select";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   HiChartBar,
   HiChartPie,
@@ -824,16 +825,40 @@ function MultiSelectDropdown({
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (!containerRef.current) return;
-      if (!containerRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function update() {
+      if (!triggerRef.current) return;
+      const r = triggerRef.current.getBoundingClientRect();
+      setCoords({ top: r.bottom + 4, left: r.left, width: r.width });
+    }
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
   }, [open]);
 
   function toggle(id: number) {
@@ -852,8 +877,9 @@ function MultiSelectDropdown({
         : `${value.length} selected`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between rounded-md border border-secondary-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900 dark:text-secondary-100"
@@ -871,27 +897,41 @@ function MultiSelectDropdown({
           className={`ml-2 h-4 w-4 shrink-0 text-secondary-500 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open ? (
-        <div className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-md border border-secondary-200 bg-white py-1 shadow-lg dark:border-secondary-700 dark:bg-secondary-900">
-          {options.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-secondary-500">No options.</p>
-          ) : (
-            options.map((opt) => (
-              <label
-                key={opt.id}
-                className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={value.includes(opt.id)}
-                  onChange={() => toggle(opt.id)}
-                />
-                {opt.name}
-              </label>
-            ))
-          )}
-        </div>
-      ) : null}
+      {open && coords && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={panelRef}
+              style={{
+                position: "fixed",
+                top: coords.top,
+                left: coords.left,
+                width: coords.width,
+              }}
+              className="z-50 max-h-60 overflow-auto rounded-md border border-secondary-200 bg-white py-1 shadow-lg dark:border-secondary-700 dark:bg-secondary-900"
+            >
+              {options.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-secondary-500">
+                  No options.
+                </p>
+              ) : (
+                options.map((opt) => (
+                  <label
+                    key={opt.id}
+                    className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-secondary-100 dark:hover:bg-secondary-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={value.includes(opt.id)}
+                      onChange={() => toggle(opt.id)}
+                    />
+                    {opt.name}
+                  </label>
+                ))
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
