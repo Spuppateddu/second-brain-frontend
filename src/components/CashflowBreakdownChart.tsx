@@ -34,6 +34,17 @@ const CURRENCY = new Intl.NumberFormat("en", {
 
 type Slice = { name: string; value: number };
 
+const MAX_LEGEND_ITEMS = 11;
+
+function collapseSlices(slices: Slice[]): Slice[] {
+  if (slices.length <= MAX_LEGEND_ITEMS) return slices;
+  const sorted = [...slices].sort((a, b) => b.value - a.value);
+  const top = sorted.slice(0, MAX_LEGEND_ITEMS - 1);
+  const rest = sorted.slice(MAX_LEGEND_ITEMS - 1);
+  const otherValue = rest.reduce((sum, s) => sum + s.value, 0);
+  return [...top, { name: `Other (${rest.length})`, value: otherValue }];
+}
+
 export function CashflowBreakdownChart({
   title,
   data,
@@ -41,7 +52,7 @@ export function CashflowBreakdownChart({
   title: string;
   data: Slice[];
 }) {
-  const filtered = data.filter((d) => d.value > 0);
+  const filtered = collapseSlices(data.filter((d) => d.value > 0));
   return (
     <Card>
       <span className="text-xs uppercase tracking-wide text-zinc-500">
