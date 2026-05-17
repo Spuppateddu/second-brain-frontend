@@ -108,7 +108,7 @@ function TripEditorInner({
     initial?.tags?.map((t) => t.id) ?? [],
   );
   const [isSearchable, setIsSearchable] = useState(
-    (initial as Trip & { is_searchable?: boolean })?.is_searchable ?? false,
+    (initial as Trip & { is_searchable?: boolean })?.is_searchable ?? true,
   );
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);

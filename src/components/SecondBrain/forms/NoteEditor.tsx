@@ -45,7 +45,7 @@ function NoteEditorInner({
     initial?.tags?.map((t) => t.id) ?? [],
   );
   const [isSearchable, setIsSearchable] = useState(
-    initial?.is_searchable ?? false,
+    initial?.is_searchable ?? true,
   );
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);

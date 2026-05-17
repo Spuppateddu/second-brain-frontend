@@ -55,7 +55,7 @@ function WishlistEditorInner({
   );
   const [isSearchable, setIsSearchable] = useState(
     (initial as WishlistItem & { is_searchable?: boolean })?.is_searchable ??
-      false,
+      true,
   );
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);

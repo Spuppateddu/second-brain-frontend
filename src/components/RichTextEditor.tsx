@@ -74,15 +74,21 @@ export function RichTextEditor({
   }, [value, editor]);
 
   // Register with the surrounding editor group (if any) so a shared toolbar
-  // can target this editor when focused. The first editor to register also
-  // becomes the initial "active" editor.
+  // can target this editor while it has focus. The toolbar hides when no
+  // editor is focused; toolbar buttons use mousedown.preventDefault so they
+  // don't blur the editor.
   useEffect(() => {
     if (!editor || !group || !editable) return;
     const unregister = group.registerEditor(editor);
     const onFocus = () => group.setActive(editor);
+    const onBlur = () => {
+      group.setActive(null);
+    };
     editor.on("focus", onFocus);
+    editor.on("blur", onBlur);
     return () => {
       editor.off("focus", onFocus);
+      editor.off("blur", onBlur);
       unregister();
     };
   }, [editor, group, editable]);

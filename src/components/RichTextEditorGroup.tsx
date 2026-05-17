@@ -29,7 +29,6 @@ export function EditorGroupProvider({ children }: { children: ReactNode }) {
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
 
   const registerEditor = useCallback((editor: Editor) => {
-    setActiveEditor((current) => (current ? current : editor));
     return () => {
       setActiveEditor((current) => (current === editor ? null : current));
     };
@@ -69,14 +68,17 @@ export function SharedEditorToolbar({ className }: { className?: string }) {
     };
   }, [group?.activeEditor]);
 
+  if (!group?.activeEditor) return null;
+
   return (
     <div
+      onMouseDown={(e) => e.preventDefault()}
       className={[
         "sticky top-0 z-20 rounded-t-lg",
         className ?? "",
       ].join(" ")}
     >
-      <RichTextToolbar editor={group?.activeEditor ?? null} />
+      <RichTextToolbar editor={group.activeEditor} />
     </div>
   );
 }
