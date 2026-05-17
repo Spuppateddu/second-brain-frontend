@@ -15,7 +15,8 @@ export default function TripsPage() {
   const trips = data ?? [];
   const { query, setQuery, filtered } = useTextFilter(
     trips,
-    (t) => `${t.name} ${t.notes ?? ""} ${t.locations ?? ""}`,
+    (t) =>
+      `${t.name} ${t.notes ?? ""} ${t.plan ?? ""} ${t.plan_without_time ?? ""} ${t.bag ?? ""}`,
   );
 
   return (

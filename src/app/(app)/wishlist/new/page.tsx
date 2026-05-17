@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 
-import WishlistFormModal from "@/components/SecondBrain/forms/WishlistFormModal";
+import WishlistEditor from "@/components/SecondBrain/forms/WishlistEditor";
 
 export default function NewWishlistPage() {
   const router = useRouter();
   return (
-    <WishlistFormModal
-      isOpen
+    <WishlistEditor
+      mode="modal"
       onClose={() => router.push("/wishlist")}
       onSaved={() => router.push("/wishlist")}
     />

@@ -1155,7 +1155,7 @@ export function useDismissPill() {
 }
 
 // Bag
-export type BagInput = { title: string; description?: string | null; tag_ids?: number[] };
+export type BagInput = { title: string; description?: string | null; is_default?: boolean; tag_ids?: number[] };
 export const useBag = makeOne<Bag>({ resource: "bags", wrapKey: "bag", queryKey: entityKeys.bags });
 export const useCreateBag = makeCreate<BagInput, Bag>({ resource: "bags", wrapKey: "bag", queryKey: entityKeys.bags });
 export const useUpdateBag = makeUpdate<BagInput, Bag>({ resource: "bags", wrapKey: "bag", queryKey: entityKeys.bags });
@@ -1224,7 +1224,7 @@ export type SharableLink = {
   token: string;
   expires_at: string;
   created_at: string;
-  url: string;
+  url?: string;
 };
 
 const sharableLinkKey = (type: ShareableType, id: number) =>
@@ -1671,8 +1671,9 @@ export function useDeleteRecipe() {
 export type TripInput = {
   name: string;
   bag?: string | null;
-  locations?: string | null;
   notes?: string | null;
+  plan_without_time?: string | null;
+  plan?: string | null;
   is_searchable?: boolean;
   tag_ids?: number[];
 };

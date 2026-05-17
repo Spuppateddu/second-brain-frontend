@@ -1,51 +1,49 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useDeleteSoftware,
-  useSoftwareOne,
-  useUpdateSoftware, type SoftwareInput
-} from "@/lib/queries/entities";
-import type { Software } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "title", label: "Title", required: true },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import SoftwareEditor from "@/components/SecondBrain/forms/SoftwareEditor";
+import { useSoftwareOne } from "@/lib/queries/entities";
 
 export default function EditSoftwarePage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<Software, SoftwareInput>
-      id={Number(id)}
-      title="Software"
-      fields={FIELDS}
-      listHref="/software"
-      toFormValues={(item) => ({
-        title: item.title,
-        description: item.description ?? ""
-})}
-      withTags
-      anchorEntityType="software"
+  const swId = Number(id);
 
-      useOne={useSoftwareOne}
-      useUpdate={useUpdateSoftware}
-      useDelete={useDeleteSoftware}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="software" id={item.id} />
-          <LinkedEntitiesPanel type="software" id={item.id} />
-        </>
-      )}
+  const { data, isLoading, error } = useSoftwareOne(
+    Number.isNaN(swId) ? null : swId,
+  );
+
+  if (Number.isNaN(swId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid software id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading software…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">
+        Couldn&rsquo;t load this software.
+      </main>
+    );
+  }
+
+  return (
+    <SoftwareEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="software" id={data.id} />}
     />
   );
 }

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import TripFormModal from "@/components/SecondBrain/forms/TripFormModal";
+import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
+import TripEditor from "@/components/SecondBrain/forms/TripEditor";
 import { useTrip } from "@/lib/queries/entities";
 
 export default function EditTripPage({
@@ -15,7 +16,7 @@ export default function EditTripPage({
   const { id } = use(params);
   const tripId = Number(id);
 
-  const { data: trip, isLoading, error } = useTrip(
+  const { data, isLoading, error } = useTrip(
     Number.isNaN(tripId) ? null : tripId,
   );
 
@@ -26,24 +27,21 @@ export default function EditTripPage({
       </main>
     );
   }
-
   if (isLoading) {
     return <main className="p-6 text-sm text-zinc-500">Loading trip…</main>;
   }
-
-  if (error || !trip) {
+  if (error || !data) {
     return (
-      <main className="p-6 text-sm text-danger">
-        Couldn&rsquo;t load this trip.
-      </main>
+      <main className="p-6 text-sm text-danger">Couldn&rsquo;t load this trip.</main>
     );
   }
 
   return (
-    <TripFormModal
-      isOpen
-      initial={trip}
-      onClose={() => router.push("/trips")}
+    <TripEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="trip" id={data.id} />}
     />
   );
 }

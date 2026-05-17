@@ -141,33 +141,41 @@
   }
 }
 
-/* TipTap task list: checkbox and text inline. */
-.ProseMirror ul[data-type="taskList"] {
+/* TipTap task list: checkbox and text inline. Applies in the editor and in
+   any read-only render (e.g. /share/[token] under .prose). */
+ul[data-type="taskList"] {
   list-style: none;
   padding: 0;
 }
 
-.ProseMirror ul[data-type="taskList"] li {
+ul[data-type="taskList"] li {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
 }
 
-.ProseMirror ul[data-type="taskList"] li > label {
+ul[data-type="taskList"] li > label {
   flex: 0 0 auto;
   margin-top: 0.25rem;
   user-select: none;
 }
 
-.ProseMirror ul[data-type="taskList"] li > div {
+ul[data-type="taskList"] li > div {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.ProseMirror ul[data-type="taskList"] li > div > p {
+ul[data-type="taskList"] li > div > p {
   margin: 0;
 }
 
-.ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+ul[data-type="taskList"] input[type="checkbox"] {
   cursor: pointer;
+}
+
+/* Read-only render (share page, etc.) — TipTap output appears inside .prose
+   instead of the editor's .ProseMirror, so checkboxes there are display-only. */
+.prose ul[data-type="taskList"] input[type="checkbox"] {
+  pointer-events: none;
+  cursor: default;
 }

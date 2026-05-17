@@ -2,55 +2,64 @@
 
 import { useState } from "react";
 
-import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
+import EntityActionBar from "@/components/SecondBrain/EntityActionBar";
+import EntityEditorShell from "@/components/SecondBrain/EntityEditorShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
-import SearchableToggle from "@/components/SecondBrain/SearchableToggle";
 import {
-  FooterCloseButton,
-  FooterPrimaryButton,
   FormError,
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
-import { entityFullPagePath } from "@/lib/entity-fetch";
-import { useCreatePlace, useUpdatePlace } from "@/lib/queries/entities";
+import {
+  useCreatePlace,
+  useDeletePlace,
+  useUpdatePlace,
+} from "@/lib/queries/entities";
 import type { Place } from "@/types/entities";
 
-interface PlaceFormModalProps {
-  isOpen: boolean;
+interface PlaceEditorProps {
+  mode: "modal" | "page";
   initial?: Place | null;
   prefillTagId?: number;
+  belowBody?: React.ReactNode;
   onClose: () => void;
   onSaved?: () => void;
 }
 
-export default function PlaceFormModal(props: PlaceFormModalProps) {
-  if (!props.isOpen) return null;
+export default function PlaceEditor(props: PlaceEditorProps) {
   const key = props.initial ? `edit-${props.initial.id}` : "new";
-  return <PlaceFormModalInner key={key} {...props} />;
+  return <PlaceEditorInner key={key} {...props} />;
 }
 
-function PlaceFormModalInner({
+function PlaceEditorInner({
+  mode,
   initial,
   prefillTagId,
+  belowBody,
   onClose,
   onSaved,
-}: PlaceFormModalProps) {
+}: PlaceEditorProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [url, setUrl] = useState(initial?.url ?? "");
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
-  const [isSearchable, setIsSearchable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(
+    (initial as Place & { is_searchable?: boolean })?.is_searchable ?? false,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const createMut = useCreatePlace();
   const updateMut = useUpdatePlace(initial?.id ?? 0);
-  const isPending = createMut.isPending || updateMut.isPending;
-  void isSearchable;
+  const deleteMut = useDeletePlace();
+  const isPending =
+    createMut.isPending || updateMut.isPending || deleteMut.isPending;
 
-  const submit = async () => {
+  const markDirty = () => setDirty(true);
+
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!name.trim()) {
       setError("Place name is required.");
@@ -60,13 +69,15 @@ function PlaceFormModalInner({
       name: name.trim(),
       description: description.trim() || null,
       url: url.trim() || null,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
       if (initial) await updateMut.mutateAsync(payload);
       else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      setDirty(false);
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -78,28 +89,53 @@ function PlaceFormModalInner({
     }
   };
 
-  return (
-    <EntityModalShell
-      isOpen
-      onClose={onClose}
-      fullPagePath={
-        initial ? entityFullPagePath("place", initial.id) : undefined
+  const handleDelete = initial
+    ? async () => {
+        try {
+          await deleteMut.mutateAsync(initial.id);
+          onClose();
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } } };
+          setError(err?.response?.data?.message ?? "Failed to delete.");
+        }
       }
-      anchorEntity={initial ? { type: "place", id: initial.id } : undefined}
+    : undefined;
+
+  return (
+    <EntityEditorShell
+      mode={mode}
+      onClose={onClose}
+      belowBody={belowBody}
       titleContent={
         <ModalTitleInput
           value={name}
-          onChange={setName}
+          onChange={(v) => {
+            setName(v);
+            markDirty();
+          }}
           placeholder={initial ? "Place name" : "New Place"}
         />
       }
-      footer={
-        <>
-          <FooterCloseButton onClick={onClose} isPending={isPending} />
-          <FooterPrimaryButton onClick={submit} isPending={isPending}>
-            {initial ? "Save" : "Create Place"}
-          </FooterPrimaryButton>
-        </>
+      bottom={
+        <EntityActionBar
+          mode={mode}
+          kind="place"
+          id={initial?.id}
+          entityLabel="place"
+          dirty={dirty}
+          isPending={isPending}
+          isSearchable={{
+            value: isSearchable,
+            onChange: (v) => {
+              setIsSearchable(v);
+              markDirty();
+            },
+          }}
+          onSave={() => submit(false)}
+          onSaveAndExit={() => submit(true)}
+          onDelete={handleDelete}
+          onClose={mode === "modal" ? onClose : undefined}
+        />
       }
     >
       <div className="space-y-4 pt-4">
@@ -108,7 +144,10 @@ function PlaceFormModalInner({
           <input
             type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              markDirty();
+            }}
             placeholder="https://maps.google.com/..."
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -118,7 +157,10 @@ function PlaceFormModalInner({
           <textarea
             rows={4}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              markDirty();
+            }}
             placeholder="Optional notes about this place"
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -126,14 +168,15 @@ function PlaceFormModalInner({
 
         <InlineTagPicker
           selectedTagIds={tagIds}
-          onChange={setTagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
           prefillTagId={prefillTagId}
         />
 
-        <SearchableToggle value={isSearchable} onChange={setIsSearchable} />
-
         <FormError message={error} />
       </div>
-    </EntityModalShell>
+    </EntityEditorShell>
   );
 }

@@ -1,51 +1,47 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useBag,
-  useDeleteBag,
-  useUpdateBag, type BagInput
-} from "@/lib/queries/entities";
-import type { Bag } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "title", label: "Title", required: true },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import BagEditor from "@/components/SecondBrain/forms/BagEditor";
+import { useBag } from "@/lib/queries/entities";
 
 export default function EditBagPage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<Bag, BagInput>
-      id={Number(id)}
-      title="Bag"
-      fields={FIELDS}
-      listHref="/bags"
-      toFormValues={(item) => ({
-        title: item.title,
-        description: item.description ?? ""
-})}
-      withTags
-      anchorEntityType="bag"
+  const bagId = Number(id);
 
-      useOne={useBag}
-      useUpdate={useUpdateBag}
-      useDelete={useDeleteBag}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="bag" id={item.id} />
-          <LinkedEntitiesPanel type="bag" id={item.id} />
-        </>
-      )}
+  const { data, isLoading, error } = useBag(
+    Number.isNaN(bagId) ? null : bagId,
+  );
+
+  if (Number.isNaN(bagId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid bag id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading bag…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">Couldn&rsquo;t load this bag.</main>
+    );
+  }
+
+  return (
+    <BagEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="bag" id={data.id} />}
     />
   );
 }

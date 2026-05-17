@@ -1,53 +1,47 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useDeletePerson,
-  usePerson,
-  useUpdatePerson, type PersonInput
-} from "@/lib/queries/entities";
-import type { Person } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "name", label: "Name", required: true },
-  { kind: "date", key: "birth_date", label: "Birth date" },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import PersonEditor from "@/components/SecondBrain/forms/PersonEditor";
+import { usePerson } from "@/lib/queries/entities";
 
 export default function EditPersonPage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<Person, PersonInput>
-      id={Number(id)}
-      title="Person"
-      fields={FIELDS}
-      listHref="/persons"
-      toFormValues={(item) => ({
-        name: item.name,
-        birth_date: item.birth_date ?? "",
-        description: item.description ?? ""
-})}
-      withTags
-      anchorEntityType="person"
+  const personId = Number(id);
 
-      useOne={usePerson}
-      useUpdate={useUpdatePerson}
-      useDelete={useDeletePerson}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="person" id={item.id} />
-          <LinkedEntitiesPanel type="person" id={item.id} />
-        </>
-      )}
+  const { data, isLoading, error } = usePerson(
+    Number.isNaN(personId) ? null : personId,
+  );
+
+  if (Number.isNaN(personId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid person id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading person…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">Couldn&rsquo;t load this person.</main>
+    );
+  }
+
+  return (
+    <PersonEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="person" id={data.id} />}
     />
   );
 }

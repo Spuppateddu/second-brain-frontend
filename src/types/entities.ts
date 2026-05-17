@@ -176,14 +176,15 @@ type CommonFields = {
   updated_at: string;
 };
 
-export type Bag = CommonFields & { title: string };
+export type Bag = CommonFields & { title: string; is_default: boolean };
 export type Hardware = CommonFields & { title: string };
 export type Software = CommonFields & { title: string };
 export type Trip = CommonFields & {
   name: string;
   bag: string | null;
-  locations: string | null;
   notes: string | null;
+  plan_without_time: string | null;
+  plan: string | null;
 };
 export type MegaFile = CommonFields & {
   title: string;

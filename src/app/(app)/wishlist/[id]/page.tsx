@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import WishlistFormModal from "@/components/SecondBrain/forms/WishlistFormModal";
+import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
+import WishlistEditor from "@/components/SecondBrain/forms/WishlistEditor";
 import { useWishlistOne } from "@/lib/queries/entities";
 
 export default function EditWishlistPage({
@@ -15,7 +16,7 @@ export default function EditWishlistPage({
   const { id } = use(params);
   const itemId = Number(id);
 
-  const { data: item, isLoading, error } = useWishlistOne(
+  const { data, isLoading, error } = useWishlistOne(
     Number.isNaN(itemId) ? null : itemId,
   );
 
@@ -26,14 +27,12 @@ export default function EditWishlistPage({
       </main>
     );
   }
-
   if (isLoading) {
     return (
       <main className="p-6 text-sm text-zinc-500">Loading wishlist item…</main>
     );
   }
-
-  if (error || !item) {
+  if (error || !data) {
     return (
       <main className="p-6 text-sm text-danger">
         Couldn&rsquo;t load this wishlist item.
@@ -42,10 +41,11 @@ export default function EditWishlistPage({
   }
 
   return (
-    <WishlistFormModal
-      isOpen
-      initial={item}
-      onClose={() => router.push("/wishlist")}
+    <WishlistEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="wishlist_item" id={data.id} />}
     />
   );
 }

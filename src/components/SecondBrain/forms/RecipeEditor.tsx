@@ -2,40 +2,43 @@
 
 import { useState } from "react";
 
-import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
+import EntityActionBar from "@/components/SecondBrain/EntityActionBar";
+import EntityEditorShell from "@/components/SecondBrain/EntityEditorShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
-import SearchableToggle from "@/components/SecondBrain/SearchableToggle";
 import {
-  FooterCloseButton,
-  FooterPrimaryButton,
   FormError,
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
-import { entityFullPagePath } from "@/lib/entity-fetch";
-import { useCreateRecipe, useUpdateRecipe } from "@/lib/queries/entities";
+import {
+  useCreateRecipe,
+  useDeleteRecipe,
+  useUpdateRecipe,
+} from "@/lib/queries/entities";
 import type { Recipe } from "@/types/entities";
 
-interface RecipeFormModalProps {
-  isOpen: boolean;
+interface RecipeEditorProps {
+  mode: "modal" | "page";
   initial?: Recipe | null;
   prefillTagId?: number;
+  belowBody?: React.ReactNode;
   onClose: () => void;
   onSaved?: () => void;
 }
 
-export default function RecipeFormModal(props: RecipeFormModalProps) {
-  if (!props.isOpen) return null;
+export default function RecipeEditor(props: RecipeEditorProps) {
   const key = props.initial ? `edit-${props.initial.id}` : "new";
-  return <RecipeFormModalInner key={key} {...props} />;
+  return <RecipeEditorInner key={key} {...props} />;
 }
 
-function RecipeFormModalInner({
+function RecipeEditorInner({
+  mode,
   initial,
   prefillTagId,
+  belowBody,
   onClose,
   onSaved,
-}: RecipeFormModalProps) {
+}: RecipeEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [ingredients, setIngredients] = useState(initial?.ingredients ?? "");
   const [instructions, setInstructions] = useState(initial?.instructions ?? "");
@@ -48,15 +51,21 @@ function RecipeFormModalInner({
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
-  const [isSearchable, setIsSearchable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(
+    (initial as Recipe & { is_searchable?: boolean })?.is_searchable ?? false,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const createMut = useCreateRecipe();
   const updateMut = useUpdateRecipe(initial?.id ?? 0);
-  const isPending = createMut.isPending || updateMut.isPending;
-  void isSearchable;
+  const deleteMut = useDeleteRecipe();
+  const isPending =
+    createMut.isPending || updateMut.isPending || deleteMut.isPending;
 
-  const submit = async () => {
+  const markDirty = () => setDirty(true);
+
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!title.trim()) {
       setError("Recipe title is required.");
@@ -70,13 +79,15 @@ function RecipeFormModalInner({
       time_minutes: timeMinutes.trim()
         ? Number.parseInt(timeMinutes, 10)
         : null,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
       if (initial) await updateMut.mutateAsync(payload);
       else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      setDirty(false);
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -88,29 +99,54 @@ function RecipeFormModalInner({
     }
   };
 
-  return (
-    <EntityModalShell
-      isOpen
-      onClose={onClose}
-      size="xl"
-      fullPagePath={
-        initial ? entityFullPagePath("recipe", initial.id) : undefined
+  const handleDelete = initial
+    ? async () => {
+        try {
+          await deleteMut.mutateAsync(initial.id);
+          onClose();
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } } };
+          setError(err?.response?.data?.message ?? "Failed to delete.");
+        }
       }
-      anchorEntity={initial ? { type: "recipe", id: initial.id } : undefined}
+    : undefined;
+
+  return (
+    <EntityEditorShell
+      mode={mode}
+      size="xl"
+      onClose={onClose}
+      belowBody={belowBody}
       titleContent={
         <ModalTitleInput
           value={title}
-          onChange={setTitle}
+          onChange={(v) => {
+            setTitle(v);
+            markDirty();
+          }}
           placeholder={initial ? "Recipe title" : "New Recipe"}
         />
       }
-      footer={
-        <>
-          <FooterCloseButton onClick={onClose} isPending={isPending} />
-          <FooterPrimaryButton onClick={submit} isPending={isPending}>
-            {initial ? "Save" : "Create Recipe"}
-          </FooterPrimaryButton>
-        </>
+      bottom={
+        <EntityActionBar
+          mode={mode}
+          kind="recipe"
+          id={initial?.id}
+          entityLabel="recipe"
+          dirty={dirty}
+          isPending={isPending}
+          isSearchable={{
+            value: isSearchable,
+            onChange: (v) => {
+              setIsSearchable(v);
+              markDirty();
+            },
+          }}
+          onSave={() => submit(false)}
+          onSaveAndExit={() => submit(true)}
+          onDelete={handleDelete}
+          onClose={mode === "modal" ? onClose : undefined}
+        />
       }
     >
       <div className="space-y-4 pt-4">
@@ -119,9 +155,12 @@ function RecipeFormModalInner({
             <FormFieldLabel>Difficulty</FormFieldLabel>
             <select
               value={difficulty}
-              onChange={(e) =>
-                setDifficulty(e.target.value as "easy" | "medium" | "hard" | "")
-              }
+              onChange={(e) => {
+                setDifficulty(
+                  e.target.value as "easy" | "medium" | "hard" | "",
+                );
+                markDirty();
+              }}
               className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             >
               <option value="">—</option>
@@ -136,7 +175,10 @@ function RecipeFormModalInner({
               type="number"
               min={0}
               value={timeMinutes}
-              onChange={(e) => setTimeMinutes(e.target.value)}
+              onChange={(e) => {
+                setTimeMinutes(e.target.value);
+                markDirty();
+              }}
               className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </div>
@@ -147,7 +189,10 @@ function RecipeFormModalInner({
           <textarea
             rows={4}
             value={ingredients ?? ""}
-            onChange={(e) => setIngredients(e.target.value)}
+            onChange={(e) => {
+              setIngredients(e.target.value);
+              markDirty();
+            }}
             placeholder="One per line"
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -157,7 +202,10 @@ function RecipeFormModalInner({
           <textarea
             rows={6}
             value={instructions ?? ""}
-            onChange={(e) => setInstructions(e.target.value)}
+            onChange={(e) => {
+              setInstructions(e.target.value);
+              markDirty();
+            }}
             placeholder="Step-by-step"
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -165,14 +213,15 @@ function RecipeFormModalInner({
 
         <InlineTagPicker
           selectedTagIds={tagIds}
-          onChange={setTagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
           prefillTagId={prefillTagId}
         />
 
-        <SearchableToggle value={isSearchable} onChange={setIsSearchable} />
-
         <FormError message={error} />
       </div>
-    </EntityModalShell>
+    </EntityEditorShell>
   );
 }

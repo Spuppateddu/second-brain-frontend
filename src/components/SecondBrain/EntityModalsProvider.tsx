@@ -10,19 +10,17 @@ import {
   type ReactNode,
 } from "react";
 
-import {
-  BagFormModal,
-  HardwareFormModal,
-  SoftwareFormModal,
-} from "@/components/SecondBrain/forms/BagHardwareSoftwareFormModals";
-import BookmarkFormModal from "@/components/SecondBrain/forms/BookmarkFormModal";
-import MegaFileFormModal from "@/components/SecondBrain/forms/MegaFileFormModal";
-import NoteFormModal from "@/components/SecondBrain/forms/NoteFormModal";
-import PersonFormModal from "@/components/SecondBrain/forms/PersonFormModal";
-import PlaceFormModal from "@/components/SecondBrain/forms/PlaceFormModal";
-import RecipeFormModal from "@/components/SecondBrain/forms/RecipeFormModal";
-import TripFormModal from "@/components/SecondBrain/forms/TripFormModal";
-import WishlistFormModal from "@/components/SecondBrain/forms/WishlistFormModal";
+import BagEditor from "@/components/SecondBrain/forms/BagEditor";
+import BookmarkEditor from "@/components/SecondBrain/forms/BookmarkEditor";
+import HardwareEditor from "@/components/SecondBrain/forms/HardwareEditor";
+import MegaFileEditor from "@/components/SecondBrain/forms/MegaFileEditor";
+import NoteEditor from "@/components/SecondBrain/forms/NoteEditor";
+import PersonEditor from "@/components/SecondBrain/forms/PersonEditor";
+import PlaceEditor from "@/components/SecondBrain/forms/PlaceEditor";
+import RecipeEditor from "@/components/SecondBrain/forms/RecipeEditor";
+import SoftwareEditor from "@/components/SecondBrain/forms/SoftwareEditor";
+import TripEditor from "@/components/SecondBrain/forms/TripEditor";
+import WishlistEditor from "@/components/SecondBrain/forms/WishlistEditor";
 import type {
   Bag,
   Bookmark,
@@ -100,8 +98,6 @@ export default function EntityModalsProvider({
   }, []);
   const close = useCallback(() => setState(null), []);
 
-  // After any save, the second-brain payload may now have new
-  // tags/entities/links — refetch so the graph + tag-card stay in sync.
   const handleSaved = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["second-brain"] });
     queryClient.invalidateQueries({ queryKey: ["tag-card"] });
@@ -115,107 +111,105 @@ export default function EntityModalsProvider({
   return (
     <EntityModalsContext.Provider value={value}>
       {children}
-      <BookmarkFormModal
-        isOpen={state?.kind === "bookmark"}
-        initial={
-          state?.kind === "bookmark" ? (state.entity as Bookmark) : undefined
-        }
-        prefillTagId={state?.kind === "bookmark" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <NoteFormModal
-        isOpen={state?.kind === "note"}
-        initial={state?.kind === "note" ? (state.entity as Note) : undefined}
-        prefillTagId={state?.kind === "note" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <PlaceFormModal
-        isOpen={state?.kind === "place"}
-        initial={state?.kind === "place" ? (state.entity as Place) : undefined}
-        prefillTagId={state?.kind === "place" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <PersonFormModal
-        isOpen={state?.kind === "person"}
-        initial={
-          state?.kind === "person" ? (state.entity as Person) : undefined
-        }
-        prefillTagId={state?.kind === "person" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <WishlistFormModal
-        isOpen={state?.kind === "wishlist_item"}
-        initial={
-          state?.kind === "wishlist_item"
-            ? (state.entity as WishlistItem)
-            : undefined
-        }
-        prefillTagId={
-          state?.kind === "wishlist_item" ? state.prefillTagId : undefined
-        }
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <RecipeFormModal
-        isOpen={state?.kind === "recipe"}
-        initial={
-          state?.kind === "recipe" ? (state.entity as Recipe) : undefined
-        }
-        prefillTagId={state?.kind === "recipe" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <TripFormModal
-        isOpen={state?.kind === "trip"}
-        initial={state?.kind === "trip" ? (state.entity as Trip) : undefined}
-        prefillTagId={state?.kind === "trip" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <BagFormModal
-        isOpen={state?.kind === "bag"}
-        initial={state?.kind === "bag" ? (state.entity as Bag) : undefined}
-        prefillTagId={state?.kind === "bag" ? state.prefillTagId : undefined}
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <HardwareFormModal
-        isOpen={state?.kind === "hardware"}
-        initial={
-          state?.kind === "hardware" ? (state.entity as Hardware) : undefined
-        }
-        prefillTagId={
-          state?.kind === "hardware" ? state.prefillTagId : undefined
-        }
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <SoftwareFormModal
-        isOpen={state?.kind === "software"}
-        initial={
-          state?.kind === "software" ? (state.entity as Software) : undefined
-        }
-        prefillTagId={
-          state?.kind === "software" ? state.prefillTagId : undefined
-        }
-        onClose={close}
-        onSaved={handleSaved}
-      />
-      <MegaFileFormModal
-        isOpen={state?.kind === "mega_file"}
-        initial={
-          state?.kind === "mega_file" ? (state.entity as MegaFile) : undefined
-        }
-        prefillTagId={
-          state?.kind === "mega_file" ? state.prefillTagId : undefined
-        }
-        onClose={close}
-        onSaved={handleSaved}
-      />
+      {state?.kind === "bookmark" && (
+        <BookmarkEditor
+          mode="modal"
+          initial={state.entity as Bookmark | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "note" && (
+        <NoteEditor
+          mode="modal"
+          initial={state.entity as Note | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "place" && (
+        <PlaceEditor
+          mode="modal"
+          initial={state.entity as Place | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "person" && (
+        <PersonEditor
+          mode="modal"
+          initial={state.entity as Person | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "wishlist_item" && (
+        <WishlistEditor
+          mode="modal"
+          initial={state.entity as WishlistItem | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "recipe" && (
+        <RecipeEditor
+          mode="modal"
+          initial={state.entity as Recipe | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "trip" && (
+        <TripEditor
+          mode="modal"
+          initial={state.entity as Trip | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "bag" && (
+        <BagEditor
+          mode="modal"
+          initial={state.entity as Bag | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "hardware" && (
+        <HardwareEditor
+          mode="modal"
+          initial={state.entity as Hardware | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "software" && (
+        <SoftwareEditor
+          mode="modal"
+          initial={state.entity as Software | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
+      {state?.kind === "mega_file" && (
+        <MegaFileEditor
+          mode="modal"
+          initial={state.entity as MegaFile | undefined}
+          prefillTagId={state.prefillTagId}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
     </EntityModalsContext.Provider>
   );
 }

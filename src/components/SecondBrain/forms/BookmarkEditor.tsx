@@ -4,43 +4,43 @@ import { Button } from "@heroui/react";
 import { useState } from "react";
 import { FiCopy, FiExternalLink } from "react-icons/fi";
 
-import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
+import EntityActionBar from "@/components/SecondBrain/EntityActionBar";
+import EntityEditorShell from "@/components/SecondBrain/EntityEditorShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
-import SearchableToggle from "@/components/SecondBrain/SearchableToggle";
 import {
-  FooterCloseButton,
-  FooterPrimaryButton,
   FormError,
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
-import { entityFullPagePath } from "@/lib/entity-fetch";
 import {
   useCreateBookmark,
+  useDeleteBookmark,
   useUpdateBookmark,
 } from "@/lib/queries/entities";
 import type { Bookmark } from "@/types/entities";
 
-interface BookmarkFormModalProps {
-  isOpen: boolean;
+interface BookmarkEditorProps {
+  mode: "modal" | "page";
   initial?: Bookmark | null;
   prefillTagId?: number;
+  belowBody?: React.ReactNode;
   onClose: () => void;
   onSaved?: () => void;
 }
 
-export default function BookmarkFormModal(props: BookmarkFormModalProps) {
-  if (!props.isOpen) return null;
+export default function BookmarkEditor(props: BookmarkEditorProps) {
   const key = props.initial ? `edit-${props.initial.id}` : "new";
-  return <BookmarkFormModalInner key={key} {...props} />;
+  return <BookmarkEditorInner key={key} {...props} />;
 }
 
-function BookmarkFormModalInner({
+function BookmarkEditorInner({
+  mode,
   initial,
   prefillTagId,
+  belowBody,
   onClose,
   onSaved,
-}: BookmarkFormModalProps) {
+}: BookmarkEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [url, setUrl] = useState(initial?.url ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -50,12 +50,19 @@ function BookmarkFormModalInner({
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
-  const [isSearchable, setIsSearchable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(
+    (initial as Bookmark & { is_searchable?: boolean })?.is_searchable ?? false,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const createMut = useCreateBookmark();
   const updateMut = useUpdateBookmark(initial?.id ?? 0);
-  const isPending = createMut.isPending || updateMut.isPending;
+  const deleteMut = useDeleteBookmark();
+  const isPending =
+    createMut.isPending || updateMut.isPending || deleteMut.isPending;
+
+  const markDirty = () => setDirty(true);
 
   const handleOpenUrl = () => {
     if (url) window.open(url, "_blank", "noopener,noreferrer");
@@ -70,7 +77,7 @@ function BookmarkFormModalInner({
     }
   };
 
-  const handleSubmit = async () => {
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!title.trim()) {
       setError("Title is required.");
@@ -84,16 +91,15 @@ function BookmarkFormModalInner({
       title: title.trim(),
       url: url.trim(),
       description: description.trim() || null,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
-      if (initial) {
-        await updateMut.mutateAsync(payload);
-      } else {
-        await createMut.mutateAsync(payload);
-      }
+      if (initial) await updateMut.mutateAsync(payload);
+      else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      setDirty(false);
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -105,34 +111,53 @@ function BookmarkFormModalInner({
     }
   };
 
+  const handleDelete = initial
+    ? async () => {
+        try {
+          await deleteMut.mutateAsync(initial.id);
+          onClose();
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } } };
+          setError(err?.response?.data?.message ?? "Failed to delete.");
+        }
+      }
+    : undefined;
+
   return (
-    <EntityModalShell
-      isOpen
+    <EntityEditorShell
+      mode={mode}
       onClose={onClose}
-      fullPagePath={
-        initial ? entityFullPagePath("bookmark", initial.id) : undefined
-      }
-      anchorEntity={
-        initial ? { type: "bookmark", id: initial.id } : undefined
-      }
+      belowBody={belowBody}
       titleContent={
         <ModalTitleInput
           value={title}
-          onChange={setTitle}
-          placeholder={initial ? "Bookmark title" : "Create New Bookmark"}
+          onChange={(v) => {
+            setTitle(v);
+            markDirty();
+          }}
+          placeholder={initial ? "Bookmark title" : "New Bookmark"}
         />
       }
-      footer={
-        <>
-          <FooterCloseButton
-            onClick={onClose}
-            isPending={isPending}
-            label={initial ? "Close" : "Close"}
-          />
-          <FooterPrimaryButton onClick={handleSubmit} isPending={isPending}>
-            {initial ? "Save" : "Create Bookmark"}
-          </FooterPrimaryButton>
-        </>
+      bottom={
+        <EntityActionBar
+          mode={mode}
+          kind="bookmark"
+          id={initial?.id}
+          entityLabel="bookmark"
+          dirty={dirty}
+          isPending={isPending}
+          isSearchable={{
+            value: isSearchable,
+            onChange: (v) => {
+              setIsSearchable(v);
+              markDirty();
+            },
+          }}
+          onSave={() => submit(false)}
+          onSaveAndExit={() => submit(true)}
+          onDelete={handleDelete}
+          onClose={mode === "modal" ? onClose : undefined}
+        />
       }
     >
       <div className="space-y-4 pt-4">
@@ -142,7 +167,10 @@ function BookmarkFormModalInner({
             <input
               type="url"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                markDirty();
+              }}
               placeholder="https://example.com"
               className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
@@ -185,6 +213,7 @@ function BookmarkFormModalInner({
                 onClick={() => {
                   setShowDescription(false);
                   setDescription("");
+                  markDirty();
                 }}
                 className="text-xs text-zinc-500 hover:text-zinc-700"
               >
@@ -194,7 +223,10 @@ function BookmarkFormModalInner({
             <textarea
               rows={3}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                markDirty();
+              }}
               className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </div>
@@ -202,14 +234,15 @@ function BookmarkFormModalInner({
 
         <InlineTagPicker
           selectedTagIds={tagIds}
-          onChange={setTagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
           prefillTagId={prefillTagId}
         />
 
-        <SearchableToggle value={isSearchable} onChange={setIsSearchable} />
-
         <FormError message={error} />
       </div>
-    </EntityModalShell>
+    </EntityEditorShell>
   );
 }

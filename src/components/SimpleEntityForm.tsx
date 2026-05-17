@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@heroui/react";
 import { useState } from "react";
 
 import { TagPicker } from "@/components/TagPicker";
@@ -22,9 +23,10 @@ export type FieldDef =
       required?: boolean;
       placeholder?: string;
     }
-  | { kind: "date"; key: string; label: string; required?: boolean };
+  | { kind: "date"; key: string; label: string; required?: boolean }
+  | { kind: "checkbox"; key: string; label: string };
 
-export type FormValues = Record<string, string>;
+export type FormValues = Record<string, string | boolean>;
 
 type Props = {
   fields: FieldDef[];
@@ -51,14 +53,23 @@ export function SimpleEntityForm({
 }: Props) {
   const [values, setValues] = useState<FormValues>(() => {
     const start: FormValues = {};
-    for (const f of fields) start[f.key] = initial?.[f.key] ?? "";
+    for (const f of fields) {
+      const provided = initial?.[f.key];
+      if (f.kind === "checkbox") {
+        start[f.key] = typeof provided === "boolean" ? provided : false;
+      } else {
+        start[f.key] = typeof provided === "string" ? provided : "";
+      }
+    }
     return start;
   });
   const [tagIds, setTagIds] = useState<number[]>(initialTagIds ?? []);
 
-  const valid = fields.every(
-    (f) => !f.required || values[f.key].trim() !== "",
-  );
+  const valid = fields.every((f) => {
+    if (!("required" in f) || !f.required) return true;
+    const v = values[f.key];
+    return typeof v === "string" && v.trim() !== "";
+  });
 
   return (
     <form
@@ -68,14 +79,33 @@ export function SimpleEntityForm({
         if (!valid) return;
         const cleaned: FormValues = {};
         for (const f of fields) {
-          cleaned[f.key] = values[f.key].trim();
+          const v = values[f.key];
+          cleaned[f.key] = typeof v === "string" ? v.trim() : v;
         }
         await onSubmit(cleaned, tagIds);
       }}
     >
       {fields.map((field) => {
         const id = `field-${field.key}`;
+        if (field.kind === "checkbox") {
+          const checked = values[field.key] === true;
+          return (
+            <Checkbox
+              key={field.key}
+              isSelected={checked}
+              onChange={(next: boolean) =>
+                setValues((v) => ({ ...v, [field.key]: next }))
+              }
+            >
+              {field.label}
+            </Checkbox>
+          );
+        }
         const labelText = field.required ? `${field.label} *` : field.label;
+        const stringValue =
+          typeof values[field.key] === "string"
+            ? (values[field.key] as string)
+            : "";
         if (field.kind === "textarea") {
           return (
             <Textarea
@@ -83,7 +113,7 @@ export function SimpleEntityForm({
               id={id}
               label={labelText}
               placeholder={field.placeholder}
-              value={values[field.key]}
+              value={stringValue}
               onChange={(e) =>
                 setValues((v) => ({ ...v, [field.key]: e.target.value }))
               }
@@ -111,7 +141,7 @@ export function SimpleEntityForm({
                   ? field.placeholder
                   : undefined
             }
-            value={values[field.key]}
+            value={stringValue}
             onChange={(e) =>
               setValues((v) => ({ ...v, [field.key]: e.target.value }))
             }

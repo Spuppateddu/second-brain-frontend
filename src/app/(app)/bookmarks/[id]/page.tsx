@@ -1,84 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
-import { HiTrash } from "react-icons/hi2";
+import { use } from "react";
 
-import { BookmarkForm } from "@/components/BookmarkForm";
-import { EntityListShell } from "@/components/EntityListShell";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import AnchorToggleButton from "@/components/SecondBrain/AnchorToggleButton";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import { FormSection } from "@/components/UI/FormSection";
-import { IconButton } from "@/components/UI/IconButton";
-import {
-  useBookmark,
-  useDeleteBookmark,
-  useUpdateBookmark,
-} from "@/lib/queries/entities";
-import type { Bookmark } from "@/types/entities";
+import BookmarkEditor from "@/components/SecondBrain/forms/BookmarkEditor";
+import { useBookmark } from "@/lib/queries/entities";
 
-function BookmarkEditCard({ bookmark }: { bookmark: Bookmark }) {
-  const router = useRouter();
-  const update = useUpdateBookmark(bookmark.id);
-  const remove = useDeleteBookmark();
-  const [error, setError] = useState<string | null>(null);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <FormSection
-        title="Details"
-        actions={
-          <IconButton
-            size="sm"
-            variant="danger"
-            label="Delete bookmark"
-            disabled={remove.isPending}
-            onClick={async () => {
-              if (!confirm("Delete this bookmark?")) return;
-              try {
-                await remove.mutateAsync(bookmark.id);
-                router.push("/bookmarks");
-              } catch {
-                setError("Failed to delete.");
-              }
-            }}
-          >
-            <HiTrash />
-          </IconButton>
-        }
-      >
-        <BookmarkForm
-          initial={bookmark}
-          submitLabel="Save"
-          isPending={update.isPending}
-          error={error}
-          onCancel={() => router.push("/bookmarks")}
-          onSubmit={async (input) => {
-            setError(null);
-            try {
-              await update.mutateAsync(input);
-              router.push("/bookmarks");
-            } catch (err) {
-              const message =
-                (err as { response?: { data?: { message?: string } } })
-                  ?.response?.data?.message ?? "Failed to save.";
-              setError(message);
-            }
-          }}
-        />
-      </FormSection>
-      <SharableLinksPanel type="bookmark" id={bookmark.id} />
-      <LinkedEntitiesPanel type="bookmark" id={bookmark.id} />
-    </div>
-  );
-}
-
-export default function BookmarkEditPage({
+export default function EditBookmarkPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
   const bookmarkId = Number(id);
 
@@ -88,24 +22,28 @@ export default function BookmarkEditPage({
 
   if (Number.isNaN(bookmarkId)) {
     return (
-      <main className="p-4 sm:p-6 lg:py-10">
-        <p className="text-sm text-danger-600 dark:text-danger-400">
-          Invalid bookmark id.
-        </p>
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid bookmark id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading bookmark…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">
+        Couldn&rsquo;t load this bookmark.
       </main>
     );
   }
 
   return (
-    <EntityListShell
-      title={data ? `Bookmark · ${data.title}` : "Bookmark"}
-      isLoading={isLoading}
-      error={error}
-      headerActions={
-        data ? <AnchorToggleButton type="bookmark" id={data.id} /> : undefined
-      }
-    >
-      {data ? <BookmarkEditCard bookmark={data} key={data.id} /> : null}
-    </EntityListShell>
+    <BookmarkEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="bookmark" id={data.id} />}
+    />
   );
 }

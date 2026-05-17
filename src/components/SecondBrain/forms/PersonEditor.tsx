@@ -2,55 +2,64 @@
 
 import { useState } from "react";
 
-import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
+import EntityActionBar from "@/components/SecondBrain/EntityActionBar";
+import EntityEditorShell from "@/components/SecondBrain/EntityEditorShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
-import SearchableToggle from "@/components/SecondBrain/SearchableToggle";
 import {
-  FooterCloseButton,
-  FooterPrimaryButton,
   FormError,
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
-import { entityFullPagePath } from "@/lib/entity-fetch";
-import { useCreatePerson, useUpdatePerson } from "@/lib/queries/entities";
+import {
+  useCreatePerson,
+  useDeletePerson,
+  useUpdatePerson,
+} from "@/lib/queries/entities";
 import type { Person } from "@/types/entities";
 
-interface PersonFormModalProps {
-  isOpen: boolean;
+interface PersonEditorProps {
+  mode: "modal" | "page";
   initial?: Person | null;
   prefillTagId?: number;
+  belowBody?: React.ReactNode;
   onClose: () => void;
   onSaved?: () => void;
 }
 
-export default function PersonFormModal(props: PersonFormModalProps) {
-  if (!props.isOpen) return null;
+export default function PersonEditor(props: PersonEditorProps) {
   const key = props.initial ? `edit-${props.initial.id}` : "new";
-  return <PersonFormModalInner key={key} {...props} />;
+  return <PersonEditorInner key={key} {...props} />;
 }
 
-function PersonFormModalInner({
+function PersonEditorInner({
+  mode,
   initial,
   prefillTagId,
+  belowBody,
   onClose,
   onSaved,
-}: PersonFormModalProps) {
+}: PersonEditorProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [birthDate, setBirthDate] = useState(initial?.birth_date ?? "");
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
-  const [isSearchable, setIsSearchable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(
+    (initial as Person & { is_searchable?: boolean })?.is_searchable ?? false,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const createMut = useCreatePerson();
   const updateMut = useUpdatePerson(initial?.id ?? 0);
-  const isPending = createMut.isPending || updateMut.isPending;
-  void isSearchable;
+  const deleteMut = useDeletePerson();
+  const isPending =
+    createMut.isPending || updateMut.isPending || deleteMut.isPending;
 
-  const submit = async () => {
+  const markDirty = () => setDirty(true);
+
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!name.trim()) {
       setError("Person name is required.");
@@ -60,13 +69,15 @@ function PersonFormModalInner({
       name: name.trim(),
       description: description.trim() || null,
       birth_date: birthDate || null,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
       if (initial) await updateMut.mutateAsync(payload);
       else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      setDirty(false);
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -78,28 +89,53 @@ function PersonFormModalInner({
     }
   };
 
-  return (
-    <EntityModalShell
-      isOpen
-      onClose={onClose}
-      fullPagePath={
-        initial ? entityFullPagePath("person", initial.id) : undefined
+  const handleDelete = initial
+    ? async () => {
+        try {
+          await deleteMut.mutateAsync(initial.id);
+          onClose();
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } } };
+          setError(err?.response?.data?.message ?? "Failed to delete.");
+        }
       }
-      anchorEntity={initial ? { type: "person", id: initial.id } : undefined}
+    : undefined;
+
+  return (
+    <EntityEditorShell
+      mode={mode}
+      onClose={onClose}
+      belowBody={belowBody}
       titleContent={
         <ModalTitleInput
           value={name}
-          onChange={setName}
+          onChange={(v) => {
+            setName(v);
+            markDirty();
+          }}
           placeholder={initial ? "Person name" : "New Person"}
         />
       }
-      footer={
-        <>
-          <FooterCloseButton onClick={onClose} isPending={isPending} />
-          <FooterPrimaryButton onClick={submit} isPending={isPending}>
-            {initial ? "Save" : "Create Person"}
-          </FooterPrimaryButton>
-        </>
+      bottom={
+        <EntityActionBar
+          mode={mode}
+          kind="person"
+          id={initial?.id}
+          entityLabel="person"
+          dirty={dirty}
+          isPending={isPending}
+          isSearchable={{
+            value: isSearchable,
+            onChange: (v) => {
+              setIsSearchable(v);
+              markDirty();
+            },
+          }}
+          onSave={() => submit(false)}
+          onSaveAndExit={() => submit(true)}
+          onDelete={handleDelete}
+          onClose={mode === "modal" ? onClose : undefined}
+        />
       }
     >
       <div className="space-y-4 pt-4">
@@ -108,7 +144,10 @@ function PersonFormModalInner({
           <input
             type="date"
             value={birthDate ?? ""}
-            onChange={(e) => setBirthDate(e.target.value)}
+            onChange={(e) => {
+              setBirthDate(e.target.value);
+              markDirty();
+            }}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
         </div>
@@ -117,7 +156,10 @@ function PersonFormModalInner({
           <textarea
             rows={4}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              markDirty();
+            }}
             placeholder="Optional"
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -125,14 +167,15 @@ function PersonFormModalInner({
 
         <InlineTagPicker
           selectedTagIds={tagIds}
-          onChange={setTagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
           prefillTagId={prefillTagId}
         />
 
-        <SearchableToggle value={isSearchable} onChange={setIsSearchable} />
-
         <FormError message={error} />
       </div>
-    </EntityModalShell>
+    </EntityEditorShell>
   );
 }

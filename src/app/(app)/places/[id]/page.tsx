@@ -1,53 +1,47 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useDeletePlace,
-  usePlace,
-  useUpdatePlace, type PlaceInput
-} from "@/lib/queries/entities";
-import type { Place } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "name", label: "Name", required: true },
-  { kind: "url", key: "url", label: "URL" },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import PlaceEditor from "@/components/SecondBrain/forms/PlaceEditor";
+import { usePlace } from "@/lib/queries/entities";
 
 export default function EditPlacePage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<Place, PlaceInput>
-      id={Number(id)}
-      title="Place"
-      fields={FIELDS}
-      listHref="/places"
-      toFormValues={(item) => ({
-        name: item.name,
-        url: item.url ?? "",
-        description: item.description ?? ""
-})}
-      withTags
-      anchorEntityType="place"
+  const placeId = Number(id);
 
-      useOne={usePlace}
-      useUpdate={useUpdatePlace}
-      useDelete={useDeletePlace}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="place" id={item.id} />
-          <LinkedEntitiesPanel type="place" id={item.id} />
-        </>
-      )}
+  const { data, isLoading, error } = usePlace(
+    Number.isNaN(placeId) ? null : placeId,
+  );
+
+  if (Number.isNaN(placeId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid place id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading place…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">Couldn&rsquo;t load this place.</main>
+    );
+  }
+
+  return (
+    <PlaceEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="place" id={data.id} />}
     />
   );
 }

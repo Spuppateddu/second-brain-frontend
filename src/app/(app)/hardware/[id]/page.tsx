@@ -1,51 +1,49 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
-import { GenericEditPage } from "@/components/EntityCrudPages";
 import { LinkedEntitiesPanel } from "@/components/LinkedEntitiesPanel";
-import { SharableLinksPanel } from "@/components/SharableLinksPanel";
-import type { FieldDef } from "@/components/SimpleEntityForm";
-import {
-  useDeleteHardware,
-  useHardwareOne,
-  useUpdateHardware, type HardwareInput
-} from "@/lib/queries/entities";
-import type { Hardware } from "@/types/entities";
-
-const FIELDS: FieldDef[] = [
-  { kind: "text", key: "title", label: "Title", required: true },
-  { kind: "textarea", key: "description", label: "Description" },
-];
+import HardwareEditor from "@/components/SecondBrain/forms/HardwareEditor";
+import { useHardwareOne } from "@/lib/queries/entities";
 
 export default function EditHardwarePage({
-  params
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id } = use(params);
-  return (
-    <GenericEditPage<Hardware, HardwareInput>
-      id={Number(id)}
-      title="Hardware"
-      fields={FIELDS}
-      listHref="/hardware"
-      toFormValues={(item) => ({
-        title: item.title,
-        description: item.description ?? ""
-})}
-      withTags
-      anchorEntityType="hardware"
+  const hwId = Number(id);
 
-      useOne={useHardwareOne}
-      useUpdate={useUpdateHardware}
-      useDelete={useDeleteHardware}
-      renderBelow={(item) => (
-        <>
-          <SharableLinksPanel type="hardware" id={item.id} />
-          <LinkedEntitiesPanel type="hardware" id={item.id} />
-        </>
-      )}
+  const { data, isLoading, error } = useHardwareOne(
+    Number.isNaN(hwId) ? null : hwId,
+  );
+
+  if (Number.isNaN(hwId)) {
+    return (
+      <main className="p-6">
+        <p className="text-sm text-danger">Invalid hardware id.</p>
+      </main>
+    );
+  }
+  if (isLoading) {
+    return <main className="p-6 text-sm text-zinc-500">Loading hardware…</main>;
+  }
+  if (error || !data) {
+    return (
+      <main className="p-6 text-sm text-danger">
+        Couldn&rsquo;t load this hardware.
+      </main>
+    );
+  }
+
+  return (
+    <HardwareEditor
+      mode="page"
+      initial={data}
+      onClose={() => router.push("/second-brain")}
+      belowBody={<LinkedEntitiesPanel type="hardware" id={data.id} />}
     />
   );
 }

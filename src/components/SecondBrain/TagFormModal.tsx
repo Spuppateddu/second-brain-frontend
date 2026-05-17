@@ -55,7 +55,7 @@ function TagFormModalInner({
   const [color, setColor] = useState(initial?.color ?? PRESET_COLORS[0]);
   const [description, setDescription] = useState(initial?.description ?? "");
   const [isSearchable, setIsSearchable] = useState(
-    initial?.is_searchable ?? true,
+    initial?.is_searchable ?? false,
   );
 
   useEffect(() => {

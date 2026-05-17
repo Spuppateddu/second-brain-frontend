@@ -2,40 +2,43 @@
 
 import { useState } from "react";
 
-import EntityModalShell from "@/components/SecondBrain/EntityModalShell";
+import EntityActionBar from "@/components/SecondBrain/EntityActionBar";
+import EntityEditorShell from "@/components/SecondBrain/EntityEditorShell";
 import InlineTagPicker from "@/components/SecondBrain/InlineTagPicker";
-import SearchableToggle from "@/components/SecondBrain/SearchableToggle";
 import {
-  FooterCloseButton,
-  FooterPrimaryButton,
   FormError,
   FormFieldLabel,
   ModalTitleInput,
 } from "@/components/SecondBrain/forms/sharedFormBits";
-import { entityFullPagePath } from "@/lib/entity-fetch";
-import { useCreateMegaFile, useUpdateMegaFile } from "@/lib/queries/entities";
+import {
+  useCreateMegaFile,
+  useDeleteMegaFile,
+  useUpdateMegaFile,
+} from "@/lib/queries/entities";
 import type { MegaFile } from "@/types/entities";
 
-interface MegaFileFormModalProps {
-  isOpen: boolean;
+interface MegaFileEditorProps {
+  mode: "modal" | "page";
   initial?: MegaFile | null;
   prefillTagId?: number;
+  belowBody?: React.ReactNode;
   onClose: () => void;
   onSaved?: () => void;
 }
 
-export default function MegaFileFormModal(props: MegaFileFormModalProps) {
-  if (!props.isOpen) return null;
+export default function MegaFileEditor(props: MegaFileEditorProps) {
   const key = props.initial ? `edit-${props.initial.id}` : "new";
-  return <MegaFileFormModalInner key={key} {...props} />;
+  return <MegaFileEditorInner key={key} {...props} />;
 }
 
-function MegaFileFormModalInner({
+function MegaFileEditorInner({
+  mode,
   initial,
   prefillTagId,
+  belowBody,
   onClose,
   onSaved,
-}: MegaFileFormModalProps) {
+}: MegaFileEditorProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [megaLink, setMegaLink] = useState(initial?.mega_link ?? "");
   const [fileType, setFileType] = useState(initial?.file_type ?? "");
@@ -45,15 +48,21 @@ function MegaFileFormModalInner({
   const [tagIds, setTagIds] = useState<number[]>(
     initial?.tags?.map((t) => t.id) ?? [],
   );
-  const [isSearchable, setIsSearchable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(
+    (initial as MegaFile & { is_searchable?: boolean })?.is_searchable ?? false,
+  );
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const createMut = useCreateMegaFile();
   const updateMut = useUpdateMegaFile(initial?.id ?? 0);
-  const isPending = createMut.isPending || updateMut.isPending;
-  void isSearchable;
+  const deleteMut = useDeleteMegaFile();
+  const isPending =
+    createMut.isPending || updateMut.isPending || deleteMut.isPending;
 
-  const submit = async () => {
+  const markDirty = () => setDirty(true);
+
+  const submit = async (closeAfter: boolean) => {
     setError(null);
     if (!title.trim()) {
       setError("File title is required.");
@@ -70,13 +79,15 @@ function MegaFileFormModalInner({
       file_size: fileSize.trim() || null,
       description: description.trim() || null,
       is_folder: isFolder,
+      is_searchable: isSearchable,
       tag_ids: tagIds,
     };
     try {
       if (initial) await updateMut.mutateAsync(payload);
       else await createMut.mutateAsync(payload);
       onSaved?.();
-      onClose();
+      setDirty(false);
+      if (closeAfter) onClose();
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { message?: string } };
@@ -88,30 +99,53 @@ function MegaFileFormModalInner({
     }
   };
 
+  const handleDelete = initial
+    ? async () => {
+        try {
+          await deleteMut.mutateAsync(initial.id);
+          onClose();
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } } };
+          setError(err?.response?.data?.message ?? "Failed to delete.");
+        }
+      }
+    : undefined;
+
   return (
-    <EntityModalShell
-      isOpen
+    <EntityEditorShell
+      mode={mode}
       onClose={onClose}
-      fullPagePath={
-        initial ? entityFullPagePath("mega_file", initial.id) : undefined
-      }
-      anchorEntity={
-        initial ? { type: "mega_file", id: initial.id } : undefined
-      }
+      belowBody={belowBody}
       titleContent={
         <ModalTitleInput
           value={title}
-          onChange={setTitle}
+          onChange={(v) => {
+            setTitle(v);
+            markDirty();
+          }}
           placeholder={initial ? "File title" : "New Mega File"}
         />
       }
-      footer={
-        <>
-          <FooterCloseButton onClick={onClose} isPending={isPending} />
-          <FooterPrimaryButton onClick={submit} isPending={isPending}>
-            {initial ? "Save" : "Create File"}
-          </FooterPrimaryButton>
-        </>
+      bottom={
+        <EntityActionBar
+          mode={mode}
+          kind="mega_file"
+          id={initial?.id}
+          entityLabel="file"
+          dirty={dirty}
+          isPending={isPending}
+          isSearchable={{
+            value: isSearchable,
+            onChange: (v) => {
+              setIsSearchable(v);
+              markDirty();
+            },
+          }}
+          onSave={() => submit(false)}
+          onSaveAndExit={() => submit(true)}
+          onDelete={handleDelete}
+          onClose={mode === "modal" ? onClose : undefined}
+        />
       }
     >
       <div className="space-y-4 pt-4">
@@ -120,7 +154,10 @@ function MegaFileFormModalInner({
           <input
             type="url"
             value={megaLink}
-            onChange={(e) => setMegaLink(e.target.value)}
+            onChange={(e) => {
+              setMegaLink(e.target.value);
+              markDirty();
+            }}
             placeholder="https://mega.nz/..."
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -131,7 +168,10 @@ function MegaFileFormModalInner({
             <input
               type="text"
               value={fileType ?? ""}
-              onChange={(e) => setFileType(e.target.value)}
+              onChange={(e) => {
+                setFileType(e.target.value);
+                markDirty();
+              }}
               placeholder="zip, pdf, mp4..."
               className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
@@ -141,7 +181,10 @@ function MegaFileFormModalInner({
             <input
               type="text"
               value={fileSize ?? ""}
-              onChange={(e) => setFileSize(e.target.value)}
+              onChange={(e) => {
+                setFileSize(e.target.value);
+                markDirty();
+              }}
               placeholder="1.2 GB"
               className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
@@ -151,7 +194,10 @@ function MegaFileFormModalInner({
           <input
             type="checkbox"
             checked={isFolder}
-            onChange={(e) => setIsFolder(e.target.checked)}
+            onChange={(e) => {
+              setIsFolder(e.target.checked);
+              markDirty();
+            }}
           />
           This is a folder
         </label>
@@ -160,21 +206,25 @@ function MegaFileFormModalInner({
           <textarea
             rows={3}
             value={description ?? ""}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              markDirty();
+            }}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
         </div>
 
         <InlineTagPicker
           selectedTagIds={tagIds}
-          onChange={setTagIds}
+          onChange={(ids) => {
+            setTagIds(ids);
+            markDirty();
+          }}
           prefillTagId={prefillTagId}
         />
 
-        <SearchableToggle value={isSearchable} onChange={setIsSearchable} />
-
         <FormError message={error} />
       </div>
-    </EntityModalShell>
+    </EntityEditorShell>
   );
 }
