@@ -141,38 +141,47 @@ function getContrastColor(hex: string): string {
   return luminance > 0.6 ? "#1f2937" : "#ffffff";
 }
 
-type WithLinks = {
-  linkedBookmarks?: { id: number; title?: string; name?: string }[];
-  linkedNotes?: { id: number; title?: string; name?: string }[];
-  linkedPersons?: { id: number; title?: string; name?: string }[];
-  linkedPlaces?: { id: number; title?: string; name?: string }[];
-  linkedRecipes?: { id: number; title?: string; name?: string }[];
-  linkedWishlistItems?: { id: number; title?: string; name?: string }[];
-  linkedBags?: { id: number; title?: string; name?: string }[];
-  linkedHardware?: { id: number; title?: string; name?: string }[];
-  linkedSoftware?: { id: number; title?: string; name?: string }[];
-  linkedTrips?: { id: number; title?: string; name?: string }[];
+type LinkedSummary = { id: number; title?: string; name?: string };
+
+// Laravel serializes Eloquent relations as snake_case by default, so the same
+// list may arrive as `linkedBookmarks` (calendar query, post-normalizer) or
+// `linked_bookmarks` (planning query, raw). Accept both.
+type WithLinks = Record<string, unknown> & {
+  linkedBookmarks?: LinkedSummary[];
+  linkedNotes?: LinkedSummary[];
+  linkedPersons?: LinkedSummary[];
+  linkedPlaces?: LinkedSummary[];
+  linkedRecipes?: LinkedSummary[];
+  linkedWishlistItems?: LinkedSummary[];
+  linkedBags?: LinkedSummary[];
+  linkedHardware?: LinkedSummary[];
+  linkedSoftware?: LinkedSummary[];
+  linkedTrips?: LinkedSummary[];
 };
 
 function getInitialLinkChips(task: WithLinks | null | undefined): LinkChip[] {
   if (!task) return [];
+  const raw = task as Record<string, unknown>;
+  const pick = (camel: string, snake: string): LinkedSummary[] => {
+    const v = raw[camel] ?? raw[snake];
+    return Array.isArray(v) ? (v as LinkedSummary[]) : [];
+  };
   const out: LinkChip[] = [];
-  const push = (type: string, list?: { id: number; title?: string; name?: string }[]) => {
-    if (!list) return;
+  const push = (type: string, list: LinkedSummary[]) => {
     for (const item of list) {
       out.push({ type, id: item.id, label: item.title ?? item.name ?? `#${item.id}` });
     }
   };
-  push("bookmark", task.linkedBookmarks);
-  push("note", task.linkedNotes);
-  push("person", task.linkedPersons);
-  push("place", task.linkedPlaces);
-  push("recipe", task.linkedRecipes);
-  push("wishlist_item", task.linkedWishlistItems);
-  push("bag", task.linkedBags);
-  push("hardware", task.linkedHardware);
-  push("software", task.linkedSoftware);
-  push("trip", task.linkedTrips);
+  push("bookmark", pick("linkedBookmarks", "linked_bookmarks"));
+  push("note", pick("linkedNotes", "linked_notes"));
+  push("person", pick("linkedPersons", "linked_persons"));
+  push("place", pick("linkedPlaces", "linked_places"));
+  push("recipe", pick("linkedRecipes", "linked_recipes"));
+  push("wishlist_item", pick("linkedWishlistItems", "linked_wishlist_items"));
+  push("bag", pick("linkedBags", "linked_bags"));
+  push("hardware", pick("linkedHardware", "linked_hardware"));
+  push("software", pick("linkedSoftware", "linked_software"));
+  push("trip", pick("linkedTrips", "linked_trips"));
   return out;
 }
 
@@ -520,6 +529,9 @@ function TaskModalForm({
           });
         }
         queryClient.invalidateQueries({ queryKey: heavyKeys.planning });
+        // Planning tasks with a task_date show up on the calendar overview
+        // and day view, so refresh those caches when one is saved here too.
+        queryClient.invalidateQueries({ queryKey: ["calendar"] });
       } else if (mode === "outofplan") {
         if (editing && outOfPlanNote) {
           await api.patch(`/out-of-plan-notes/${outOfPlanNote.id}`, {

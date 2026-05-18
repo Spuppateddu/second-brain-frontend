@@ -101,4 +101,41 @@ export type CalendarTask = {
 export type CalendarDayPayload = {
   calendarTasks: CalendarTask[];
   calendarWorkTasks: CalendarTask[];
+  planningTasks: PlanningTaskOnDay[];
+};
+
+// Lightweight shape for planning tasks that appear on a calendar day because
+// their own `task_date` matches. The shape mirrors `PlanningTaskLite` but is
+// declared here to avoid pulling in the `heavy` types from the calendar UI.
+export type PlanningTaskOnDay = {
+  id: number;
+  content: string;
+  description: string | null;
+  is_done: boolean;
+  is_cancelled: boolean;
+  is_blocked: boolean;
+  is_work: boolean;
+  stars: number | null;
+  task_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  start_date: string;
+  end_date: string;
+  planning_type_id: number;
+  order: number;
+  origin_month?: number | null;
+  origin_year?: number | null;
+  planningType?: { id: number; name: string; slug: string } | null;
+  taskCategories: TaskCategory[];
+  subTasks?: { id: number; content: string; is_done: boolean; order: number }[];
+  linkedBookmarks?: LinkableSummary[];
+  linkedNotes?: LinkableSummary[];
+  linkedPersons?: LinkableSummary[];
+  linkedPlaces?: LinkableSummary[];
+  linkedBags?: LinkableSummary[];
+  linkedHardware?: LinkableSummary[];
+  linkedSoftware?: LinkableSummary[];
+  linkedRecipes?: LinkableSummary[];
+  linkedWishlistItems?: LinkableSummary[];
+  linkedTrips?: LinkableSummary[];
 };

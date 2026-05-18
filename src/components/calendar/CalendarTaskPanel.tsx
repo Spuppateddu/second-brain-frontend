@@ -20,10 +20,12 @@ import {
   HiCheckCircle,
   HiClock,
   HiLink,
+  HiLockClosed,
   HiNoSymbol,
   HiPlus,
   HiQueueList,
   HiSparkles,
+  HiStar,
   HiUser,
   HiUsers,
   HiViewColumns,
@@ -42,7 +44,8 @@ import {
   usePillsForDate,
   type PillForDate,
 } from "@/lib/queries/entities";
-import type { CalendarTask } from "@/types/calendar";
+import type { CalendarTask, PlanningTaskOnDay } from "@/types/calendar";
+import type { PlanningTaskLite } from "@/types/heavy";
 
 type StatusFilter = "all" | "not_completed" | "completed" | "cancelled";
 type TypeFilter = "all" | "work" | "personal";
@@ -155,6 +158,7 @@ function TaskCard({
   task,
   date,
   selected,
+  selectable,
   onToggleSelect,
   onDragStart,
   onDragEnd,
@@ -163,6 +167,7 @@ function TaskCard({
   task: CalendarTask;
   date: string;
   selected: boolean;
+  selectable: boolean;
   onToggleSelect: (id: number) => void;
   onDragStart?: (task: CalendarTask) => void;
   onDragEnd?: () => void;
@@ -217,18 +222,20 @@ function TaskCard({
       ].join(" ")}
     >
       <div className="relative flex items-start justify-between gap-2">
-        <div
-          className="flex-shrink-0 pt-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => onToggleSelect(task.id)}
-            aria-label={`Select task ${task.title || task.content || ""}`}
-            className="h-4 w-4 rounded border-secondary-400 text-primary-600 focus:ring-primary-500 cursor-pointer"
-          />
-        </div>
+        {selectable && (
+          <div
+            className="flex-shrink-0 pt-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onToggleSelect(task.id)}
+              aria-label={`Select task ${task.title || task.content || ""}`}
+              className="h-4 w-4 rounded border-secondary-400 text-primary-600 focus:ring-primary-500 cursor-pointer"
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className={["font-medium truncate", titleStyle].join(" ")}>
             {task.title || task.content || ""}
@@ -268,6 +275,112 @@ function TaskCard({
           )}
           {linked && (
             <HiLink className="w-4 h-4 text-info-600 dark:text-info-400" />
+          )}
+        </div>
+      </div>
+      {task.taskCategories && task.taskCategories.length > 0 && (
+        <div className="relative mt-2 flex flex-wrap gap-1">
+          {task.taskCategories.map((cat) => (
+            <span
+              key={cat.id}
+              className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white"
+              style={{ backgroundColor: cat.color }}
+            >
+              {cat.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Planning task card ──────────────────────────────────────────────────────
+
+function PlanningTaskCard({
+  task,
+  onOpen,
+}: {
+  task: PlanningTaskOnDay;
+  onOpen: (task: PlanningTaskOnDay) => void;
+}) {
+  const isWork = task.is_work;
+  const isDone = task.is_done;
+  const isCancelled = task.is_cancelled;
+  const isBlocked = task.is_blocked;
+  const stars = task.stars ?? 0;
+
+  // Cyan tint to distinguish from calendar tasks, with a work-orange accent
+  // when the planning task is flagged as work.
+  const bg = isWork
+    ? "bg-orange-500/15 dark:bg-orange-500/10 border-l-orange-500"
+    : "bg-cyan-500/15 dark:bg-cyan-500/10 border-l-cyan-500";
+
+  const titleStyle = isCancelled
+    ? "line-through text-secondary-400"
+    : isBlocked
+      ? "italic text-secondary-400 dark:text-secondary-500"
+      : isDone
+        ? "line-through text-secondary-400 dark:text-secondary-500"
+        : "text-secondary-800 dark:text-secondary-100";
+
+  return (
+    <div
+      onClick={() => !isBlocked && onOpen(task)}
+      className={[
+        "group relative w-full text-left p-3 rounded-[var(--radius-card)] border-l-4 hover:opacity-90 transition-opacity",
+        isBlocked ? "cursor-not-allowed" : "cursor-pointer",
+        bg,
+      ].join(" ")}
+    >
+      <div className="relative flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className={["font-medium truncate", titleStyle].join(" ")}>
+            {task.content}
+          </p>
+          <div className="mt-1 flex items-center gap-2 text-xs text-secondary-500 dark:text-secondary-400">
+            {task.start_time && (
+              <span className="flex items-center gap-1">
+                <HiClock className="w-3 h-3" />
+                {task.start_time.slice(0, 5)}
+                {task.end_time ? ` - ${task.end_time.slice(0, 5)}` : ""}
+              </span>
+            )}
+            <span className="flex items-center gap-1 uppercase tracking-wide font-semibold text-cyan-700 dark:text-cyan-300">
+              <HiStar className="w-3 h-3" />
+              {task.planningType?.slug === "year" ? "Yearly plan" : "Monthly plan"}
+            </span>
+          </div>
+        </div>
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1 flex-shrink-0"
+        >
+          {stars > 0 && (
+            <span className="inline-flex items-center text-[10px] font-semibold text-yellow-500">
+              {stars}
+              <HiStar className="w-3 h-3" />
+            </span>
+          )}
+          {isDone && (
+            <span className="p-1 rounded-full bg-success-100 dark:bg-success-900/30">
+              <HiCheck className="w-3 h-3 text-success-600 dark:text-success-400" />
+            </span>
+          )}
+          {isCancelled && (
+            <span className="p-1 rounded-full bg-danger-100 dark:bg-danger-900/30">
+              <HiNoSymbol className="w-3 h-3 text-danger-600 dark:text-danger-400" />
+            </span>
+          )}
+          {isBlocked && (
+            <span className="p-1 rounded-full bg-secondary-100 dark:bg-secondary-800">
+              <HiLockClosed className="w-3 h-3 text-secondary-500 dark:text-secondary-400" />
+            </span>
+          )}
+          {isWork ? (
+            <HiBriefcase className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+          ) : (
+            <HiStar className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
           )}
         </div>
       </div>
@@ -394,6 +507,8 @@ export function CalendarTaskPanel({
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTask, setModalTask] = useState<CalendarTask | null>(null);
+  const [planningModalTask, setPlanningModalTask] =
+    useState<PlanningTaskOnDay | null>(null);
   // Selection is scoped to the currently shown `date`. Tracking the date
   // alongside the ids lets us reset the set when the panel switches days
   // without using an effect (see React docs: "Storing information from
@@ -404,11 +519,13 @@ export function CalendarTaskPanel({
   }>({ date, ids: new Set() });
   const selectedIds =
     selectionState.date === date ? selectionState.ids : new Set<number>();
+  const [selectionMode, setSelectionMode] = useState(false);
   const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [movePending, setMovePending] = useState(false);
-  // If the panel switched days, also close the move modal.
-  if (selectionState.date !== date && moveModalOpen) {
-    setMoveModalOpen(false);
+  // If the panel switched days, exit selection mode and close the move modal.
+  if (selectionState.date !== date) {
+    if (moveModalOpen) setMoveModalOpen(false);
+    if (selectionMode) setSelectionMode(false);
   }
 
   function updateSelection(
@@ -433,6 +550,11 @@ export function CalendarTaskPanel({
     updateSelection(() => new Set());
   }
 
+  function exitSelectionMode() {
+    clearSelection();
+    setSelectionMode(false);
+  }
+
   function openCreate() {
     setModalTask(null);
     setModalOpen(true);
@@ -444,6 +566,12 @@ export function CalendarTaskPanel({
   function closeModal() {
     setModalOpen(false);
     setModalTask(null);
+  }
+  function openPlanningEdit(t: PlanningTaskOnDay) {
+    setPlanningModalTask(t);
+  }
+  function closePlanningModal() {
+    setPlanningModalTask(null);
   }
 
   const allTasks = useMemo(
@@ -463,6 +591,20 @@ export function CalendarTaskPanel({
       return true;
     });
   }, [allTasks, statusFilter, typeFilter]);
+
+  const filteredPlanning = useMemo(() => {
+    const list = data?.planningTasks ?? [];
+    return list.filter((t) => {
+      if (statusFilter === "not_completed" && (t.is_done || t.is_cancelled))
+        return false;
+      if (statusFilter === "completed" && (!t.is_done || t.is_cancelled))
+        return false;
+      if (statusFilter === "cancelled" && !t.is_cancelled) return false;
+      if (typeFilter === "work" && !t.is_work) return false;
+      if (typeFilter === "personal" && t.is_work) return false;
+      return true;
+    });
+  }, [data, statusFilter, typeFilter]);
 
   const undoneIds = useMemo(
     () =>
@@ -500,6 +642,7 @@ export function CalendarTaskPanel({
       );
       updateSelection(() => new Set());
       setMoveModalOpen(false);
+      setSelectionMode(false);
     } finally {
       setMovePending(false);
     }
@@ -507,7 +650,13 @@ export function CalendarTaskPanel({
 
   type TimedItem =
     | { kind: "task"; time: string; endTime: string; task: CalendarTask }
-    | { kind: "pill"; time: string; endTime: string; pill: PillForDate };
+    | { kind: "pill"; time: string; endTime: string; pill: PillForDate }
+    | {
+        kind: "planning";
+        time: string;
+        endTime: string;
+        task: PlanningTaskOnDay;
+      };
 
   const timedItems = useMemo<TimedItem[]>(() => {
     const taskItems: TimedItem[] = filtered
@@ -516,6 +665,14 @@ export function CalendarTaskPanel({
         kind: "task",
         time: t.start_time ?? "",
         endTime: t.end_time ?? t.start_time ?? "",
+        task: t,
+      }));
+    const planningItems: TimedItem[] = filteredPlanning
+      .filter((t) => !!t.start_time)
+      .map((t) => ({
+        kind: "planning",
+        time: (t.start_time ?? "").slice(0, 5),
+        endTime: (t.end_time ?? t.start_time ?? "").slice(0, 5),
         task: t,
       }));
     const pillItems: TimedItem[] =
@@ -537,15 +694,23 @@ export function CalendarTaskPanel({
               endTime: p.taking_time.slice(0, 5),
               pill: p,
             }));
-    return [...taskItems, ...pillItems].sort((a, b) =>
+    return [...taskItems, ...planningItems, ...pillItems].sort((a, b) =>
       a.time.localeCompare(b.time),
     );
-  }, [filtered, pills, statusFilter, typeFilter]);
+  }, [filtered, filteredPlanning, pills, statusFilter, typeFilter]);
 
   const withoutTime = useMemo(
     () =>
       filtered.filter((t) => !t.start_time).sort((a, b) => a.order - b.order),
     [filtered],
+  );
+
+  const planningWithoutTime = useMemo(
+    () =>
+      filteredPlanning
+        .filter((t) => !t.start_time)
+        .sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0) || a.order - b.order),
+    [filteredPlanning],
   );
 
   return (
@@ -583,45 +748,57 @@ export function CalendarTaskPanel({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusFilterGroup value={statusFilter} onChange={setStatusFilter} />
           <TypeFilterGroup value={typeFilter} onChange={setTypeFilter} />
+          {selectionMode && (
+            <IconButton
+              size="sm"
+              variant={allUndoneSelected ? "primary" : "ghost"}
+              label={
+                allUndoneSelected
+                  ? "Deselect all undone tasks"
+                  : "Select all undone tasks"
+              }
+              disabled={undoneIds.length === 0}
+              onClick={toggleSelectAllUndone}
+            >
+              <HiCheckCircle />
+            </IconButton>
+          )}
           <IconButton
             size="sm"
-            variant={allUndoneSelected ? "primary" : "ghost"}
+            variant={selectionMode ? "primary" : "ghost"}
             label={
-              allUndoneSelected
-                ? "Deselect all undone tasks"
-                : "Select all undone tasks"
+              !selectionMode
+                ? "Move multiple tasks to another day"
+                : selectedIds.size === 0
+                  ? "Select tasks to move"
+                  : `Move ${selectedIds.size} selected to another day`
             }
-            disabled={undoneIds.length === 0}
-            onClick={toggleSelectAllUndone}
-          >
-            <HiCheckCircle />
-          </IconButton>
-          <IconButton
-            size="sm"
-            variant="primary"
-            label={
-              selectedIds.size === 0
-                ? "Move selected tasks to another day"
-                : `Move ${selectedIds.size} selected to another day`
-            }
-            disabled={selectedIds.size === 0}
-            onClick={() => setMoveModalOpen(true)}
+            disabled={selectionMode && selectedIds.size === 0}
+            onClick={() => {
+              if (!selectionMode) {
+                setSelectionMode(true);
+              } else {
+                setMoveModalOpen(true);
+              }
+            }}
           >
             <HiArrowRightCircle />
           </IconButton>
-          {selectedIds.size > 0 && (
+          {selectionMode && (
             <>
-              <span
-                className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
-                aria-live="polite"
-              >
-                {selectedIds.size} selected
-              </span>
+              {selectedIds.size > 0 && (
+                <span
+                  className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
+                  aria-live="polite"
+                >
+                  {selectedIds.size} selected
+                </span>
+              )}
               <IconButton
                 size="sm"
                 variant="ghost"
-                label="Clear selection"
-                onClick={clearSelection}
+                label="Exit selection mode"
+                onClick={exitSelectionMode}
               >
                 <HiXMark />
               </IconButton>
@@ -640,7 +817,9 @@ export function CalendarTaskPanel({
           <div className="text-sm text-danger-600 dark:text-danger-400">
             Couldn&rsquo;t load this day.
           </div>
-        ) : filtered.length === 0 && timedItems.length === 0 ? (
+        ) : filtered.length === 0 &&
+          timedItems.length === 0 &&
+          planningWithoutTime.length === 0 ? (
           <div className="text-sm text-secondary-500 dark:text-secondary-400">
             No tasks match the filters.
           </div>
@@ -664,7 +843,9 @@ export function CalendarTaskPanel({
                     const key =
                       item.kind === "pill"
                         ? `pill-${item.pill.id}`
-                        : `task-${item.task.id}`;
+                        : item.kind === "planning"
+                          ? `planning-${item.task.id}`
+                          : `task-${item.task.id}`;
                     return (
                       <Fragment key={key}>
                         {gapLabel && (
@@ -675,11 +856,17 @@ export function CalendarTaskPanel({
                         )}
                         {item.kind === "pill" ? (
                           <PillCard pill={item.pill} date={date} />
+                        ) : item.kind === "planning" ? (
+                          <PlanningTaskCard
+                            task={item.task}
+                            onOpen={openPlanningEdit}
+                          />
                         ) : (
                           <TaskCard
                             task={item.task}
                             date={date}
                             selected={selectedIds.has(item.task.id)}
+                            selectable={selectionMode}
                             onToggleSelect={toggleSelect}
                             onDragStart={onDragStartTask}
                             onDragEnd={onDragEndTask}
@@ -692,22 +879,30 @@ export function CalendarTaskPanel({
                 </div>
               </section>
             )}
-            {withoutTime.length > 0 && (
+            {(withoutTime.length > 0 || planningWithoutTime.length > 0) && (
               <section>
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-secondary-500 dark:text-secondary-400">
-                  Without time ({withoutTime.length})
+                  Without time ({withoutTime.length + planningWithoutTime.length})
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {withoutTime.map((task) => (
                     <TaskCard
-                      key={task.id}
+                      key={`task-${task.id}`}
                       task={task}
                       date={date}
                       selected={selectedIds.has(task.id)}
+                      selectable={selectionMode}
                       onToggleSelect={toggleSelect}
                       onDragStart={onDragStartTask}
                       onDragEnd={onDragEndTask}
                       onOpen={openEdit}
+                    />
+                  ))}
+                  {planningWithoutTime.map((task) => (
+                    <PlanningTaskCard
+                      key={`planning-${task.id}`}
+                      task={task}
+                      onOpen={openPlanningEdit}
                     />
                   ))}
                 </div>
@@ -725,6 +920,20 @@ export function CalendarTaskPanel({
         defaultDate={date}
         defaultIsWork={typeFilter === "work"}
       />
+
+      {planningModalTask && (
+        <TaskModal
+          open={!!planningModalTask}
+          onClose={closePlanningModal}
+          mode="planning"
+          planningTask={planningModalTask as unknown as PlanningTaskLite}
+          planningPeriod={{
+            start_date: planningModalTask.start_date,
+            end_date: planningModalTask.end_date,
+            planning_type_id: planningModalTask.planning_type_id,
+          }}
+        />
+      )}
 
       {moveModalOpen && (
         <MoveTasksModal

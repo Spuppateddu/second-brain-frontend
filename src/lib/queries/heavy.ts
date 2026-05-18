@@ -103,6 +103,9 @@ export function useCreatePlanningTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: heavyKeys.planning });
+      // Planning tasks with a task_date appear on the calendar overview
+      // and day view, so the calendar caches need a refresh too.
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
     },
   });
 }
@@ -127,6 +130,7 @@ export function useUpdatePlanningTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: heavyKeys.planning });
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
     },
   });
 }
@@ -139,6 +143,7 @@ export function useDeletePlanningTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: heavyKeys.planning });
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
     },
   });
 }

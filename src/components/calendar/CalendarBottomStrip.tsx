@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  HiArrowRightOnRectangle,
   HiArrowTopRightOnSquare,
   HiArrowsPointingOut,
   HiBookmark,
@@ -28,6 +29,7 @@ import type { IconType } from "react-icons";
 
 import { useEntityModals } from "@/components/SecondBrain/EntityModalsProvider";
 import { TaskModal } from "@/components/calendar/TaskModal";
+import { IconButton } from "@/components/UI/IconButton";
 import {
   entityFullPagePath,
   fetchEntityForEdit,
@@ -45,6 +47,7 @@ import {
 import {
   useAddYoutubeByUrl,
   useCalendarBudgets,
+  useCopyPlanningToCalendar,
   usePlanningUnlinked,
   useRssNews,
   useToggleYoutubeVideoWatchlist,
@@ -429,12 +432,31 @@ function PlanningDueBadge({ due }: { due: DueStatus }) {
 
 function PlanningSection({
   tasks,
+  selectedDate,
 }: {
   tasks: PlanningTaskUnlinked[];
+  selectedDate: string;
 }) {
   const [openTask, setOpenTask] = useState<PlanningTaskUnlinked | null>(null);
+  const copy = useCopyPlanningToCalendar();
 
-  if (tasks.length === 0) {
+  const sortedTasks = useMemo(
+    () =>
+      tasks.slice().sort((a, b) => {
+        const sa = a.stars ?? 0;
+        const sb = b.stars ?? 0;
+        if (sa !== sb) return sb - sa;
+        const da = a.task_date ?? null;
+        const db = b.task_date ?? null;
+        if (da && db && da !== db) return da < db ? -1 : 1;
+        if (da && !db) return -1;
+        if (!da && db) return 1;
+        return a.order - b.order;
+      }),
+    [tasks],
+  );
+
+  if (sortedTasks.length === 0) {
     return (
       <p className="text-sm text-secondary-500">No unlinked planning tasks.</p>
     );
@@ -453,16 +475,23 @@ function PlanningSection({
       : undefined;
 
   return (
-    <div className="grid grid-cols-[max-content_1fr] gap-y-2">
-      {tasks.map((task) => {
+    <div className="grid grid-cols-[max-content_1fr_max-content] gap-y-2">
+      {sortedTasks.map((task) => {
         const categories = task.taskCategories ?? task.task_categories ?? [];
         const due = describeDueDate(task.task_date);
         return (
-          <button
-            type="button"
+          <div
             key={task.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setOpenTask(task)}
-            className="col-span-2 grid grid-cols-subgrid items-center gap-x-3 rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setOpenTask(task);
+              }
+            }}
+            className="col-span-3 grid grid-cols-subgrid items-center gap-x-3 cursor-pointer rounded-lg border border-secondary-200 bg-white p-3 text-left transition-shadow duration-200 hover:shadow-md dark:border-secondary-600 dark:bg-secondary-700"
           >
             <div className="whitespace-nowrap text-xs font-bold text-yellow-500 dark:text-yellow-400">
               {task.stars ? "★".repeat(task.stars) : ""}
@@ -485,7 +514,22 @@ function PlanningSection({
               ))}
               {due && <PlanningDueBadge due={due} />}
             </div>
-          </button>
+            <div className="flex shrink-0 items-center">
+              <IconButton
+                size="xs"
+                variant="ghost"
+                label={`Copy to calendar (${selectedDate})`}
+                loading={copy.isPending}
+                disabled={copy.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copy.mutate({ taskId: task.id, taskDate: selectedDate });
+                }}
+              >
+                <HiArrowRightOnRectangle />
+              </IconButton>
+            </div>
+          </div>
         );
       })}
 
@@ -1055,7 +1099,9 @@ export function CalendarBottomStrip({
       case "media":
         return <MediaSection items={watchlistMedia} />;
       case "planning":
-        return <PlanningSection tasks={planningTasks} />;
+        return (
+          <PlanningSection tasks={planningTasks} selectedDate={selectedDate} />
+        );
       case "youtube":
         return <YouTubeSection videos={youtubeVideos} />;
       case "twitch":

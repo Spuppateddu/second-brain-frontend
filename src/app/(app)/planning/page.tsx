@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
+  HiArrowRightOnRectangle,
   HiCalendar,
   HiCheck,
   HiChevronDown,
@@ -20,7 +21,7 @@ import { ClosePlanningPeriodDialog } from "@/components/planning/ClosePlanningPe
 import { Badge } from "@/components/UI/Badge";
 import { Button } from "@/components/UI/Button";
 import { IconButton } from "@/components/UI/IconButton";
-import { usePlanning } from "@/lib/queries/heavy";
+import { usePlanning, useCopyPlanningToCalendar } from "@/lib/queries/heavy";
 import { describeDueDate, type DueStatus } from "@/lib/utils/dueDate";
 import type { PlanningPeriod, PlanningTaskLite } from "@/types/heavy";
 
@@ -206,6 +207,42 @@ function StatusFilterToggle({
   );
 }
 
+function todayString(): string {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function CopyToCalendarIconButton({
+  taskId,
+  taskDate,
+  disabled,
+}: {
+  taskId: number;
+  taskDate: string;
+  disabled?: boolean;
+}) {
+  const copy = useCopyPlanningToCalendar();
+  return (
+    <IconButton
+      size="xs"
+      variant="ghost"
+      label={`Copy to calendar (${taskDate})`}
+      loading={copy.isPending}
+      disabled={disabled || copy.isPending}
+      onClick={(e) => {
+        e.stopPropagation();
+        copy.mutate({ taskId, taskDate });
+      }}
+    >
+      <HiArrowRightOnRectangle />
+    </IconButton>
+  );
+}
+
 function TaskRow({
   task,
   onOpen,
@@ -244,18 +281,26 @@ function TaskRow({
         : "text-secondary-800 dark:text-secondary-100";
 
   const interactive = !isBlocked;
+  const canCopy = interactive && !isDone && !isCancelled;
 
   return (
-    <button
-      type="button"
+    <div
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
       onClick={() => interactive && onOpen(task)}
-      disabled={!interactive}
+      onKeyDown={(e) => {
+        if (!interactive) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(task);
+        }
+      }}
       aria-disabled={!interactive}
       title={isBlocked ? "Closed — carried forward to another period" : undefined}
       className={[
         "group flex w-full items-start gap-3 rounded-[var(--radius-control)] border border-secondary-200 border-l-4 px-3 py-1.5 text-left transition-colors dark:border-secondary-800",
         interactive
-          ? "hover:bg-secondary-50 dark:hover:bg-secondary-900/60"
+          ? "cursor-pointer hover:bg-secondary-50 dark:hover:bg-secondary-900/60"
           : "cursor-not-allowed",
         borderColor,
         bgColor,
@@ -313,8 +358,14 @@ function TaskRow({
             {c.name}
           </span>
         ))}
+        {canCopy && (
+          <CopyToCalendarIconButton
+            taskId={task.id}
+            taskDate={todayString()}
+          />
+        )}
       </div>
-    </button>
+    </div>
   );
 }
 

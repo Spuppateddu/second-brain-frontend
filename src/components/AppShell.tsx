@@ -24,6 +24,7 @@ import {
   HiMagnifyingGlass,
   HiNewspaper,
   HiPlayCircle,
+  HiPlus,
   HiTag,
   HiVideoCamera,
   HiXMark,
@@ -31,6 +32,7 @@ import {
 
 import ApplicationLogo from "@/components/ApplicationLogo";
 import { FastNoteModal } from "@/components/FastNoteModal";
+import { FastTaskModal } from "@/components/FastTaskModal";
 import Footer from "@/components/Footer";
 import { PushNotificationBell } from "@/components/PushNotificationBell";
 import { SpotlightSearch } from "@/components/SpotlightSearch";
@@ -270,6 +272,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [fastNoteOpen, setFastNoteOpen] = useState(false);
+  const [fastTaskOpen, setFastTaskOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
 
   useEffect(() => {
@@ -300,6 +303,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-label="Open Fast Note"
             >
               <ApplicationLogo className="block h-12 w-auto" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFastTaskOpen(true)}
+              aria-label="Add quick task for today"
+              className="ms-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm transition hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              <HiPlus className="h-4 w-4" />
             </button>
 
             <div className="hidden lg:ms-10 lg:flex lg:items-center lg:gap-7">
@@ -535,6 +547,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <FastNoteModal
         open={fastNoteOpen}
         onClose={() => setFastNoteOpen(false)}
+      />
+      <FastTaskModal
+        open={fastTaskOpen}
+        onClose={() => setFastTaskOpen(false)}
       />
     </div>
   );

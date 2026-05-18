@@ -6,6 +6,7 @@ import type {
   CalendarOverview,
   CalendarSubTask,
   CalendarTask,
+  PlanningTaskOnDay,
 } from "@/types/calendar";
 
 export const calendarKeys = {
@@ -150,14 +151,74 @@ function normalizeTask(raw: Record<string, unknown>): CalendarTask {
   } as CalendarTask;
 }
 
+function normalizePlanningTaskOnDay(
+  raw: Record<string, unknown>,
+): PlanningTaskOnDay {
+  const pt = pickObjectRelation(raw, "planning_type", "planningType");
+  const subTasksRaw = pickRelation<Record<string, unknown>>(
+    raw,
+    "sub_tasks",
+    "subTasks",
+  );
+  return {
+    id: raw.id as number,
+    content: (raw.content as string) ?? "",
+    description: (raw.description as string | null) ?? null,
+    is_done: !!raw.is_done,
+    is_cancelled: !!raw.is_cancelled,
+    is_blocked: !!raw.is_blocked,
+    is_work: !!raw.is_work,
+    stars: (raw.stars as number | null) ?? null,
+    task_date: (raw.task_date as string | null) ?? null,
+    start_time: (raw.start_time as string | null) ?? null,
+    end_time: (raw.end_time as string | null) ?? null,
+    start_date: (raw.start_date as string) ?? "",
+    end_date: (raw.end_date as string) ?? "",
+    planning_type_id: (raw.planning_type_id as number) ?? 0,
+    order: (raw.order as number) ?? 0,
+    origin_month: (raw.origin_month as number | null) ?? null,
+    origin_year: (raw.origin_year as number | null) ?? null,
+    planningType: pt
+      ? {
+          id: pt.id as number,
+          name: (pt.name as string) ?? "",
+          slug: (pt.slug as string) ?? "",
+        }
+      : null,
+    taskCategories: pickRelation(raw, "task_categories", "taskCategories"),
+    subTasks: subTasksRaw.map((s) => ({
+      id: s.id as number,
+      content: (s.content as string) ?? "",
+      is_done: !!s.is_done,
+      order: (s.order as number) ?? 0,
+    })),
+    linkedBookmarks: pickRelation(raw, "linked_bookmarks", "linkedBookmarks"),
+    linkedNotes: pickRelation(raw, "linked_notes", "linkedNotes"),
+    linkedPersons: pickRelation(raw, "linked_persons", "linkedPersons"),
+    linkedPlaces: pickRelation(raw, "linked_places", "linkedPlaces"),
+    linkedBags: pickRelation(raw, "linked_bags", "linkedBags"),
+    linkedHardware: pickRelation(raw, "linked_hardware", "linkedHardware"),
+    linkedSoftware: pickRelation(raw, "linked_software", "linkedSoftware"),
+    linkedRecipes: pickRelation(raw, "linked_recipes", "linkedRecipes"),
+    linkedWishlistItems: pickRelation(
+      raw,
+      "linked_wishlist_items",
+      "linkedWishlistItems",
+    ),
+    linkedTrips: pickRelation(raw, "linked_trips", "linkedTrips"),
+  };
+}
+
 function normalizeDayPayload(
   raw: Record<string, unknown>,
 ): CalendarDayPayload {
   const personal = (raw.calendarTasks as Record<string, unknown>[]) ?? [];
   const work = (raw.calendarWorkTasks as Record<string, unknown>[]) ?? [];
+  const planning = (raw.planningTasks as Record<string, unknown>[]) ?? [];
   return {
     calendarTasks: personal.map(normalizeTask),
     calendarWorkTasks: work.map(normalizeTask),
+    planningTasks: planning.map(normalizePlanningTaskOnDay),
   };
 }
 
@@ -323,6 +384,7 @@ export function useCreateCalendarSubTask(date: string) {
                 : t,
             );
           return {
+            ...prev,
             calendarTasks: insert(prev.calendarTasks),
             calendarWorkTasks: insert(prev.calendarWorkTasks),
           };
@@ -358,6 +420,7 @@ export function useUpdateCalendarSubTask(date: string) {
               ),
             }));
           return {
+            ...prev,
             calendarTasks: apply(prev.calendarTasks),
             calendarWorkTasks: apply(prev.calendarWorkTasks),
           };
@@ -385,6 +448,7 @@ export function useDeleteCalendarSubTask(date: string) {
               subTasks: (t.subTasks ?? []).filter((s) => s.id !== id),
             }));
           return {
+            ...prev,
             calendarTasks: apply(prev.calendarTasks),
             calendarWorkTasks: apply(prev.calendarWorkTasks),
           };
