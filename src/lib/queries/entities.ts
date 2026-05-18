@@ -51,12 +51,14 @@ export type TaskCategory = {
   user_id?: number;
   name: string;
   color: string;
+  keywords?: string[] | null;
   order?: number;
 };
 
 export type TaskCategoryInput = {
   name: string;
   color: string;
+  keywords?: string[];
 };
 
 export function useTaskCategories() {

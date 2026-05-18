@@ -1,13 +1,23 @@
 "use client";
 
-import { Fragment, useMemo, useState, type DragEvent } from "react";
 import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+} from "react";
+import {
+  HiArrowRightCircle,
   HiBars3,
   HiBeaker,
   HiBriefcase,
   HiCake,
   HiCalendar,
+  HiCalendarDays,
   HiCheck,
+  HiCheckCircle,
   HiClock,
   HiLink,
   HiNoSymbol,
@@ -17,12 +27,15 @@ import {
   HiUser,
   HiUsers,
   HiViewColumns,
+  HiXMark,
 } from "react-icons/hi2";
 
 import { TaskModal } from "@/components/calendar/TaskModal";
 import { WaterTracker } from "@/components/calendar/WaterTracker";
+import { Button } from "@/components/UI/Button";
 import { IconButton } from "@/components/UI/IconButton";
-import { useCalendarDay } from "@/lib/queries/calendar";
+import { Input } from "@/components/UI/Input";
+import { useCalendarDay, useMoveCalendarTask } from "@/lib/queries/calendar";
 import {
   useDismissPill,
   useMarkPillTaken,
@@ -141,12 +154,16 @@ function PillCard({ pill, date }: { pill: PillForDate; date: string }) {
 function TaskCard({
   task,
   date,
+  selected,
+  onToggleSelect,
   onDragStart,
   onDragEnd,
   onOpen,
 }: {
   task: CalendarTask;
   date: string;
+  selected: boolean;
+  onToggleSelect: (id: number) => void;
   onDragStart?: (task: CalendarTask) => void;
   onDragEnd?: () => void;
   onOpen: (task: CalendarTask) => void;
@@ -196,9 +213,22 @@ function TaskCard({
       className={[
         "group relative w-full text-left p-3 rounded-[var(--radius-card)] border-l-4 hover:opacity-90 transition-opacity cursor-pointer",
         bg,
+        selected ? "ring-2 ring-primary-500" : "",
       ].join(" ")}
     >
       <div className="relative flex items-start justify-between gap-2">
+        <div
+          className="flex-shrink-0 pt-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect(task.id)}
+            aria-label={`Select task ${task.title || task.content || ""}`}
+            className="h-4 w-4 rounded border-secondary-400 text-primary-600 focus:ring-primary-500 cursor-pointer"
+          />
+        </div>
         <div className="flex-1 min-w-0">
           <p className={["font-medium truncate", titleStyle].join(" ")}>
             {task.title || task.content || ""}
@@ -358,11 +388,50 @@ export function CalendarTaskPanel({
 }: CalendarTaskPanelProps) {
   const { data, isLoading, error } = useCalendarDay(date);
   const { data: pills } = usePillsForDate(date);
+  const move = useMoveCalendarTask();
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("not_completed");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTask, setModalTask] = useState<CalendarTask | null>(null);
+  // Selection is scoped to the currently shown `date`. Tracking the date
+  // alongside the ids lets us reset the set when the panel switches days
+  // without using an effect (see React docs: "Storing information from
+  // previous renders").
+  const [selectionState, setSelectionState] = useState<{
+    date: string;
+    ids: Set<number>;
+  }>({ date, ids: new Set() });
+  const selectedIds =
+    selectionState.date === date ? selectionState.ids : new Set<number>();
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [movePending, setMovePending] = useState(false);
+  // If the panel switched days, also close the move modal.
+  if (selectionState.date !== date && moveModalOpen) {
+    setMoveModalOpen(false);
+  }
+
+  function updateSelection(
+    updater: (prev: Set<number>) => Set<number>,
+  ) {
+    setSelectionState((prev) => {
+      const base = prev.date === date ? prev.ids : new Set<number>();
+      return { date, ids: updater(base) };
+    });
+  }
+
+  function toggleSelect(id: number) {
+    updateSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    updateSelection(() => new Set());
+  }
 
   function openCreate() {
     setModalTask(null);
@@ -394,6 +463,47 @@ export function CalendarTaskPanel({
       return true;
     });
   }, [allTasks, statusFilter, typeFilter]);
+
+  const undoneIds = useMemo(
+    () =>
+      allTasks
+        .filter((t) => !t.is_done && !t.is_cancelled)
+        .map((t) => t.id),
+    [allTasks],
+  );
+  const allUndoneSelected =
+    undoneIds.length > 0 && undoneIds.every((id) => selectedIds.has(id));
+
+  function toggleSelectAllUndone() {
+    updateSelection((prev) => {
+      const next = new Set(prev);
+      if (allUndoneSelected) {
+        undoneIds.forEach((id) => next.delete(id));
+      } else {
+        undoneIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
+  async function moveSelectedTo(targetDate: string) {
+    if (selectedIds.size === 0 || targetDate === date) {
+      setMoveModalOpen(false);
+      return;
+    }
+    setMovePending(true);
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) =>
+          move.mutateAsync({ id, task_date: targetDate }),
+        ),
+      );
+      updateSelection(() => new Set());
+      setMoveModalOpen(false);
+    } finally {
+      setMovePending(false);
+    }
+  }
 
   type TimedItem =
     | { kind: "task"; time: string; endTime: string; task: CalendarTask }
@@ -473,6 +583,50 @@ export function CalendarTaskPanel({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusFilterGroup value={statusFilter} onChange={setStatusFilter} />
           <TypeFilterGroup value={typeFilter} onChange={setTypeFilter} />
+          <IconButton
+            size="sm"
+            variant={allUndoneSelected ? "primary" : "ghost"}
+            label={
+              allUndoneSelected
+                ? "Deselect all undone tasks"
+                : "Select all undone tasks"
+            }
+            disabled={undoneIds.length === 0}
+            onClick={toggleSelectAllUndone}
+          >
+            <HiCheckCircle />
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="primary"
+            label={
+              selectedIds.size === 0
+                ? "Move selected tasks to another day"
+                : `Move ${selectedIds.size} selected to another day`
+            }
+            disabled={selectedIds.size === 0}
+            onClick={() => setMoveModalOpen(true)}
+          >
+            <HiArrowRightCircle />
+          </IconButton>
+          {selectedIds.size > 0 && (
+            <>
+              <span
+                className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
+                aria-live="polite"
+              >
+                {selectedIds.size} selected
+              </span>
+              <IconButton
+                size="sm"
+                variant="ghost"
+                label="Clear selection"
+                onClick={clearSelection}
+              >
+                <HiXMark />
+              </IconButton>
+            </>
+          )}
         </div>
       </div>
 
@@ -525,6 +679,8 @@ export function CalendarTaskPanel({
                           <TaskCard
                             task={item.task}
                             date={date}
+                            selected={selectedIds.has(item.task.id)}
+                            onToggleSelect={toggleSelect}
                             onDragStart={onDragStartTask}
                             onDragEnd={onDragEndTask}
                             onOpen={openEdit}
@@ -547,6 +703,8 @@ export function CalendarTaskPanel({
                       key={task.id}
                       task={task}
                       date={date}
+                      selected={selectedIds.has(task.id)}
+                      onToggleSelect={toggleSelect}
                       onDragStart={onDragStartTask}
                       onDragEnd={onDragEndTask}
                       onOpen={openEdit}
@@ -567,6 +725,117 @@ export function CalendarTaskPanel({
         defaultDate={date}
         defaultIsWork={typeFilter === "work"}
       />
+
+      {moveModalOpen && (
+        <MoveTasksModal
+          count={selectedIds.size}
+          fromDate={date}
+          pending={movePending}
+          onCancel={() => setMoveModalOpen(false)}
+          onConfirm={moveSelectedTo}
+        />
+      )}
+    </div>
+  );
+}
+
+type MoveTasksModalProps = {
+  count: number;
+  fromDate: string;
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: (date: string) => void;
+};
+
+function MoveTasksModal({
+  count,
+  fromDate,
+  pending,
+  onCancel,
+  onConfirm,
+}: MoveTasksModalProps) {
+  const [value, setValue] = useState(fromDate);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !pending) {
+        e.preventDefault();
+        onCancel();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel, pending]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value === fromDate) return;
+    onConfirm(value);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/40 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="calendar-move-tasks-title"
+      onClick={pending ? undefined : onCancel}
+    >
+      <div
+        className="w-full max-w-sm overflow-hidden rounded-[var(--radius-card)] border border-secondary-200 bg-white shadow-[var(--shadow-card)] dark:border-secondary-800 dark:bg-secondary-950"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 border-b border-secondary-200 px-5 py-3 dark:border-secondary-800">
+          <HiCalendarDays className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+          <h3
+            id="calendar-move-tasks-title"
+            className="text-base font-semibold text-secondary-900 dark:text-secondary-100"
+          >
+            Move {count} task{count === 1 ? "" : "s"} to…
+          </h3>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4 p-5">
+          <Input
+            ref={inputRef}
+            id="calendar-move-tasks-date"
+            label="Target date"
+            type="date"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            fullWidth
+            disabled={pending}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onCancel}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={pending}
+              disabled={
+                pending ||
+                !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+                value === fromDate
+              }
+            >
+              Move tasks
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

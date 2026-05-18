@@ -51,6 +51,7 @@ import {
   useSecondBrainSearch,
   useTaskCategories,
 } from "@/lib/queries/entities";
+import { inferCategoryFromTitle } from "@/lib/utils/inferCategory";
 import type {
   CalendarSubTask,
   CalendarTask,
@@ -295,6 +296,17 @@ function TaskModalForm({
   const [categoryIds, setCategoryIds] = useState<number[]>(
     initialCategories.map((c) => c.id),
   );
+  // In create mode: false → silent auto-suggest is live.
+  // In edit mode WITH existing category: true → locked, no suggesting, no prompt.
+  // In edit mode WITHOUT existing category: false → one-shot prompt may appear.
+  // Becomes sticky-true on any manual select OR clear, so the user is never
+  // overridden by further title changes in this session.
+  const [manuallyTouchedCategory, setManuallyTouchedCategory] = useState(
+    editing && initialCategories.length > 0,
+  );
+  const [editPromptCategory, setEditPromptCategory] =
+    useState<TaskCategory | null>(null);
+  const [editPromptResolved, setEditPromptResolved] = useState(false);
   const [linkChips, setLinkChips] = useState<LinkChip[]>(() =>
     getInitialLinkChips(
       isPlanning ? planningTask : isOutOfPlan ? outOfPlanNote : task,
@@ -347,10 +359,65 @@ function TaskModalForm({
       .filter((c): c is TaskCategory => !!c);
   }, [initialCategories, allCategories, categoryIds]);
 
-  function toggleCategory(c: TaskCategory) {
-    setCategoryIds((prev) =>
-      prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id],
-    );
+  // Single-select. Clicking the active category clears it.
+  // Both branches mark the category as manually touched so neither create-mode
+  // auto-suggest nor the edit-mode one-shot prompt will re-introduce a value.
+  function selectCategory(c: TaskCategory) {
+    setCategoryIds((prev) => (prev[0] === c.id ? [] : [c.id]));
+    setManuallyTouchedCategory(true);
+    setEditPromptResolved(true);
+    setEditPromptCategory(null);
+    setShowCategoryPicker(false);
+  }
+
+  function clearCategory() {
+    setCategoryIds([]);
+    setManuallyTouchedCategory(true);
+    setEditPromptResolved(true);
+    setEditPromptCategory(null);
+  }
+
+  // Create-mode: silent auto-select, debounced.
+  useEffect(() => {
+    if (editing) return;
+    if (manuallyTouchedCategory) return;
+    if (allCategories.length === 0) return;
+    const handle = setTimeout(() => {
+      const match = inferCategoryFromTitle(title, allCategories);
+      setCategoryIds(match ? [match.id] : []);
+    }, 600);
+    return () => clearTimeout(handle);
+  }, [editing, title, manuallyTouchedCategory, allCategories]);
+
+  // Edit-mode: only when the task has no category, propose one once.
+  useEffect(() => {
+    if (!editing) return;
+    if (manuallyTouchedCategory) return;
+    if (editPromptResolved) return;
+    if (allCategories.length === 0) return;
+    const handle = setTimeout(() => {
+      setEditPromptCategory(inferCategoryFromTitle(title, allCategories));
+    }, 600);
+    return () => clearTimeout(handle);
+  }, [
+    editing,
+    title,
+    manuallyTouchedCategory,
+    editPromptResolved,
+    allCategories,
+  ]);
+
+  function applyEditPrompt() {
+    if (!editPromptCategory) return;
+    setCategoryIds([editPromptCategory.id]);
+    setManuallyTouchedCategory(true);
+    setEditPromptResolved(true);
+    setEditPromptCategory(null);
+  }
+
+  function dismissEditPrompt() {
+    setEditPromptResolved(true);
+    setEditPromptCategory(null);
   }
 
   function buildLinkedEntitiesPayload(): LinkedEntityRef[] {
@@ -750,11 +817,7 @@ function TaskModalForm({
                     {c.name}
                     <button
                       type="button"
-                      onClick={() =>
-                        setCategoryIds((prev) =>
-                          prev.filter((id) => id !== c.id),
-                        )
-                      }
+                      onClick={clearCategory}
                       disabled={formLocked}
                       title="Remove category"
                       className="rounded-full p-0.5 hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
@@ -789,7 +852,7 @@ function TaskModalForm({
                           <li key={c.id}>
                             <button
                               type="button"
-                              onClick={() => toggleCategory(c)}
+                              onClick={() => selectCategory(c)}
                               className={[
                                 "flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-sm",
                                 selected
@@ -815,6 +878,42 @@ function TaskModalForm({
               )}
             </div>
           </div>
+
+          {editing && editPromptCategory && !editPromptResolved && (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-info-200 bg-info-50 px-3 py-2 text-sm dark:border-info-900 dark:bg-info-900/20">
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: editPromptCategory.color }}
+                />
+                <span className="truncate text-info-800 dark:text-info-200">
+                  Suggested category:{" "}
+                  <strong className="font-semibold">
+                    {editPromptCategory.name}
+                  </strong>
+                </span>
+              </div>
+              <div className="flex flex-shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={applyEditPrompt}
+                  disabled={formLocked}
+                  title="Apply suggestion"
+                  className="rounded-md border border-info-300 bg-white px-2 py-1 text-xs font-medium text-info-700 hover:bg-info-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-info-700 dark:bg-secondary-950 dark:text-info-200"
+                >
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissEditPrompt}
+                  title="Dismiss suggestion"
+                  className="rounded-full p-1 text-info-500 hover:bg-info-100 dark:hover:bg-info-900/40"
+                >
+                  <HiXMark className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <section>

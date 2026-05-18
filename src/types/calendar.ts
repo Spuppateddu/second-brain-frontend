@@ -34,6 +34,7 @@ export type TaskCategory = {
   id: number;
   name: string;
   color: string;
+  keywords?: string[] | null;
 };
 
 export type CalendarSubTask = {

@@ -54,6 +54,7 @@ export default function TaskCategoriesPage() {
   const [editing, setEditing] = useState<TaskCategory | null>(null);
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [keywordsText, setKeywordsText] = useState("");
   const [formError, setFormError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -70,6 +71,7 @@ export default function TaskCategoriesPage() {
     setEditing(null);
     setName("");
     setColor(PRESET_COLORS[0]);
+    setKeywordsText("");
     setFormError("");
   }
 
@@ -77,6 +79,7 @@ export default function TaskCategoriesPage() {
     setEditing(null);
     setName("");
     setColor(PRESET_COLORS[0]);
+    setKeywordsText("");
     setFormError("");
     setShowForm(true);
   }
@@ -85,6 +88,7 @@ export default function TaskCategoriesPage() {
     setEditing(cat);
     setName(cat.name);
     setColor(cat.color);
+    setKeywordsText((cat.keywords ?? []).join(", "));
     setFormError("");
     setShowForm(true);
   }
@@ -96,14 +100,22 @@ export default function TaskCategoriesPage() {
       return;
     }
     setFormError("");
+    const keywords = Array.from(
+      new Set(
+        keywordsText
+          .split(",")
+          .map((k) => k.trim().toLowerCase())
+          .filter((k) => k.length > 0),
+      ),
+    );
     try {
       if (editing) {
         await update.mutateAsync({
           id: editing.id,
-          payload: { name: trimmed, color },
+          payload: { name: trimmed, color, keywords },
         });
       } else {
-        await create.mutateAsync({ name: trimmed, color });
+        await create.mutateAsync({ name: trimmed, color, keywords });
       }
       resetForm();
     } catch (err) {
@@ -196,6 +208,19 @@ export default function TaskCategoriesPage() {
                 ))}
               </div>
             </div>
+
+            <Input
+              label="Keywords"
+              type="text"
+              value={keywordsText}
+              onChange={(e) => setKeywordsText(e.target.value)}
+              placeholder="e.g. laravel, react, php"
+              helperText="Comma-separated. New task titles are auto-matched against these words to suggest this category."
+              fullWidth
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isSubmitting) void handleSubmit();
+              }}
+            />
 
             {formError ? (
               <p className="text-sm text-danger-600 dark:text-danger-400">
