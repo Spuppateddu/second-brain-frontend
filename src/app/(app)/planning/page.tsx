@@ -21,6 +21,7 @@ import { Badge } from "@/components/UI/Badge";
 import { Button } from "@/components/UI/Button";
 import { IconButton } from "@/components/UI/IconButton";
 import { usePlanning } from "@/lib/queries/heavy";
+import { describeDueDate, type DueStatus } from "@/lib/utils/dueDate";
 import type { PlanningPeriod, PlanningTaskLite } from "@/types/heavy";
 
 type StatusFilter = "all" | "incomplete" | "completed";
@@ -84,6 +85,33 @@ function getContrastColor(hex: string): string {
   const b = parseInt(m.slice(4, 6), 16);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? "#1f2937" : "#ffffff";
+}
+
+function DueBadge({ due }: { due: DueStatus }) {
+  const tone: Record<DueStatus["tone"], string> = {
+    overdue:
+      "bg-danger-50 text-danger-700 ring-danger-200 dark:bg-danger-900/30 dark:text-danger-300 dark:ring-danger-800",
+    today:
+      "bg-warning-50 text-warning-700 ring-warning-200 dark:bg-warning-900/30 dark:text-warning-300 dark:ring-warning-800",
+    soon:
+      "bg-info-50 text-info-700 ring-info-200 dark:bg-info-900/30 dark:text-info-300 dark:ring-info-800",
+    upcoming:
+      "bg-secondary-100 text-secondary-700 ring-secondary-200 dark:bg-secondary-800 dark:text-secondary-200 dark:ring-secondary-700",
+  };
+  return (
+    <span
+      className={[
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1",
+        tone[due.tone],
+      ].join(" ")}
+      title={due.diffLabel}
+    >
+      <HiCalendar className="h-3 w-3" />
+      <span>{due.dateLabel}</span>
+      <span className="opacity-70">·</span>
+      <span>{due.diffLabel}</span>
+    </span>
+  );
 }
 
 function StarRow({ stars, max = 5 }: { stars: number; max?: number }) {
@@ -194,6 +222,7 @@ function TaskRow({
   const linkedCalendarTasks =
     task.linkedCalendarTasks ?? task.linked_calendar_tasks ?? [];
   const categories = task.taskCategories ?? task.task_categories ?? [];
+  const due = describeDueDate(task.task_date);
 
   const borderColor = isBlocked
     ? "border-l-secondary-400"
@@ -265,6 +294,9 @@ function TaskRow({
               {formatCalendarTaskDates(linkedCalendarTasks) ??
                 linkedCalendarTasks.length}
             </Badge>
+          )}
+          {due && !isDone && !isCancelled && !isBlocked && (
+            <DueBadge due={due} />
           )}
         </div>
       </div>
@@ -365,6 +397,13 @@ function PeriodCard({
         const sa = a.stars ?? 0;
         const sb = b.stars ?? 0;
         if (sa !== sb) return sb - sa;
+        // Within the same star bucket, tasks with the nearest due date come
+        // first; tasks without a due date go to the bottom.
+        const da = a.task_date ?? null;
+        const db = b.task_date ?? null;
+        if (da && db && da !== db) return da < db ? -1 : 1;
+        if (da && !db) return -1;
+        if (!da && db) return 1;
         return a.order - b.order;
       }),
     [period],

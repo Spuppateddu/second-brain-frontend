@@ -290,9 +290,19 @@ function TaskModalForm({
         ? (outOfPlanNote?.stars ?? null)
         : null,
   );
-  const [taskDate, setTaskDate] = useState(date);
-  const [startTime, setStartTime] = useState(task?.start_time ?? "");
-  const [endTime, setEndTime] = useState(task?.end_time ?? "");
+  const [taskDate, setTaskDate] = useState(
+    isPlanning ? (planningTask?.task_date ?? "") : date,
+  );
+  const [startTime, setStartTime] = useState(
+    isPlanning
+      ? ((planningTask?.start_time ?? "").slice(0, 5))
+      : (task?.start_time ?? ""),
+  );
+  const [endTime, setEndTime] = useState(
+    isPlanning
+      ? ((planningTask?.end_time ?? "").slice(0, 5))
+      : (task?.end_time ?? ""),
+  );
   const [categoryIds, setCategoryIds] = useState<number[]>(
     initialCategories.map((c) => c.id),
   );
@@ -488,6 +498,9 @@ function TaskModalForm({
             is_done: finalIsDone,
             is_cancelled: finalIsCancelled,
             stars: stars ?? null,
+            task_date: taskDate || null,
+            start_time: startTime || null,
+            end_time: endTime || null,
             task_category_ids: categoryIds,
             linked_entities,
           });
@@ -499,6 +512,9 @@ function TaskModalForm({
             content: title.trim(),
             is_work: isWork,
             stars: stars ?? null,
+            task_date: taskDate || null,
+            start_time: startTime || null,
+            end_time: endTime || null,
             task_category_ids: categoryIds,
             linked_entities,
           });
@@ -967,6 +983,80 @@ function TaskModalForm({
               taskId={planningTask.id}
               onCopied={onClose}
             />
+          )}
+
+          {/* Due date & time (planning only) */}
+          {isPlanning && (
+            <section>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
+                Due date &amp; time
+              </label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-xs text-secondary-500">Date</p>
+                    {taskDate && !formLocked && (
+                      <button
+                        type="button"
+                        onClick={() => setTaskDate("")}
+                        className="text-xs text-secondary-400 hover:text-danger"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="date"
+                    value={taskDate}
+                    onChange={(e) => setTaskDate(e.target.value)}
+                    disabled={formLocked}
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                  />
+                </div>
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-xs text-secondary-500">Start time</p>
+                    {startTime && !formLocked && (
+                      <button
+                        type="button"
+                        onClick={() => setStartTime("")}
+                        className="text-xs text-secondary-400 hover:text-danger"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="time"
+                    value={startTime ?? ""}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    disabled={formLocked}
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                  />
+                </div>
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-xs text-secondary-500">End time</p>
+                    {endTime && !formLocked && (
+                      <button
+                        type="button"
+                        onClick={() => setEndTime("")}
+                        className="text-xs text-secondary-400 hover:text-danger"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="time"
+                    value={endTime ?? ""}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    disabled={formLocked}
+                    className="w-full rounded-md border border-secondary-200 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70"
+                  />
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Date & time (calendar) or Stars (planning / outofplan) */}

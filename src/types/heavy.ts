@@ -30,6 +30,9 @@ export type PlanningTaskLite = {
   start_date?: string;
   end_date?: string;
   planning_type_id?: number;
+  task_date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
   subTasks?: PlanningSubTaskLite[];
   sub_tasks?: PlanningSubTaskLite[];
   taskCategories?: PlanningTaskCategory[];
