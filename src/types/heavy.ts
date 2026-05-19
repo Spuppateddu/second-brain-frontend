@@ -37,8 +37,18 @@ export type PlanningTaskLite = {
   sub_tasks?: PlanningSubTaskLite[];
   taskCategories?: PlanningTaskCategory[];
   task_categories?: PlanningTaskCategory[];
-  linkedCalendarTasks?: { id: number; task_date?: string }[];
-  linked_calendar_tasks?: { id: number; task_date?: string }[];
+  linkedCalendarTasks?: {
+    id: number;
+    task_date?: string;
+    is_done?: boolean;
+    is_cancelled?: boolean;
+  }[];
+  linked_calendar_tasks?: {
+    id: number;
+    task_date?: string;
+    is_done?: boolean;
+    is_cancelled?: boolean;
+  }[];
   linkedBookmarks?: LinkableSummary[];
   linkedNotes?: LinkableSummary[];
   linkedPersons?: LinkableSummary[];

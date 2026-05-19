@@ -966,6 +966,9 @@ function TaskModalForm({
           {editing && isPlanning && planningTask && (
             <PlanningSubtasksSection taskId={planningTask.id} />
           )}
+          {editing && isPlanning && planningTask && (
+            <PlanningLinkedDatesSection planningTask={planningTask} />
+          )}
           {editing && isOutOfPlan && outOfPlanNote && (
             <OutOfPlanSubnotesSection noteId={outOfPlanNote.id} />
           )}
@@ -2001,6 +2004,47 @@ function todayString(): string {
     String(d.getMonth() + 1).padStart(2, "0"),
     String(d.getDate()).padStart(2, "0"),
   ].join("-");
+}
+
+function PlanningLinkedDatesSection({
+  planningTask,
+}: {
+  planningTask: PlanningTaskLite;
+}) {
+  const linked =
+    planningTask.linkedCalendarTasks ?? planningTask.linked_calendar_tasks ?? [];
+  const pending = linked
+    .filter((t) => !t.is_done && !!t.task_date)
+    .slice()
+    .sort((a, b) => (a.task_date ?? "").localeCompare(b.task_date ?? ""));
+
+  if (pending.length === 0) return null;
+
+  return (
+    <section>
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-secondary-500">
+        Connected dates
+      </label>
+      <ul className="flex flex-wrap gap-2">
+        {pending.map((t) => (
+          <li key={t.id}>
+            <a
+              href={`/calendar/${t.task_date}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-info-200 bg-info-50 px-3 py-1 text-xs font-medium text-info-700 hover:bg-info-100 dark:border-info-800 dark:bg-info-900/30 dark:text-info-300 dark:hover:bg-info-900/50"
+            >
+              <HiCalendarDays className="h-3.5 w-3.5" />
+              {shortDateLabel(t.task_date as string)}
+              {t.is_cancelled && (
+                <span className="text-[10px] uppercase tracking-wide opacity-70">
+                  cancelled
+                </span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function CopyPlanningToCalendarSection({

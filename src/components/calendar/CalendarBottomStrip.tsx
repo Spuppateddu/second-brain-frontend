@@ -458,7 +458,7 @@ function PlanningSection({
 
   if (sortedTasks.length === 0) {
     return (
-      <p className="text-sm text-secondary-500">No unlinked planning tasks.</p>
+      <p className="text-sm text-secondary-500">No planning tasks to do.</p>
     );
   }
 
